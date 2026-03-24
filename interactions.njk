@@ -515,12 +515,23 @@ function interactionsApp() {
     mergeAndDeduplicate(wmItems, convItems) {
       const convUrls = new Set(convItems.map(c => c.url).filter(Boolean));
       const seen = new Set();
+      const seenInteraction = new Set();
       const result = [];
+
+      const normalizeUrl = (url) => (url || '').replace(/\/$/, '');
+      const interactionKey = (item) => {
+        const author = normalizeUrl(item.author?.url);
+        const type = item['wm-property'] || '';
+        const target = normalizeUrl(item['wm-target']);
+        return `${author}|${type}|${target}`;
+      };
 
       for (const item of convItems) {
         const key = item['wm-id'] || item.url;
-        if (key && !seen.has(key)) {
+        const iKey = interactionKey(item);
+        if (key && !seen.has(key) && !seenInteraction.has(iKey)) {
           seen.add(key);
+          seenInteraction.add(iKey);
           result.push(item);
         }
       }
@@ -530,12 +541,16 @@ function interactionsApp() {
         if (seen.has(wmKey)) continue;
         if (item.url && convUrls.has(item.url)) continue;
 
+        const iKey = interactionKey(item);
+        if (seenInteraction.has(iKey)) continue;
+
         if (!item.platform) {
           const detected = this.detectPlatform(item);
           if (detected) item.platform = detected;
         }
 
         seen.add(wmKey);
+        seenInteraction.add(iKey);
         result.push(item);
       }
 
