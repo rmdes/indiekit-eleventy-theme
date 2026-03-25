@@ -137,14 +137,11 @@ document.addEventListener("alpine:init", () => {
             },
           };
 
-          // Only add syndication target for the matching platform
+          // Only add syndication target if one exists for the platform
           if (this.replyingTo.syndicateTo) {
             micropubBody.properties["mp-syndicate-to"] = [
               this.replyingTo.syndicateTo,
             ];
-          } else {
-            // IndieWeb webmention — no syndication, empty array
-            micropubBody.properties["mp-syndicate-to"] = [];
           }
 
           const res = await fetch("/micropub", {

@@ -803,9 +803,12 @@
       btn.addEventListener('click', function() {
         var replyUrl = btn.dataset.replyUrl;
         var platform = btn.dataset.platform || 'webmention';
+        // Map detected platform to syndicator by service.name
+        var targets = ownerStore.syndicationTargets || {};
         var syndicateTo = null;
-        if (platform === 'bluesky') syndicateTo = ownerStore.syndicationTargets.bluesky || null;
-        if (platform === 'mastodon') syndicateTo = ownerStore.syndicationTargets.mastodon || null;
+        if (platform === 'bluesky') syndicateTo = targets['Bluesky'] || null;
+        if (platform === 'mastodon') syndicateTo = targets['Mastodon'] || null;
+        if (platform === 'activitypub') syndicateTo = targets['ActivityPub (Fediverse)'] || null;
 
         // Close any existing reply form
         closeActiveReplyForm();
