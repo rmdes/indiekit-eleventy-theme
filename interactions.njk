@@ -216,7 +216,7 @@ permalink: /interactions/
     </div>
 
     {# Webmentions list #}
-    <div x-show="!notConfigured && (!loading || webmentions.length)" class="space-y-4">
+    <div id="webmentions-list" x-show="!notConfigured && (!loading || webmentions.length)" class="space-y-4">
       <template x-for="wm in paginatedWebmentions" :key="wm['wm-id']">
         <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 shadow-sm">
           <div class="flex gap-3">
@@ -297,7 +297,7 @@ permalink: /interactions/
             Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span>
             <span class="text-surface-600 dark:text-surface-400 ml-1">(<span x-text="filteredWebmentions.length"></span> total)</span>
           </div>
-          <div class="pagination-links">
+          <div class="pagination-links flex-wrap">
             <button
               @click="goToPage(currentPage - 1)"
               :disabled="currentPage <= 1"
@@ -307,7 +307,7 @@ permalink: /interactions/
               Previous
             </button>
 
-            <template x-for="p in pageNumbers" :key="p">
+            <template x-for="(p, idx) in pageNumbers" :key="'pg-' + idx">
               <button
                 @click="typeof p === 'number' && goToPage(p)"
                 :disabled="p === '…'"
@@ -413,8 +413,7 @@ function interactionsApp() {
     goToPage(page) {
       if (page < 1 || page > this.totalPages) return;
       this.currentPage = page;
-      // Scroll to top of inbound tab
-      this.$el.closest('[x-show]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('webmentions-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
 
     async init() {

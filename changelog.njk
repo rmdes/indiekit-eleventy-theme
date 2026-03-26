@@ -59,6 +59,14 @@ withSidebar: false
     <span class="ml-3 text-surface-600 dark:text-surface-400">Loading changelog...</span>
   </div>
 
+  {# Error/stale data banner #}
+  <div x-show="apiError && !loading" x-cloak class="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+    <p class="text-amber-800 dark:text-amber-200 text-sm">
+      <span class="font-medium">Note:</span>
+      <span x-text="commits.length > 0 ? 'Showing cached data — GitHub API is temporarily unavailable.' : apiError"></span>
+    </p>
+  </div>
+
   {# Commit list #}
   <div x-show="!loading" x-cloak>
     <template x-if="filteredCommits().length === 0">
@@ -129,6 +137,7 @@ function changelogApp() {
     viewMode: 'repo',
     loading: true,
     loadingMore: false,
+    apiError: null,
     commits: [],
     categories: {},
     commitCategories: {},
@@ -239,14 +248,16 @@ function changelogApp() {
     async fetchChangelog(days) {
       try {
         const response = await fetch('/githubapi/api/changelog?days=' + days);
-        if (!response.ok) throw new Error('Failed to fetch');
+        if (!response.ok) throw new Error('Failed to fetch changelog (HTTP ' + response.status + ')');
         const data = await response.json();
         this.commits = data.commits || [];
         this.categories = data.categories || {};
         this.commitCategories = data.commitCategories || {};
         this.currentDays = data.days;
+        this.apiError = data.error || null;
       } catch (err) {
         console.error('Changelog error:', err);
+        this.apiError = err.message || 'Failed to load changelog';
       } finally {
         this.loading = false;
         this.loadingMore = false;

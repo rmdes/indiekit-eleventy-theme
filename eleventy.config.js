@@ -655,6 +655,25 @@ export default function (eleventyConfig) {
     return array.slice(0, n);
   });
 
+  // Exclude post types from a collection by detecting type from frontmatter properties
+  // Usage: collections.posts | excludePostTypes(["reply", "like"])
+  // Supported types: reply, like, bookmark, repost, photo, article, note
+  eleventyConfig.addFilter("excludePostTypes", (posts, excludeTypes) => {
+    if (!Array.isArray(posts) || !Array.isArray(excludeTypes) || !excludeTypes.length) return posts;
+    return posts.filter((post) => {
+      const d = post.data || {};
+      let type;
+      if (d.inReplyTo || d.in_reply_to) type = "reply";
+      else if (d.likeOf || d.like_of) type = "like";
+      else if (d.bookmarkOf || d.bookmark_of) type = "bookmark";
+      else if (d.repostOf || d.repost_of) type = "repost";
+      else if (d.photo && d.photo.length) type = "photo";
+      else if (d.title) type = "article";
+      else type = "note";
+      return !excludeTypes.includes(type);
+    });
+  });
+
   // Slugify filter
   eleventyConfig.addFilter("slugify", (str) => {
     if (!str) return "";
