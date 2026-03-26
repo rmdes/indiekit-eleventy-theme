@@ -331,9 +331,19 @@ Generates OpenGraph images for posts without photos using Satori (Yoga WASM → 
 
 The conversations API enriches its response with owner replies (`is_owner: true`, `parent_url`). The frontend's `threadOwnerReplies()` function matches `parent_url` to reply `<li>` elements via `data-wm-url` attributes and inserts threaded reply cards into `wm-owner-reply-slot` divs.
 
-Reply routing is provenance-aware:
-- **Mastodon/Bluesky replies** — `POST /micropub` with `mp-syndicate-to` for platform threading
-- **IndieWeb webmention replies** — `POST /micropub` without syndication (webmention sent automatically)
+Reply routing is provenance-aware, using a two-level mapping:
+
+1. **`replyTargets`** (from `GET /comments/api/is-owner`) maps detected platform → syndicator `service.name`
+2. **`syndicationTargets`** (same endpoint) maps `service.name` → syndicator UID
+
+The mapping is configurable via the comments plugin `replyTargets` option. Default routes mastodon/activitypub via the AP syndicator (self-hosted), bluesky via the Bluesky syndicator. Users without a self-hosted AP server can override to route mastodon → external Mastodon account.
+
+Build-time reply buttons get a `data-platform` from URL heuristics as fallback. At runtime, `enrichBuildTimeBadges()` upgrades to NodeInfo-resolved platform from the conversations API.
+
+Reply paths:
+- **Fediverse replies (mastodon/activitypub)** — `POST /micropub` with `mp-syndicate-to` for the AP syndicator (configurable via `replyTargets`)
+- **Bluesky replies** — `POST /micropub` with `mp-syndicate-to` for the Bluesky syndicator
+- **IndieWeb webmention replies** — `POST /micropub` without `mp-syndicate-to` (webmention sent automatically)
 - **Native comment replies** — `POST /comments/api/reply` (stored in comments collection)
 
 #### IndieAuth
