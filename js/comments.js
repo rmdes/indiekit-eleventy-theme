@@ -12,6 +12,7 @@ document.addEventListener("alpine:init", () => {
     isOwner: false,
     profile: null,
     syndicationTargets: {},
+    replyTargets: {},
   });
 
   Alpine.data("commentsSection", (targetUrl) => ({
@@ -74,11 +75,13 @@ document.addEventListener("alpine:init", () => {
               photo: data.photo,
             };
             this.syndicationTargets = data.syndicationTargets || {};
+            this.replyTargets = data.replyTargets || {};
 
             // Also update global store for webmentions component
             Alpine.store("owner").isOwner = true;
             Alpine.store("owner").profile = this.ownerProfile;
             Alpine.store("owner").syndicationTargets = this.syndicationTargets;
+            Alpine.store("owner").replyTargets = this.replyTargets;
 
             // Note: owner:detected event is dispatched from init() after
             // this completes, so the Alpine store is populated before the event fires

@@ -803,12 +803,11 @@
       btn.addEventListener('click', function() {
         var replyUrl = btn.dataset.replyUrl;
         var platform = btn.dataset.platform || 'webmention';
-        // Map detected platform to syndicator by service.name
+        // Map platform to syndicator via replyTargets config
         var targets = ownerStore.syndicationTargets || {};
-        var syndicateTo = null;
-        if (platform === 'bluesky') syndicateTo = targets['Bluesky'] || null;
-        if (platform === 'mastodon') syndicateTo = targets['Mastodon'] || null;
-        if (platform === 'activitypub') syndicateTo = targets['ActivityPub (Fediverse)'] || null;
+        var replyTargets = ownerStore.replyTargets || {};
+        var serviceName = replyTargets[platform] || null;
+        var syndicateTo = serviceName ? (targets[serviceName] || null) : null;
 
         // Close any existing reply form
         closeActiveReplyForm();

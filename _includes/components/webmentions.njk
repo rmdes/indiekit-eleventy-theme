@@ -153,9 +153,19 @@
             <div class="text-surface-700 dark:text-surface-300 prose dark:prose-invert prose-sm max-w-none">
               {{ reply.content.html | safe if reply.content.html else reply.content.text }}
             </div>
+            {% set replySource = reply['wm-source'] | default('', true) %}
+            {% set replyAuthorUrl = reply.author.url | default('', true) %}
+            {% set buildPlatform = 'webmention' %}
+            {% if 'bsky.app' in replyAuthorUrl or ('brid.gy/' in replySource and '/bluesky/' in replySource) %}
+              {% set buildPlatform = 'bluesky' %}
+            {% elif 'brid.gy/' in replySource and '/mastodon/' in replySource %}
+              {% set buildPlatform = 'mastodon' %}
+            {% elif 'fed.brid.gy' in replySource %}
+              {% set buildPlatform = 'activitypub' %}
+            {% endif %}
             <button class="wm-reply-btn hidden text-xs text-primary-600 dark:text-primary-400 hover:underline mt-2"
                     data-reply-url="{{ reply.url }}"
-                    data-platform="">
+                    data-platform="{{ buildPlatform }}">
               Reply
             </button>
           </div>
