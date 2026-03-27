@@ -112,6 +112,16 @@ withBlogSidebar: true
       {% endif %}
     {% endfor %}
   {% endif %}
+  {# Fallback: if no selfHostedApUrl from syndication yet, check mpSyndicateTo.
+     This ensures the Fediverse button appears on the first build, before the
+     syndication endpoint has run and added the URL to the syndication array. #}
+  {% if not selfHostedApUrl and mpSyndicateTo %}
+    {% for url in mpSyndicateTo %}
+      {% if url.indexOf(site.url) == 0 %}
+        {% set selfHostedApUrl = page.url | url %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
   {% if externalSyndication.length or selfHostedApUrl %}
   <footer class="post-footer mt-8 pt-6 border-t border-surface-200 dark:border-surface-700">
     <div class="flex flex-wrap items-center gap-4">
