@@ -1058,13 +1058,13 @@ export default function (eleventyConfig) {
   });
 
   // Recently edited posts (updated !== published) — for /updated.xml
+  // Note: getFilteredByGlob reuses Eleventy's cached template parse, no extra I/O
   eleventyConfig.addCollection("recentlyUpdated", function (collectionApi) {
     return collectionApi
       .getFilteredByGlob("content/**/*.md")
       .filter(isPublished)
       .filter((item) => {
         if (!item.data.updated) return false;
-        // Only include if updated date differs from published date
         const published = new Date(item.date).getTime();
         const updated = new Date(item.data.updated).getTime();
         return updated > published;
