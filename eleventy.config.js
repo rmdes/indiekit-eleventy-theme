@@ -1057,6 +1057,22 @@ export default function (eleventyConfig) {
       .slice(0, 20);
   });
 
+  // Recently edited posts (updated !== published) — for /updated.xml
+  eleventyConfig.addCollection("recentlyUpdated", function (collectionApi) {
+    return collectionApi
+      .getFilteredByGlob("content/**/*.md")
+      .filter(isPublished)
+      .filter((item) => {
+        if (!item.data.updated) return false;
+        // Only include if updated date differs from published date
+        const published = new Date(item.date).getTime();
+        const updated = new Date(item.data.updated).getTime();
+        return updated > published;
+      })
+      .sort((a, b) => new Date(b.data.updated) - new Date(a.data.updated))
+      .slice(0, 20);
+  });
+
   // Categories collection - deduplicated by slug to avoid duplicate permalinks
   eleventyConfig.addCollection("categories", function (collectionApi) {
     const categoryMap = new Map(); // slug -> original name (first seen)

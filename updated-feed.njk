@@ -1,0 +1,45 @@
+---
+permalink: /updated.xml
+eleventyExcludeFromCollections: true
+eleventyImport:
+  collections:
+    - recentlyUpdated
+---
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>{{ site.name }} — Recently Updated</title>
+    <link>{{ site.url }}/</link>
+    <description>Posts recently edited on {{ site.name }}</description>
+    <language>{{ site.locale | default('en') }}</language>
+    <atom:link href="{{ site.url }}/updated.xml" rel="self" type="application/rss+xml"/>
+    <atom:link href="https://websubhub.com/hub" rel="hub"/>
+    {%- if collections.recentlyUpdated.length %}
+    <lastBuildDate>{{ collections.recentlyUpdated[0].data.updated | dateToRfc822 }}</lastBuildDate>
+    {%- endif %}
+    {%- for post in collections.recentlyUpdated %}
+    {%- set absolutePostUrl = site.url + post.url %}
+    {%- set postImage = post.data.photo %}
+    {%- if postImage %}
+      {%- if postImage[0] and (postImage[0] | length) > 10 %}
+        {%- set postImage = postImage[0] %}
+      {%- endif %}
+    {%- endif %}
+    {%- if not postImage or postImage == "" %}
+      {%- set postImage = post.data.image or (post.content | extractFirstImage) %}
+    {%- endif %}
+    <item>
+      <title>{{ post.data.title | default(post.content | striptags | truncate(80)) | escape }} [updated]</title>
+      <link>{{ absolutePostUrl }}</link>
+      <guid isPermaLink="false">{{ absolutePostUrl }}#updated-{{ post.data.updated | dateToRfc822 }}</guid>
+      <pubDate>{{ post.data.updated | dateToRfc822 }}</pubDate>
+      <description>{{ post.content | htmlToAbsoluteUrls(absolutePostUrl) | escape }}</description>
+      {%- if postImage and postImage != "" and (postImage | length) > 10 %}
+      {%- set imageUrl = postImage | url | absoluteUrl(site.url) %}
+      <enclosure url="{{ imageUrl }}" type="image/jpeg" length="0"/>
+      <media:content url="{{ imageUrl }}" medium="image"/>
+      {%- endif %}
+    </item>
+    {%- endfor %}
+  </channel>
+</rss>

@@ -102,6 +102,7 @@
   <link rel="canonical" href="{{ site.url }}{{ page.url }}">
   <link rel="alternate" type="application/rss+xml" href="/feed.xml" title="RSS Feed">
   <link rel="alternate" type="application/json" href="/feed.json" title="JSON Feed">
+  <link rel="alternate" type="application/rss+xml" href="/updated.xml" title="Recently Updated — RSS Feed">
   <link rel="alternate" type="application/rss+xml" href="/digest/feed.xml" title="Weekly Digest — RSS Feed">
   {% if site.markdownAgents.enabled and page.url and page.url.startsWith('/articles/') and page.url != '/articles/' %}
   <link rel="alternate" type="text/markdown" href="{{ page.url | stripTrailingSlash }}.md" title="Markdown version">
@@ -351,6 +352,7 @@
           <ul class="space-y-2">
             <li><a href="/feed.xml" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">RSS Feed</a></li>
             <li><a href="/feed.json" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">JSON Feed</a></li>
+            <li><a href="/updated.xml" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">Updated Posts Feed</a></li>
             <li><a href="/changelog/" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">Changelog</a></li>
           </ul>
         </div>
