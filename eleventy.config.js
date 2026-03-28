@@ -1485,6 +1485,18 @@ export default function (eleventyConfig) {
       }
     }
 
+    // Signal readiness to Indiekit plugins — build is complete, system is stable.
+    // Plugins poll for this file via @rmdes/indiekit-startup-gate before starting
+    // heavy background tasks (feed polling, AP federation, sync jobs).
+    // Only fires once — subsequent incremental builds skip this.
+    const readyPath = "/app/data/.indiekit-ready";
+    if (!existsSync(readyPath)) {
+      try {
+        writeFileSync(readyPath, "");
+        console.log("[startup-gate] Readiness signal created — plugins will start deferred tasks");
+      } catch { /* not running in Cloudron container — skip */ }
+    }
+
     // Force garbage collection after post-build work completes.
     // V8 doesn't return freed heap pages to the OS without GC pressure.
     // In watch mode the watcher sits idle after its initial full build,
