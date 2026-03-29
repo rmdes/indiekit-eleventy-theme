@@ -674,6 +674,29 @@ export default function (eleventyConfig) {
     });
   });
 
+  // Exclude pages from sitemap by URL pattern
+  // Usage: collections.all | excludeFromSitemap
+  eleventyConfig.addFilter("excludeFromSitemap", (items) => {
+    const excludePatterns = [
+      /^\/replies\//,
+      /^\/feed\.(xml|json)$/,
+      /\/feed\.(xml|json)$/,
+      /^\/categories\//,
+      /^\/digest/,
+      /^\/webmention-debug\//,
+      /^\/404\.html$/,
+      /^\/sitemap\.xml$/,
+      /^\/dashboard/,
+      /^\/homepage/,
+      /^\/search\//,
+      /^\/graph\//,
+    ];
+    return items.filter((item) => {
+      const url = item.url || "";
+      return !excludePatterns.some((pattern) => pattern.test(url));
+    });
+  });
+
   // Slugify filter
   eleventyConfig.addFilter("slugify", (str) => {
     if (!str) return "";
