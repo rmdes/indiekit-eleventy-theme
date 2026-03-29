@@ -1413,6 +1413,7 @@ export default function (eleventyConfig) {
         /^\/search\//,
         /^\/graph\//,
         /^\/sitemap\.xml$/,
+        /^\/\.interface-design\//,
       ];
       try {
         const walkHtml = (base, prefix = "") => {
