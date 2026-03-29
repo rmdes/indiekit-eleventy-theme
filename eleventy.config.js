@@ -1398,7 +1398,8 @@ export default function (eleventyConfig) {
     }
 
     // Sitemap generation — scan output HTML files, exclude URL patterns
-    if (!incremental) {
+    // Runs on every build (including incremental) so new posts appear immediately
+    {
       const sitemapOutputDir = directories?.output || dir.output;
       const excludePatterns = [
         /^\/replies\//,
