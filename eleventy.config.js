@@ -2,7 +2,7 @@ import pluginWebmentions from "@chrisburnell/eleventy-cache-webmentions";
 import pluginRss from "@11ty/eleventy-plugin-rss";
 import embedEverything from "eleventy-plugin-embed-everything";
 import { eleventyImageTransformPlugin } from "@11ty/eleventy-img";
-import sitemap from "@quasibit/eleventy-plugin-sitemap";
+
 import markdownIt from "markdown-it";
 import markdownItAnchor from "markdown-it-anchor";
 import syntaxHighlight from "@11ty/eleventy-plugin-syntaxhighlight";
@@ -352,12 +352,6 @@ export default function (eleventyConfig) {
     return eleventyConfig.htmlTransformer.transformContent(this.outputPath, content, this);
   });
 
-  // Sitemap generation
-  eleventyConfig.addPlugin(sitemap, {
-    sitemap: {
-      hostname: siteUrl,
-    },
-  });
 
   // Wrap <table> elements in <table-saw> for responsive tables
   eleventyConfig.addTransform("table-saw-wrap", function (content, outputPath) {
@@ -671,29 +665,6 @@ export default function (eleventyConfig) {
       else if (d.title) type = "article";
       else type = "note";
       return !excludeTypes.includes(type);
-    });
-  });
-
-  // Exclude pages from sitemap by URL pattern
-  // Usage: collections.all | excludeFromSitemap
-  eleventyConfig.addFilter("excludeFromSitemap", (items) => {
-    const excludePatterns = [
-      /^\/replies\//,
-      /^\/feed\.(xml|json)$/,
-      /\/feed\.(xml|json)$/,
-      /^\/categories\//,
-      /^\/digest/,
-      /^\/webmention-debug\//,
-      /^\/404\.html$/,
-      /^\/sitemap\.xml$/,
-      /^\/dashboard/,
-      /^\/homepage/,
-      /^\/search\//,
-      /^\/graph\//,
-    ];
-    return items.filter((item) => {
-      const url = item.url || "";
-      return !excludePatterns.some((pattern) => pattern.test(url));
     });
   });
 
@@ -1423,6 +1394,54 @@ export default function (eleventyConfig) {
         console.log(`[markdown-agents] Generated ${mdCount} article .md files`);
       } catch (err) {
         console.error("[markdown-agents] Error generating .md files:", err.message);
+      }
+    }
+
+    // Sitemap generation — scan output HTML files, exclude URL patterns
+    if (!incremental) {
+      const sitemapOutputDir = directories?.output || dir.output;
+      const excludePatterns = [
+        /^\/replies\//,
+        /\/feed\.(xml|json)$/,
+        /^\/categories\//,
+        /^\/digest/,
+        /^\/webmention-debug\//,
+        /^\/404\.html$/,
+        /^\/dashboard/,
+        /^\/homepage/,
+        /^\/search\//,
+        /^\/graph\//,
+        /^\/sitemap\.xml$/,
+      ];
+      try {
+        const walkHtml = (base, prefix = "") => {
+          const entries = [];
+          for (const entry of readdirSync(resolve(base, prefix), { withFileTypes: true })) {
+            const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+            if (entry.isDirectory()) {
+              entries.push(...walkHtml(base, rel));
+            } else if (entry.name === "index.html") {
+              const urlPath = prefix ? `/${prefix}/` : "/";
+              entries.push(urlPath);
+            }
+          }
+          return entries;
+        };
+        const allUrls = walkHtml(sitemapOutputDir)
+          .filter((url) => !excludePatterns.some((p) => p.test(url)))
+          .sort();
+        const xmlLines = [
+          '<?xml version="1.0" encoding="UTF-8"?>',
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        ];
+        for (const url of allUrls) {
+          xmlLines.push(`  <url><loc>${siteUrl}${url}</loc></url>`);
+        }
+        xmlLines.push("</urlset>");
+        writeFileSync(resolve(sitemapOutputDir, "sitemap.xml"), xmlLines.join("\n"));
+        console.log(`[sitemap] Generated sitemap.xml with ${allUrls.length} URLs`);
+      } catch (err) {
+        console.error("[sitemap] Generation failed:", err.message);
       }
     }
 
