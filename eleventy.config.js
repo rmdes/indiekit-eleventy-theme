@@ -23,6 +23,17 @@ const postGraph = esmRequire("@rknightuk/eleventy-plugin-post-graph");
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const siteUrl = process.env.SITE_URL || "https://example.com";
 
+// Memory profiler — logs RSS + V8 heap at key build phases
+function logMemory(phase) {
+  const mem = process.memoryUsage();
+  const rss = (mem.rss / 1024 / 1024).toFixed(0);
+  const heapUsed = (mem.heapUsed / 1024 / 1024).toFixed(0);
+  const heapTotal = (mem.heapTotal / 1024 / 1024).toFixed(0);
+  const external = (mem.external / 1024 / 1024).toFixed(0);
+  const arrayBuffers = (mem.arrayBuffers / 1024 / 1024).toFixed(0);
+  console.log(`[mem] ${phase}: RSS=${rss}MB heap=${heapUsed}/${heapTotal}MB external=${external}MB buffers=${arrayBuffers}MB`);
+}
+
 export default function (eleventyConfig) {
   // Don't use .gitignore for determining what to process
   // (content/ is in .gitignore because it's a symlink, but we need to process it)
@@ -1228,6 +1239,7 @@ export default function (eleventyConfig) {
   // Exit code 2 = batch complete, more work remains → re-spawn.
   // Manifest caching makes incremental builds fast (only new posts get generated).
   eleventyConfig.on("eleventy.before", () => {
+    logMemory("before-build (OG start)");
     const contentDir = resolve(__dirname, "content");
     const cacheDir = resolve(__dirname, ".cache");
     const siteName = process.env.SITE_NAME || "My IndieWeb Blog";
@@ -1343,6 +1355,7 @@ export default function (eleventyConfig) {
   // so we cannot use the incremental flag to guard pagefind. Use a one-shot flag instead.
   let pagefindDone = false;
   eleventyConfig.on("eleventy.after", async ({ dir, directories, runMode, incremental }) => {
+    logMemory("after-build (pre-hooks)");
     // Markdown for Agents — generate index.md alongside index.html for articles
     const mdEnabled = (process.env.MARKDOWN_AGENTS_ENABLED || "true").toLowerCase() === "true";
     if (mdEnabled && !incremental) {
