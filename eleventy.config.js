@@ -13,7 +13,7 @@ import matter from "gray-matter";
 import { createHash, createHmac } from "crypto";
 import { createRequire } from "module";
 import { execFileSync } from "child_process";
-import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync, copyFileSync } from "fs";
+import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync, copyFileSync, appendFileSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -24,6 +24,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const siteUrl = process.env.SITE_URL || "https://example.com";
 
 // Memory profiler — logs RSS + V8 heap at key build phases
+// Writes to file (log buffer gets flushed by AP inbox traffic) AND stdout
+const MEM_LOG = "/app/data/.eleventy-mem.log";
 function logMemory(phase) {
   const mem = process.memoryUsage();
   const rss = (mem.rss / 1024 / 1024).toFixed(0);
@@ -31,7 +33,9 @@ function logMemory(phase) {
   const heapTotal = (mem.heapTotal / 1024 / 1024).toFixed(0);
   const external = (mem.external / 1024 / 1024).toFixed(0);
   const arrayBuffers = (mem.arrayBuffers / 1024 / 1024).toFixed(0);
+  const line = `[${new Date().toISOString()}] ${phase}: RSS=${rss}MB heap=${heapUsed}/${heapTotal}MB external=${external}MB buffers=${arrayBuffers}MB`;
   console.log(`[mem] ${phase}: RSS=${rss}MB heap=${heapUsed}/${heapTotal}MB external=${external}MB buffers=${arrayBuffers}MB`);
+  try { appendFileSync(MEM_LOG, line + "\n"); } catch { /* not on Cloudron or not writable */ }
 }
 
 export default function (eleventyConfig) {
