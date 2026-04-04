@@ -380,6 +380,19 @@ export default function (eleventyConfig) {
   // page.url is unreliable during parallel rendering, but outputPath IS correct
   // since files are written to the correct location. Derives the OG slug from
   // outputPath and replaces placeholders emitted by base.njk.
+  // Clear eleventy-img in-memory cache between builds to prevent native memory leak.
+  // The MemoryCache singleton holds Sharp ArrayBuffers (~200KB-1MB each) that never get
+  // freed in watch mode. After 20-30 incremental rebuilds, external memory grows from
+  // ~170MB to 500MB+, eventually causing OOM. Disk cache handles persistence.
+  const { memCache: imgMemCache } = esmRequire("@11ty/eleventy-img/src/caches.js");
+  eleventyConfig.on("eleventy.before", () => {
+    const size = imgMemCache.size();
+    if (size > 0) {
+      imgMemCache.cache = {};
+      console.log(`[eleventy-img] Cleared in-memory cache (${size} entries)`);
+    }
+  });
+
   // Cache: directory listing built once per build instead of 3,426 existsSync calls
   let _ogFileSet = null;
   eleventyConfig.on("eleventy.before", () => { _ogFileSet = null; });
