@@ -225,21 +225,37 @@
       const wmItems = [...(wmData1.children || []), ...(wmData2.children || [])];
       const convItems = [...(convData1.children || []), ...(convData2.children || [])];
 
-      // Collect syndication URLs from owner-enriched replies (is_owner items).
+      // Collect post IDs from owner-enriched reply syndication URLs.
       // When the owner replies from the frontend, Micropub creates the post
-      // and syndicates it (e.g., to Bluesky). The syndicated copy's URL
-      // (e.g., bsky.app/profile/.../post/...) is stored in the post's
-      // syndication property. Bridgy/webmention.io picks up that same URL
-      // and sends it back as a regular webmention. By collecting these
-      // syndication URLs, we can precisely match and suppress the echo
-      // without affecting direct platform replies that have no Micropub post.
+      // and syndicates it (e.g., to Bluesky). The syndicated URL is stored
+      // in the post's syndication property. Bridgy/webmention.io picks up
+      // the same post and sends it back as a webmention — but may use a
+      // different URL format (e.g., DID-based vs handle-based on Bluesky).
+      // We extract platform-specific post IDs to match regardless of format:
+      // - Bluesky: rkey from /post/<rkey> (same post, DID or handle URL)
+      // - Mastodon: status ID from /<digits> suffix
+      function extractPostId(url) {
+        if (!url) return null;
+        // Bluesky: bsky.app/profile/.../post/<rkey>
+        var bskyMatch = url.match(/bsky\.app\/profile\/[^/]+\/post\/([a-z0-9]+)/i);
+        if (bskyMatch) return 'bsky:' + bskyMatch[1];
+        // Mastodon: instance/@user/<digits>
+        var mastoMatch = url.match(/\/@[^/]+\/(\d+)/);
+        if (mastoMatch) return 'masto:' + mastoMatch[1];
+        return null;
+      }
+      var ownerReplyPostIds = new Set();
       var ownerReplySyndicationUrls = new Set();
       for (var k = 0; k < convItems.length; k++) {
         var c = convItems[k];
         if (c.is_owner && c.syndication) {
           var syns = Array.isArray(c.syndication) ? c.syndication : [c.syndication];
           for (var s = 0; s < syns.length; s++) {
-            if (syns[s]) ownerReplySyndicationUrls.add(syns[s].replace(/\/$/, '').toLowerCase());
+            if (syns[s]) {
+              ownerReplySyndicationUrls.add(syns[s].replace(/\/$/, '').toLowerCase());
+              var pid = extractPostId(syns[s]);
+              if (pid) ownerReplyPostIds.add(pid);
+            }
           }
         }
       }
@@ -277,19 +293,14 @@
         const action = wm['wm-property'] || 'mention';
         if (authorUrl && authorActions.has(authorUrl + '::' + action)) continue;
         // Skip webmention.io items that are syndicated echoes of owner replies.
-        // When the owner replies from the frontend, Micropub creates the post
-        // and syndicates it (e.g., to Bluesky at bsky.app/profile/.../post/xyz).
-        // The conversations API returns the reply as an is_owner enriched item
-        // with syndication: ["https://bsky.app/profile/.../post/xyz"].
-        // Bridgy/webmention.io also picks up that exact syndicated URL and
-        // sends it back as a regular webmention. By matching the webmention's
-        // source URL against known owner reply syndication URLs, we precisely
-        // filter the echo without affecting:
-        // - Direct platform replies (no Micropub post, no syndication URL match)
-        // - Owner likes/reposts from webmention.io
-        // - Owner replies on a different thread on the same page
-        if (wm.url && ownerReplySyndicationUrls.has(wm.url.replace(/\/$/, '').toLowerCase())) {
-          continue;
+        // Match by platform post ID (not exact URL) because Bluesky URLs can
+        // use either DID or handle for the same post. Also fall back to exact
+        // URL match for non-Bluesky/Mastodon platforms.
+        if (wm.url) {
+          var wmLower = wm.url.replace(/\/$/, '').toLowerCase();
+          if (ownerReplySyndicationUrls.has(wmLower)) continue;
+          var wmPostId = extractPostId(wm.url);
+          if (wmPostId && ownerReplyPostIds.has(wmPostId)) continue;
         }
         seen.add(key);
         allChildren.push(wm);
