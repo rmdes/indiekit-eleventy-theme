@@ -178,14 +178,41 @@
       authorBadge.className = 'inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full';
       authorBadge.textContent = 'Author';
 
+      // Detect syndication platform and URL from the reply's syndication field
+      var synUrls = reply.syndication || [];
+      var synUrl = synUrls.length > 0 ? synUrls[0] : null;
+      var synPlatform = null;
+      if (synUrl) {
+        if (synUrl.includes('bsky.app')) synPlatform = 'bluesky';
+        else if (synUrl.match(/\/@[^/]+\/\d+/)) synPlatform = 'mastodon';
+        else if (synUrl.includes('activitypub')) synPlatform = 'activitypub';
+      }
+
+      headerRow.appendChild(nameSpan);
+      headerRow.appendChild(authorBadge);
+
+      // Add platform badge if syndicated
+      if (synPlatform) {
+        headerRow.appendChild(createProvenanceBadge(synPlatform));
+      }
+
+      // Timestamp — link to syndicated URL if available, plain text otherwise
       var timeEl = document.createElement('time');
       timeEl.className = 'text-xs text-surface-600 dark:text-surface-400 font-mono';
       timeEl.dateTime = reply.published || '';
       timeEl.textContent = formatDate(reply.published);
 
-      headerRow.appendChild(nameSpan);
-      headerRow.appendChild(authorBadge);
-      headerRow.appendChild(timeEl);
+      if (synUrl) {
+        var dateLink = document.createElement('a');
+        dateLink.href = synUrl;
+        dateLink.className = 'text-xs text-surface-600 dark:text-surface-400 hover:underline';
+        dateLink.target = '_blank';
+        dateLink.rel = 'noopener';
+        dateLink.appendChild(timeEl);
+        headerRow.appendChild(dateLink);
+      } else {
+        headerRow.appendChild(timeEl);
+      }
 
       var textDiv = document.createElement('div');
       textDiv.className = 'mt-1 text-sm prose dark:prose-invert';
