@@ -10,8 +10,8 @@ pagefindIgnore: true
 
 {% set hasCvData = (cv.experience and cv.experience.length) or
       (cv.projects and cv.projects.length) or
-      (cv.skills and ((cv.skills or {}) | dictsort | length)) or
-      (cv.interests and ((cv.interests or {}) | dictsort | length)) %}
+      ((cv.skills | safeDictsort) | length) or
+      ((cv.interests | safeDictsort) | length) %}
 
 {% if hasCvData %}
 

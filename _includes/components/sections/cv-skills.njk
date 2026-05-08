@@ -4,7 +4,7 @@
   Each family gets a distinct color via cycling palette
 #}
 
-{% if cv and cv.skills and (cv.skills | dictsort | length) %}
+{% if cv and ((cv.skills | safeDictsort) | length) %}
 <section class="mb-8 sm:mb-12" id="skills">
   <h2 class="text-xl sm:text-2xl font-bold text-surface-900 dark:text-surface-100 mb-4 sm:mb-6">
     {{ section.config.title or "Skills" }}

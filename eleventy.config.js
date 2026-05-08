@@ -711,6 +711,17 @@ export default function (eleventyConfig) {
     return url.endsWith("/") ? url.slice(0, -1) : url;
   });
 
+  // Safe alternative to the built-in `dictsort` filter. Nunjucks' `dictsort`
+  // throws "val must be an object" when given anything that isn't a plain
+  // object — including arrays, strings, and `undefined`. CV-related data can
+  // arrive in any of those shapes when the CV plugin writes a malformed
+  // cv.json or when fallback defaults race with plugin initialisation.
+  // Returning `[]` for non-objects lets template guards short-circuit safely.
+  eleventyConfig.addFilter("safeDictsort", (value) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+    return Object.entries(value).sort(([a], [b]) => a.localeCompare(b));
+  });
+
   // Hash filter for cache busting - generates MD5 hash of file content
   // Cache: same 16 static files are hashed once per build instead of once per page
   // (16 files × 3,426 pages = 55,332 readFileSync calls without cache)
