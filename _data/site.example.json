@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "identity": {
+    "name": "My IndieWeb Site",
+    "description": "A site built with Indiekit",
+    "tagline": "",
+    "defaultAuthor": "",
+    "defaultOgImage": "",
+    "locale": "en",
+    "timezone": "UTC"
+  },
+  "branding": {
+    "surfacePreset": "warm-stone",
+    "surfaceCustom": null,
+    "accentBase": "#f59e0b",
+    "colors": {
+      "primary": "#1f3a8a",
+      "link": "#3b82f6",
+      "focus": "#fbbf24",
+      "success": "#16a34a",
+      "warning": "#eab308",
+      "danger": "#dc2626"
+    },
+    "typography": {
+      "sans": "Inter",
+      "serif": "Fraunces",
+      "mono": "ui-monospace",
+      "hosting": "self"
+    },
+    "logo": "",
+    "favicon": ""
+  },
+  "layout": {
+    "preset": "blog",
+    "sidebarEnabled": true,
+    "sidebarSide": "right",
+    "navItems": [{ "label": "Home", "url": "/", "external": false }],
+    "footerColumns": []
+  },
+  "features": {
+    "webmentions": true,
+    "syndication": true,
+    "activitypub": false,
+    "search": true,
+    "rss": true
+  }
+}
