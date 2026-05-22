@@ -542,6 +542,8 @@ export default function (eleventyConfig) {
   // Watch for content changes
   eleventyConfig.addWatchTarget("./content/");
   eleventyConfig.addWatchTarget("./css/");
+  // Watch site-config runtime file so dev server rebuilds when plugin writes new config
+  eleventyConfig.addWatchTarget("./_data/site-config.json");
 
   // Webmentions plugin configuration
   const wmDomain = siteUrl.replace("https://", "").replace("http://", "");

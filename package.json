@@ -4,6 +4,7 @@
   "description": "Eleventy theme for Indiekit — IndieWeb-ready personal website",
   "type": "module",
   "scripts": {
+    "prebuild": "node -e \"const fs=require('node:fs'); ['css/theme.css','_data/site-config.json'].forEach(p => { if (!fs.existsSync(p)) fs.copyFileSync(p === 'css/theme.css' ? 'css/theme.example.css' : '_data/site.example.json', p); });\"",
     "build": "eleventy",
     "dev": "eleventy --serve --watch",
     "build:css": "postcss css/tailwind.css -o css/style.css"
