@@ -101,6 +101,9 @@ export default function siteData() {
   const siteUrlBase = (process.env.SITE_URL || "https://example.com").replace(/\/$/, "");
   const siteUrlWithSlash = siteUrlBase + "/";
 
+  // Parse SITE_SOCIAL once; reuse for the length check and the assigned value
+  const parsedSocial = parseSocialLinks(process.env.SITE_SOCIAL);
+
   return {
     // -----------------------------------------------------------------------
     // Fields sourced from site-config.json (plugin-managed)
@@ -152,9 +155,7 @@ export default function siteData() {
     // Social links (for rel="me" and h-card)
     // Set SITE_SOCIAL env var as: "GitHub|https://github.com/user|github,..."
     // Falls back to auto-generating from feed config (GITHUB_USERNAME, BLUESKY_HANDLE, etc.)
-    social: parseSocialLinks(process.env.SITE_SOCIAL).length > 0
-      ? parseSocialLinks(process.env.SITE_SOCIAL)
-      : buildSocialFromFeeds(),
+    social: parsedSocial.length > 0 ? parsedSocial : buildSocialFromFeeds(),
 
     // Feed integrations (usernames for data fetching)
     feeds: {
