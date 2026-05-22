@@ -119,14 +119,15 @@ export default function siteData() {
     // -----------------------------------------------------------------------
 
     // Basic site info
-    // JSON identity.name takes precedence over env var, then default
-    name: identity.name || process.env.SITE_NAME || "My IndieWeb Blog",
+    // Env vars take precedence over plugin identity (allows operator overrides
+    // without waiting for MongoDB to be updated via the admin UI)
+    name: process.env.SITE_NAME || identity.name || "My IndieWeb Blog",
     url: siteUrlBase,
     me: siteUrlWithSlash,
-    locale: identity.locale || process.env.SITE_LOCALE || "en",
+    locale: process.env.SITE_LOCALE || identity.locale || "en",
     description:
-      identity.description ||
       process.env.SITE_DESCRIPTION ||
+      identity.description ||
       "An IndieWeb-powered blog with Micropub support",
 
     // -----------------------------------------------------------------------
