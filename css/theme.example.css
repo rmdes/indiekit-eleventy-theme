@@ -1,3 +1,6 @@
+/* Snapshot of @rmdes/indiekit-endpoint-site-config's renderThemeCss(DEFAULTS) output.
+   Regenerate via: node --input-type=module -e "..." (see plan Task 14 for the exact command).
+   Used as fallback when /app/data/content/_data/theme.css doesn't exist. */
 :root {
   --c-surface-50: 250 248 245;
   --c-surface-100: 244 242 238;
@@ -10,17 +13,17 @@
   --c-surface-800: 42 39 34;
   --c-surface-900: 28 27 25;
   --c-surface-950: 15 14 13;
-  --c-accent-50: 255 251 235;
-  --c-accent-100: 254 243 199;
-  --c-accent-200: 253 230 138;
-  --c-accent-300: 252 211 77;
-  --c-accent-400: 251 191 36;
-  --c-accent-500: 245 158 11;
-  --c-accent-600: 217 119 6;
-  --c-accent-700: 180 83 9;
-  --c-accent-800: 146 64 14;
-  --c-accent-900: 120 53 15;
-  --c-accent-950: 69 26 3;
+  --c-accent-50: 249 244 239;
+  --c-accent-100: 243 233 223;
+  --c-accent-200: 227 205 180;
+  --c-accent-300: 211 177 138;
+  --c-accent-400: 183 131 67;
+  --c-accent-500: 157 99 0;
+  --c-accent-600: 119 74 0;
+  --c-accent-700: 87 53 0;
+  --c-accent-800: 56 32 0;
+  --c-accent-900: 34 18 0;
+  --c-accent-950: 14 5 0;
   --c-primary: 31 58 138;
   --c-link:    59 130 246;
   --c-focus:   251 191 36;
@@ -29,5 +32,5 @@
   --c-danger:  220 38 38;
   --font-sans:  "Inter", system-ui, sans-serif;
   --font-serif: "Fraunces", Georgia, serif;
-  --font-mono:  "ui-monospace", ui-monospace, monospace;
+  --font-mono:  ui-monospace, ui-monospace, monospace;
 }
