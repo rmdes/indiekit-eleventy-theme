@@ -25,3 +25,7 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Site-config runtime artifacts (written by @rmdes/indiekit-endpoint-site-config)
+_data/site-config.json
+css/theme.css
