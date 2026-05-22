@@ -62,7 +62,7 @@
   {# Critical CSS — inlined for fast first paint #}
   <style>{{ "css/critical.css" | inlineFile | safe }}</style>
   {# Theme CSS — CSS custom properties from site-config plugin; must load before style.css #}
-  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/theme.css?v={{ '/css/theme.css' | hash }}">
   {# Defer full stylesheet — loads after first paint #}
   <link rel="stylesheet" href="/css/style.css?v={{ '/css/style.css' | hash }}" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="/css/style.css?v={{ '/css/style.css' | hash }}"></noscript>
