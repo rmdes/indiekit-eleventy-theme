@@ -41,16 +41,16 @@ export default {
         content: "720px",
         wide: "1200px",
       },
-      typography: (theme) => ({
+      typography: () => ({
         DEFAULT: {
           css: {
-            "--tw-prose-links": theme("colors.link"),
+            "--tw-prose-links": "rgb(var(--c-link) / 1)",
             maxWidth: "none",
           },
         },
         invert: {
           css: {
-            "--tw-prose-links": theme("colors.link"),
+            "--tw-prose-links": "rgb(var(--c-accent-400) / 1)",
           },
         },
       }),
