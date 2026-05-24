@@ -1,0 +1,27 @@
+---
+permalink: /css/theme.css
+eleventyExcludeFromCollections: true
+---
+{#-
+  Template-generated theme.css. Reads from the runtime file the site-config
+  plugin writes to /app/data/content/_data/theme.css (symlinked into eleventy-site
+  as content/_data/theme.css). Falls back to css/theme.example.css when the
+  runtime file is missing (fresh container before plugin's seed-from-env runs).
+
+  This is THE idiomatic Eleventy pattern for serving dynamic-content-but-static
+  assets (https://www.11ty.dev/docs/permalinks/). The wholesale
+  addPassthroughCopy("css") in eleventy.config.js does NOT copy css/theme.css
+  because that file no longer exists in the source tree (only theme.example.css
+  remains); the prebuild script was updated accordingly.
+
+  Cache invalidation: when content/_data/theme.css changes (plugin write), the
+  addWatchTarget on that file triggers an Eleventy rebuild, which re-renders
+  this template with the new content. The base.njk hash filter reads the same
+  source, so the cache-bust query string matches the served content.
+-#}
+{%- set runtime = 'content/_data/theme.css' | inlineFile -%}
+{%- if runtime | length > 0 -%}
+{{ runtime | safe }}
+{%- else -%}
+{{ 'css/theme.example.css' | inlineFile | safe }}
+{%- endif -%}
