@@ -1,7 +1,19 @@
 /* Snapshot of @rmdes/indiekit-endpoint-site-config's renderThemeCss(DEFAULTS) output.
-   Regenerate via: node --input-type=module -e "..." (see plan Task 14 for the exact command).
-   Used as fallback when /app/data/content/_data/theme.css doesn't exist. */
+   Used as fallback by theme.css.njk when /app/data/content/_data/theme.css doesn't exist
+   (fresh container before plugin's seed-from-env runs).
+
+   Contract: Tier 1 palette + Tier 3 alerts + typography (shared across modes)
+             + Tier 2 semantic roles (light in :root, dark in @media + .dark).
+
+   Regenerate:
+     cd indiekit-endpoint-site-config && node --input-type=module -e "
+       import { renderThemeCss } from './lib/render/write-theme-css.js';
+       import { mergeWithDefaults } from './lib/storage/get-site-config.js';
+       process.stdout.write(renderThemeCss(mergeWithDefaults({})));
+     " > ../indiekit-eleventy-theme/css/theme.example.css
+*/
 :root {
+  /* Tier 1 — surface palette */
   --c-surface-50: 250 248 245;
   --c-surface-100: 244 242 238;
   --c-surface-200: 232 229 223;
@@ -13,24 +25,82 @@
   --c-surface-800: 42 39 34;
   --c-surface-900: 28 27 25;
   --c-surface-950: 15 14 13;
-  --c-accent-50: 249 244 239;
-  --c-accent-100: 243 233 223;
-  --c-accent-200: 227 205 180;
-  --c-accent-300: 211 177 138;
-  --c-accent-400: 183 131 67;
-  --c-accent-500: 157 99 0;
-  --c-accent-600: 119 74 0;
-  --c-accent-700: 87 53 0;
-  --c-accent-800: 56 32 0;
-  --c-accent-900: 34 18 0;
-  --c-accent-950: 14 5 0;
-  --c-primary: 31 58 138;
-  --c-link:    59 130 246;
-  --c-focus:   251 191 36;
-  --c-success: 22 163 74;
-  --c-warning: 234 179 8;
-  --c-danger:  220 38 38;
+  /* Tier 1 — accent palette */
+  --c-accent-50: 250 244 241;
+  --c-accent-100: 245 232 226;
+  --c-accent-200: 230 203 188;
+  --c-accent-300: 215 173 151;
+  --c-accent-400: 189 126 92;
+  --c-accent-500: 167 90 44;
+  --c-accent-600: 135 61 5;
+  --c-accent-700: 99 42 3;
+  --c-accent-800: 65 25 1;
+  --c-accent-900: 40 13 0;
+  --c-accent-950: 18 4 0;
+  /* Typography */
   --font-sans:  "Inter", system-ui, sans-serif;
   --font-serif: "Fraunces", Georgia, serif;
   --font-mono:  ui-monospace, ui-monospace, monospace;
+  /* Tier 3 — alerts (light) */
+  --c-success:    22 163 74;
+  --c-success-fg: 255 255 255;
+  --c-warning:    202 138 4;
+  --c-warning-fg: 28 25 23;
+  --c-danger:     220 38 38;
+  --c-danger-fg:  255 255 255;
+  /* Tier 2 — semantic roles (light) */
+  --c-bg:        250 248 245;
+  --c-fg:        63 59 53;
+  --c-fg-muted:  92 87 80;
+  --c-heading:   28 27 25;
+  --c-link:      135 61 5;
+  --c-action:    135 61 5;
+  --c-action-fg: 250 248 245;
+  --c-surface:   244 242 238;
+  --c-border:    232 229 223;
+  --c-focus:     167 90 44;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Tier 3 — alerts (dark) */
+    --c-success:    34 197 94;
+    --c-success-fg: 255 255 255;
+    --c-warning:    250 204 21;
+    --c-warning-fg: 28 25 23;
+    --c-danger:     248 113 113;
+    --c-danger-fg:  255 255 255;
+    /* Tier 2 — semantic roles (dark) */
+    --c-bg:        15 14 13;
+    --c-fg:        213 208 200;
+    --c-fg-muted:  160 154 144;
+    --c-heading:   244 242 238;
+    --c-link:      189 126 92;
+    --c-action:    167 90 44;
+    --c-action-fg: 250 248 245;
+    --c-surface:   42 39 34;
+    --c-border:    63 59 53;
+    --c-focus:     189 126 92;
+  }
+}
+
+.dark {
+  /* Tier 3 — alerts (dark) */
+  --c-success:    34 197 94;
+  --c-success-fg: 255 255 255;
+  --c-warning:    250 204 21;
+  --c-warning-fg: 28 25 23;
+  --c-danger:     248 113 113;
+  --c-danger-fg:  255 255 255;
+  /* Tier 2 — semantic roles (dark) */
+  --c-bg:        15 14 13;
+  --c-fg:        213 208 200;
+  --c-fg-muted:  160 154 144;
+  --c-heading:   244 242 238;
+  --c-link:      189 126 92;
+  --c-action:    167 90 44;
+  --c-action-fg: 250 248 245;
+  --c-surface:   42 39 34;
+  --c-border:    63 59 53;
+  --c-focus:     189 126 92;
 }

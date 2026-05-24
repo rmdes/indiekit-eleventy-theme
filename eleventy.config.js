@@ -552,6 +552,7 @@ export default function (eleventyConfig) {
   // the dev/watch server rebuilds on admin saves. These are absolute paths via
   // the content/ symlink to /app/data/content/_data/.
   eleventyConfig.addWatchTarget("./content/_data/theme.css");
+  eleventyConfig.addWatchTarget("./content/_data/critical.css");
   eleventyConfig.addWatchTarget("./content/_data/site-config.json");
 
   // Webmentions plugin configuration

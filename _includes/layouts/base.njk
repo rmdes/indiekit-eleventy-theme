@@ -59,8 +59,13 @@
   <link rel="preload" href="/fonts/inter-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/inter-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 
-  {# Critical CSS — inlined for fast first paint #}
-  <style>{{ "css/critical.css" | inlineFile | safe }}</style>
+  {# Critical CSS — inlined for fast first paint. The site-config plugin writes
+     a per-site version to /app/data/content/_data/critical.css with the user's
+     actual Tier 2 colors baked in as literal rgb(...) values (since critical
+     CSS is inlined BEFORE theme.css loads, var(--c-bg) etc. would resolve to
+     `initial`). Falls back to css/critical.example.css for fresh containers /
+     dev environments where the plugin hasn't seeded yet. #}
+  <style>{%- set runtimeCritical = 'content/_data/critical.css' | inlineFile -%}{%- if runtimeCritical | length > 0 -%}{{ runtimeCritical | safe }}{%- else -%}{{ 'css/critical.example.css' | inlineFile | safe }}{%- endif -%}</style>
   {# Theme CSS — CSS custom properties from site-config plugin; must load before style.css.
      Hash reads from content/_data/theme.css (the runtime path the plugin writes to,
      symlinked to /app/data/content/_data/) so the cache-bust query string reflects
@@ -215,7 +220,7 @@
             Dashboard
           </a>
         </nav>
-        <a href="/search/" aria-label="Search" title="Search" class="p-2 rounded-lg text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+        <a href="/search/" aria-label="Search" title="Search" class="p-2 rounded-lg text-fg-muted hover:bg-panel transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
           </svg>
@@ -319,51 +324,51 @@
     {% endif %}
   </main>
 
-  <footer class="border-t border-surface-200 dark:border-surface-700 mt-12 pt-8 pb-6">
+  <footer class="border-t border-border mt-12 pt-8 pb-6">
     <div class="container">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
         {# Navigate #}
         <div>
-          <p class="text-sm font-semibold uppercase tracking-wider text-surface-600 dark:text-surface-400 mb-3" role="heading" aria-level="2">Navigate</p>
+          <p class="text-sm font-semibold uppercase tracking-wider text-fg-muted mb-3" role="heading" aria-level="2">Navigate</p>
           <ul class="space-y-2">
-            <li><a href="/" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">Home</a></li>
-            <li><a href="/about/" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">About</a></li>
-            <li><a href="/cv/" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">CV</a></li>
-            <li x-data="{ show: false }" x-show="show" x-cloak @indiekit:auth.window="show = $event.detail.loggedIn"><a href="/dashboard" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">Dashboard</a></li>
+            <li><a href="/" class="text-sm text-fg-muted hover:text-heading hover:underline">Home</a></li>
+            <li><a href="/about/" class="text-sm text-fg-muted hover:text-heading hover:underline">About</a></li>
+            <li><a href="/cv/" class="text-sm text-fg-muted hover:text-heading hover:underline">CV</a></li>
+            <li x-data="{ show: false }" x-show="show" x-cloak @indiekit:auth.window="show = $event.detail.loggedIn"><a href="/dashboard" class="text-sm text-fg-muted hover:text-heading hover:underline">Dashboard</a></li>
           </ul>
         </div>
         {# Content #}
         <div>
-          <p class="text-sm font-semibold uppercase tracking-wider text-surface-600 dark:text-surface-400 mb-3" role="heading" aria-level="2">Content</p>
+          <p class="text-sm font-semibold uppercase tracking-wider text-fg-muted mb-3" role="heading" aria-level="2">Content</p>
           <ul class="space-y-2">
-            <li><a href="/blog/" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">Blog</a></li>
+            <li><a href="/blog/" class="text-sm text-fg-muted hover:text-heading hover:underline">Blog</a></li>
             {% for pt in enabledPostTypes %}
-            <li><a href="{{ pt.path }}" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">{{ pt.label }}</a></li>
+            <li><a href="{{ pt.path }}" class="text-sm text-fg-muted hover:text-heading hover:underline">{{ pt.label }}</a></li>
             {% endfor %}
-            <li><a href="/digest/" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">Digest</a></li>
+            <li><a href="/digest/" class="text-sm text-fg-muted hover:text-heading hover:underline">Digest</a></li>
           </ul>
         </div>
         {# Connect #}
         <div>
-          <p class="text-sm font-semibold uppercase tracking-wider text-surface-600 dark:text-surface-400 mb-3" role="heading" aria-level="2">Connect</p>
+          <p class="text-sm font-semibold uppercase tracking-wider text-fg-muted mb-3" role="heading" aria-level="2">Connect</p>
           <ul class="space-y-2">
             {% for social in site.social %}
-            <li><a href="{{ social.url }}" rel="{{ social.rel }}" target="_blank" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline" aria-label="{{ social.name }} (opens in new tab)">{{ social.name }}</a></li>
+            <li><a href="{{ social.url }}" rel="{{ social.rel }}" target="_blank" class="text-sm text-fg-muted hover:text-heading hover:underline" aria-label="{{ social.name }} (opens in new tab)">{{ social.name }}</a></li>
             {% endfor %}
           </ul>
         </div>
         {# Meta #}
         <div>
-          <p class="text-sm font-semibold uppercase tracking-wider text-surface-600 dark:text-surface-400 mb-3" role="heading" aria-level="2">Meta</p>
+          <p class="text-sm font-semibold uppercase tracking-wider text-fg-muted mb-3" role="heading" aria-level="2">Meta</p>
           <ul class="space-y-2">
-            <li><a href="/feed.xml" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">RSS Feed</a></li>
-            <li><a href="/feed.json" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">JSON Feed</a></li>
-            <li><a href="/updated.xml" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">Updated Posts Feed</a></li>
-            <li><a href="/changelog/" class="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:underline">Changelog</a></li>
+            <li><a href="/feed.xml" class="text-sm text-fg-muted hover:text-heading hover:underline">RSS Feed</a></li>
+            <li><a href="/feed.json" class="text-sm text-fg-muted hover:text-heading hover:underline">JSON Feed</a></li>
+            <li><a href="/updated.xml" class="text-sm text-fg-muted hover:text-heading hover:underline">Updated Posts Feed</a></li>
+            <li><a href="/changelog/" class="text-sm text-fg-muted hover:text-heading hover:underline">Changelog</a></li>
           </ul>
         </div>
       </div>
-      <p class="text-center text-sm text-surface-600 dark:text-surface-400">Powered by <a href="https://getindiekit.com" class="hover:text-surface-900 dark:hover:text-surface-100 hover:underline">Indiekit</a> + <a href="https://11ty.dev" class="hover:text-surface-900 dark:hover:text-surface-100 hover:underline">Eleventy</a></p>
+      <p class="text-center text-sm text-fg-muted">Powered by <a href="https://getindiekit.com" class="hover:text-heading hover:underline">Indiekit</a> + <a href="https://11ty.dev" class="hover:text-heading hover:underline">Eleventy</a></p>
     </div>
   </footer>
   <script>
@@ -477,31 +482,31 @@
       <div class="fab-menu-divider" role="separator"></div>
       {% endif %}
       <a href="/posts/create?type=page" @click="open = false" class="fab-menu-item" rel="nofollow" role="menuitem">
-        <svg class="w-5 h-5 text-surface-600 dark:text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg class="w-5 h-5 text-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
         </svg>
         <span>Page</span>
       </a>
       <a href="/posts/create?type=bookmark" @click="open = false" class="fab-menu-item" rel="nofollow" role="menuitem">
-        <svg class="w-5 h-5 text-surface-600 dark:text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg class="w-5 h-5 text-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
         </svg>
         <span>Bookmark</span>
       </a>
       <a href="/posts/create?type=photo" @click="open = false" class="fab-menu-item" rel="nofollow" role="menuitem">
-        <svg class="w-5 h-5 text-surface-600 dark:text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg class="w-5 h-5 text-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
         </svg>
         <span>Photo</span>
       </a>
       <a href="/posts/create?type=article" @click="open = false" class="fab-menu-item" rel="nofollow" role="menuitem">
-        <svg class="w-5 h-5 text-surface-600 dark:text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg class="w-5 h-5 text-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
         </svg>
         <span>Article</span>
       </a>
       <a href="/posts/create?type=note" @click="open = false" class="fab-menu-item" rel="nofollow" role="menuitem">
-        <svg class="w-5 h-5 text-surface-600 dark:text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg class="w-5 h-5 text-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
         </svg>
         <span>Note</span>

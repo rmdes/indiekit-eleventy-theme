@@ -1,0 +1,98 @@
+/* Fallback critical CSS used by base.njk when no runtime version exists at
+   /app/data/content/_data/critical.css.
+
+   The plugin (@rmdes/indiekit-endpoint-site-config) generates the runtime
+   version on save / on init, with the user's current Tier 2 colors baked in
+   as literal rgb(...) values (since critical CSS is inlined BEFORE the
+   theme.css that defines --c-bg etc., variable references would resolve
+   to `initial`).
+
+   This static fallback ships the default warm-stone + amber palette plus
+   the mode-agnostic layout shell: sticky header, mobile menu, font-faces,
+   layout-with-sidebar grid, reduced-motion override.
+
+   Regenerate the COLOR portion (from "body{background-color" down to the
+   ".dark .skip-link" block) via:
+     cd indiekit-endpoint-site-config && node --input-type=module -e "
+       import { renderCriticalCss } from './lib/render/write-critical-css.js';
+       import { mergeWithDefaults } from './lib/storage/get-site-config.js';
+       process.stdout.write(renderCriticalCss(mergeWithDefaults({})));
+     "
+   The layout-shell rules below are hand-maintained — keep them in sync with
+   base.njk class names and the Tailwind config breakpoints.
+*/
+
+/* === Layout shell (mode-agnostic) === */
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+.container{max-width:64rem;margin-left:auto;margin-right:auto;padding-left:1rem;padding-right:1rem}
+
+.site-header{padding-top:1rem;padding-bottom:1rem;position:sticky;top:0;z-index:50}
+.header-container{display:flex;align-items:center;justify-content:space-between}
+.site-title{font-size:1.25rem;font-weight:700;text-decoration:none}
+
+.header-actions{display:none}
+@media(min-width:768px){.header-actions{display:flex;align-items:center;gap:1rem}}
+
+.menu-toggle{display:block;padding:0.5rem;border-radius:0.5rem;background:none;border:none;cursor:pointer;color:rgb(92, 87, 80)}
+.dark .menu-toggle{color:rgb(160, 154, 144)}
+@media(min-width:768px){.menu-toggle{display:none}}
+
+.hidden{display:none!important}
+[x-cloak]{display:none!important}
+
+.theme-toggle .sun-icon{display:none}
+.theme-toggle .moon-icon{display:block}
+.dark .theme-toggle .sun-icon{display:block}
+.dark .theme-toggle .moon-icon{display:none}
+
+main.container{padding-top:1.5rem;padding-bottom:1.5rem}
+@media(min-width:768px){main.container{padding-top:2rem;padding-bottom:2rem}}
+
+.layout-with-sidebar{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:1.5rem}
+@media(min-width:768px){.layout-with-sidebar{gap:2rem}}
+@media(min-width:1024px){.layout-with-sidebar{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.main-content{min-width:0;overflow-x:hidden}
+@media(min-width:1024px){.main-content{grid-column:span 2/span 2}}
+@media(min-width:1024px){.sidebar{min-height:600px}}
+
+@font-face{font-family:'Inter';font-style:normal;font-display:optional;font-weight:400;src:url(/fonts/inter-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-display:optional;font-weight:600;src:url(/fonts/inter-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-display:optional;font-weight:700;src:url(/fonts/inter-latin-700-normal.woff2) format('woff2')}
+
+h1,h2,h3,h4{margin:0;line-height:1.25}
+
+.site-nav{display:flex;align-items:center;gap:1rem}
+.site-nav>a,.site-nav .nav-dropdown-trigger{text-decoration:none;padding-top:0.5rem;padding-bottom:0.5rem;color:rgb(92, 87, 80)}
+.dark .site-nav>a,.dark .site-nav .nav-dropdown-trigger{color:rgb(160, 154, 144)}
+
+img{max-width:100%;height:auto}
+svg:not(:root):not([width]){width:1.25rem;height:1.25rem}
+
+.skip-link{position:absolute;top:-100%;left:0;z-index:100;padding:0.5rem 1rem;font-weight:600;text-decoration:none}
+.skip-link:focus{top:0;outline:none}
+
+@media(prefers-reduced-motion:reduce){*{transition-duration:0.01ms!important;animation-duration:0.01ms!important}}
+
+/* === Color shell (default warm-stone + amber; user theme overrides at runtime) === */
+body{background-color:rgb(250, 248, 245);color:rgb(63, 59, 53)}
+.site-header{background-color:rgb(250, 248, 245);border-bottom:1px solid rgb(232, 229, 223)}
+.site-title{color:rgb(28, 27, 25)}
+a{color:rgb(135, 61, 5)}
+a:focus-visible,button:focus-visible,[type="button"]:focus-visible{outline:2px solid rgb(167, 90, 44);outline-offset:2px;border-radius:2px}
+.skip-link{background:rgb(135, 61, 5);color:rgb(250, 248, 245)}
+@media (prefers-color-scheme: dark){
+  body{background-color:rgb(15, 14, 13);color:rgb(213, 208, 200)}
+  .site-header{background-color:rgb(15, 14, 13);border-bottom:1px solid rgb(63, 59, 53)}
+  .site-title{color:rgb(244, 242, 238)}
+  a{color:rgb(189, 126, 92)}
+  a:focus-visible,button:focus-visible,[type="button"]:focus-visible{outline:2px solid rgb(189, 126, 92);outline-offset:2px}
+  .skip-link{background:rgb(167, 90, 44);color:rgb(250, 248, 245)}
+}
+.dark body{background-color:rgb(15, 14, 13);color:rgb(213, 208, 200)}
+.dark .site-header{background-color:rgb(15, 14, 13);border-bottom:1px solid rgb(63, 59, 53)}
+.dark .site-title{color:rgb(244, 242, 238)}
+.dark a{color:rgb(189, 126, 92)}
+.dark a:focus-visible,.dark button:focus-visible,.dark [type="button"]:focus-visible{outline:2px solid rgb(189, 126, 92);outline-offset:2px}
+.dark .skip-link{background:rgb(167, 90, 44);color:rgb(250, 248, 245)}
