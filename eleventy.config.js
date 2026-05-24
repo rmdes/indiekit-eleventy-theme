@@ -526,6 +526,17 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("interactive");
   eleventyConfig.addPassthroughCopy({ ".cache/og": "og" });
 
+  // Override css/theme.css with the runtime version written by
+  // @rmdes/indiekit-endpoint-site-config to /app/data/content/_data/theme.css
+  // (which is symlinked into eleventy-site as content/_data/theme.css).
+  // This registration runs AFTER the wholesale css/ passthrough above, so it
+  // overrides the prebuild fallback. When the runtime file is missing
+  // (e.g., fresh container before plugin's seed-from-env writes it),
+  // the wholesale copy's fallback (css/theme.css from prebuild) stays in place.
+  eleventyConfig.addPassthroughCopy({
+    "content/_data/theme.css": "css/theme.css",
+  });
+
   // Copy vendor web components from node_modules
   eleventyConfig.addPassthroughCopy({
     "node_modules/@zachleat/table-saw/table-saw.js": "js/table-saw.js",
@@ -542,8 +553,11 @@ export default function (eleventyConfig) {
   // Watch for content changes
   eleventyConfig.addWatchTarget("./content/");
   eleventyConfig.addWatchTarget("./css/");
-  // Watch site-config runtime file so dev server rebuilds when plugin writes new config
-  eleventyConfig.addWatchTarget("./_data/site-config.json");
+  // Watch runtime files written by @rmdes/indiekit-endpoint-site-config so
+  // the dev/watch server rebuilds on admin saves. These are absolute paths via
+  // the content/ symlink to /app/data/content/_data/.
+  eleventyConfig.addWatchTarget("./content/_data/theme.css");
+  eleventyConfig.addWatchTarget("./content/_data/site-config.json");
 
   // Webmentions plugin configuration
   const wmDomain = siteUrl.replace("https://", "").replace("http://", "");

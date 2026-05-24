@@ -61,8 +61,12 @@
 
   {# Critical CSS — inlined for fast first paint #}
   <style>{{ "css/critical.css" | inlineFile | safe }}</style>
-  {# Theme CSS — CSS custom properties from site-config plugin; must load before style.css #}
-  <link rel="stylesheet" href="/css/theme.css?v={{ '/css/theme.css' | hash }}">
+  {# Theme CSS — CSS custom properties from site-config plugin; must load before style.css.
+     Hash reads from content/_data/theme.css (the runtime path the plugin writes to,
+     symlinked to /app/data/content/_data/) so the cache-bust query string reflects
+     the actual served content, not the prebuild fallback. Admin saves invalidate
+     browser caches on the next Eleventy rebuild. #}
+  <link rel="stylesheet" href="/css/theme.css?v={{ 'content/_data/theme.css' | hash }}">
   {# Defer full stylesheet — loads after first paint #}
   <link rel="stylesheet" href="/css/style.css?v={{ '/css/style.css' | hash }}" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="/css/style.css?v={{ '/css/style.css' | hash }}"></noscript>
