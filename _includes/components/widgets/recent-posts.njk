@@ -22,7 +22,7 @@
           <a href="{{ post.url }}" class="text-sm text-red-600 dark:text-red-400 hover:underline break-all line-clamp-1">
             Liked {{ likedUrl | replace("https://", "") | truncate(40) }}
           </a>
-          <time class="text-xs text-surface-600 dark:text-surface-400 block font-mono" datetime="{{ post.data.published }}">
+          <time class="text-xs text-fg-muted block font-mono" datetime="{{ post.data.published }}">
             {{ (post.data.published or post.date) | dateDisplay }}
           </time>
         </div>
@@ -37,7 +37,7 @@
           <a href="{{ post.url }}" class="text-sm text-amber-600 dark:text-amber-400 hover:underline line-clamp-1">
             {{ post.data.title or ("Bookmarked " + (bookmarkedUrl | replace("https://", "") | truncate(35))) }}
           </a>
-          <time class="text-xs text-surface-600 dark:text-surface-400 block font-mono" datetime="{{ post.data.published }}">
+          <time class="text-xs text-fg-muted block font-mono" datetime="{{ post.data.published }}">
             {{ (post.data.published or post.date) | dateDisplay }}
           </time>
         </div>
@@ -52,7 +52,7 @@
           <a href="{{ post.url }}" class="text-sm text-green-600 dark:text-green-400 hover:underline break-all line-clamp-1">
             Reposted {{ repostedUrl | replace("https://", "") | truncate(40) }}
           </a>
-          <time class="text-xs text-surface-600 dark:text-surface-400 block font-mono" datetime="{{ post.data.published }}">
+          <time class="text-xs text-fg-muted block font-mono" datetime="{{ post.data.published }}">
             {{ (post.data.published or post.date) | dateDisplay }}
           </time>
         </div>
@@ -67,7 +67,7 @@
           <a href="{{ post.url }}" class="text-sm text-sky-600 dark:text-sky-400 hover:underline break-all line-clamp-1">
             Reply to {{ replyToUrl | replace("https://", "") | truncate(40) }}
           </a>
-          <time class="text-xs text-surface-600 dark:text-surface-400 block font-mono" datetime="{{ post.data.published }}">
+          <time class="text-xs text-fg-muted block font-mono" datetime="{{ post.data.published }}">
             {{ (post.data.published or post.date) | dateDisplay }}
           </time>
         </div>
@@ -83,7 +83,7 @@
           <a href="{{ post.url }}" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline line-clamp-1">
             {{ post.data.title }}
           </a>
-          <time class="text-xs text-surface-600 dark:text-surface-400 block font-mono" datetime="{{ post.data.published }}">
+          <time class="text-xs text-fg-muted block font-mono" datetime="{{ post.data.published }}">
             {{ (post.data.published or post.date) | dateDisplay }}
           </time>
         </div>
@@ -99,7 +99,7 @@
           <a href="{{ post.url }}" class="text-sm text-teal-600 dark:text-teal-400 hover:underline line-clamp-1">
             {{ post.templateContent | striptags | truncate(50) or "Note" }}
           </a>
-          <time class="text-xs text-surface-600 dark:text-surface-400 block font-mono" datetime="{{ post.data.published }}">
+          <time class="text-xs text-fg-muted block font-mono" datetime="{{ post.data.published }}">
             {{ (post.data.published or post.date) | dateDisplay }}
           </time>
         </div>
@@ -108,7 +108,7 @@
     </li>
     {% endfor %}
   </ul>
-  <a href="/blog/" class="text-sm text-accent-600 dark:text-accent-400 hover:underline mt-3 block">
+  <a href="/blog/" class="text-sm text-link hover:underline mt-3 block">
     View all posts
   </a>
 </div>

@@ -9,13 +9,13 @@
   <h3 class="widget-title">More Posts</h3>
   <div class="space-y-3">
     {% if _prevPost %}
-    <div class="border-b border-surface-200 dark:border-surface-700 pb-3">
-      <span class="text-xs text-surface-600 dark:text-surface-400 uppercase tracking-wide block mb-1">Previous</span>
+    <div class="border-b border-border pb-3">
+      <span class="text-xs text-fg-muted uppercase tracking-wide block mb-1">Previous</span>
       {% set _likedUrl = _prevPost.data.likeOf or _prevPost.data.like_of %}
       {% set _bookmarkedUrl = _prevPost.data.bookmarkOf or _prevPost.data.bookmark_of %}
       {% set _repostedUrl = _prevPost.data.repostOf or _prevPost.data.repost_of %}
       {% set _replyToUrl = _prevPost.data.inReplyTo or _prevPost.data.in_reply_to %}
-      <a href="{{ _prevPost.url }}" class="text-sm text-accent-600 dark:text-accent-400 hover:underline line-clamp-2 flex items-center gap-1.5">
+      <a href="{{ _prevPost.url }}" class="text-sm text-link hover:underline line-clamp-2 flex items-center gap-1.5">
         {% if _likedUrl %}
         <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
         Liked {{ _likedUrl | replace("https://", "") | truncate(35) }}
@@ -36,12 +36,12 @@
     {% endif %}
     {% if _nextPost %}
     <div>
-      <span class="text-xs text-surface-600 dark:text-surface-400 uppercase tracking-wide block mb-1">Next</span>
+      <span class="text-xs text-fg-muted uppercase tracking-wide block mb-1">Next</span>
       {% set _likedUrl = _nextPost.data.likeOf or _nextPost.data.like_of %}
       {% set _bookmarkedUrl = _nextPost.data.bookmarkOf or _nextPost.data.bookmark_of %}
       {% set _repostedUrl = _nextPost.data.repostOf or _nextPost.data.repost_of %}
       {% set _replyToUrl = _nextPost.data.inReplyTo or _nextPost.data.in_reply_to %}
-      <a href="{{ _nextPost.url }}" class="text-sm text-accent-600 dark:text-accent-400 hover:underline line-clamp-2 flex items-center gap-1.5">
+      <a href="{{ _nextPost.url }}" class="text-sm text-link hover:underline line-clamp-2 flex items-center gap-1.5">
         {% if _likedUrl %}
         <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
         Liked {{ _likedUrl | replace("https://", "") | truncate(35) }}

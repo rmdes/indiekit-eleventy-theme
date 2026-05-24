@@ -10,10 +10,10 @@ withBlogSidebar: true
   {% set repostedUrl = repostOf or repost_of %}
 
   {% if title %}
-  <h1 class="p-name text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100 mb-3 sm:mb-4">{{ title }}</h1>
+  <h1 class="p-name text-2xl sm:text-3xl font-bold text-heading mb-3 sm:mb-4">{{ title }}</h1>
   {% else %}
   <div class="flex items-center gap-2 mb-1">
-    <span class="text-sm font-medium text-surface-600 dark:text-surface-400">
+    <span class="text-sm font-medium text-fg-muted">
       {% if replyTo %}&#8617; Reply{% elif likedUrl %}&#9829; Like{% elif repostedUrl %}&#9851; Repost{% elif bookmarkedUrl %}&#128278; Bookmark{% else %}&#9998; Note{% endif %}
     </span>
   </div>
@@ -73,8 +73,8 @@ withBlogSidebar: true
   {% set aiCodeLevel = aiCodeLevel or ai_code_level %}
   {% set aiTools = aiTools or ai_tools %}
   {% set aiDescription = aiDescription or ai_description %}
-  <details class="mt-4 text-xs text-surface-600 dark:text-surface-400">
-    <summary class="cursor-pointer hover:text-surface-600 dark:hover:text-surface-300 list-none flex items-center gap-1.5 [&::-webkit-details-marker]:hidden">
+  <details class="mt-4 text-xs text-fg-muted">
+    <summary class="cursor-pointer hover:text-fg-muted list-none flex items-center gap-1.5 [&::-webkit-details-marker]:hidden">
       <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 01-1.59.659H9.06a2.25 2.25 0 01-1.591-.659L5 14.5m14 0V17a2 2 0 01-2 2H7a2 2 0 01-2-2v-2.5"/>
       </svg>
@@ -85,7 +85,7 @@ withBlogSidebar: true
     {% if aiDescription %}
     <p class="mt-1 pl-5">{{ aiDescription }}</p>
     {% endif %}
-    <p class="mt-1 pl-5"><a href="/ai/" class="hover:text-accent-600 dark:hover:text-accent-400 underline">Learn more about AI usage on this site</a></p>
+    <p class="mt-1 pl-5"><a href="/ai/" class="hover:text-link underline">Learn more about AI usage on this site</a></p>
   </details>
 
   {# Pending syndication targets (for services like IndieNews that require u-syndication before webmention) #}
@@ -123,9 +123,9 @@ withBlogSidebar: true
     {% endfor %}
   {% endif %}
   {% if externalSyndication.length or selfHostedApUrl %}
-  <footer class="post-footer mt-8 pt-6 border-t border-surface-200 dark:border-surface-700">
+  <footer class="post-footer mt-8 pt-6 border-t border-border">
     <div class="flex flex-wrap items-center gap-4">
-      <span class="text-sm text-surface-600 dark:text-surface-400">Also on:</span>
+      <span class="text-sm text-fg-muted">Also on:</span>
       <div class="flex flex-wrap gap-3">
         {# Fediverse remote interaction button (self-hosted ActivityPub) #}
         {% if selfHostedApUrl %}
@@ -185,7 +185,7 @@ withBlogSidebar: true
             <span>{{ mastoHandle }}</span>
           </a>
           {% else %}
-          <a class="u-syndication inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors text-sm font-medium" href="{{ url }}" target="_blank" rel="noopener syndication">
+          <a class="u-syndication inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-panel text-fg-muted hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors text-sm font-medium" href="{{ url }}" target="_blank" rel="noopener syndication">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
               <polyline points="15 3 21 3 21 9"/>

@@ -11,13 +11,13 @@ permalink: "likes/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNumbe
 ---
 <div class="h-feed">
   <div class="flex flex-wrap items-center gap-4 mb-2">
-    <h1 class="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100">Likes</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold text-heading">Likes</h1>
     {% set sparklineSvg = collections.likes | postingFrequency %}
     {% if sparklineSvg %}
     <div class="flex-1 min-w-0 text-red-600 dark:text-red-400">{{ sparklineSvg | safe }}</div>
     {% endif %}
   </div>
-  <p class="text-surface-600 dark:text-surface-400 mb-6 sm:mb-8">
+  <p class="text-fg-muted mb-6 sm:mb-8">
     Content I've liked across the web.
     <span class="text-sm">({{ collections.likes.length }} total)</span>
   </p>
@@ -53,7 +53,7 @@ permalink: "likes/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNumbe
           {% set likedUrl = post.data.likeOf or post.data.like_of %}
           {% if likedUrl %}
           {% unfurl likedUrl %}
-          <a class="u-like-of text-xs text-surface-600 dark:text-surface-400 hover:underline break-all mt-1 inline-block" href="{{ likedUrl }}">
+          <a class="u-like-of text-xs text-fg-muted hover:underline break-all mt-1 inline-block" href="{{ likedUrl }}">
             {{ likedUrl }}
           </a>
           {% endif %}

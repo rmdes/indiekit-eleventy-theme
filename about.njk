@@ -13,16 +13,16 @@ eleventyExcludeFromCollections: true
       loading="eager"
     >
     <div class="min-w-0">
-      <h1 class="p-name text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100 mb-2">
+      <h1 class="p-name text-2xl sm:text-3xl font-bold text-heading mb-2">
         {{ site.author.name }}
       </h1>
       {% if site.author.title %}
-      <p class="p-job-title text-xl text-accent-600 dark:text-accent-400 mb-2">
+      <p class="p-job-title text-xl text-link mb-2">
         {{ site.author.title }}
       </p>
       {% endif %}
       {% if site.author.location %}
-      <p class="p-locality text-surface-600 dark:text-surface-400 mb-4">
+      <p class="p-locality text-fg-muted mb-4">
         {{ site.author.location }}
       </p>
       {% endif %}

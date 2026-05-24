@@ -9,10 +9,10 @@
   </h3>
 
   {# Tab buttons — order: Commits, Repos, Featured, PRs #}
-  <div class="flex gap-1 mb-4 border-b border-surface-200 dark:border-surface-700" role="tablist" aria-label="GitHub activity">
+  <div class="flex gap-1 mb-4 border-b border-border" role="tablist" aria-label="GitHub activity">
     <button
       @click="activeTab = 'commits'"
-      :class="activeTab === 'commits' ? 'border-b-2 border-accent-500 text-accent-600 dark:text-accent-400' : 'text-surface-600 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'"
+      :class="activeTab === 'commits' ? 'border-b-2 border-accent-500 text-link' : 'text-fg-muted hover:text-fg'"
       :aria-selected="(activeTab === 'commits').toString()"
       role="tab" id="gh-tab-commits" aria-controls="gh-panel-commits"
       class="flex items-center gap-1.5 px-2 py-2 text-xs font-medium transition-colors -mb-px"
@@ -21,7 +21,7 @@
     </button>
     <button
       @click="activeTab = 'repos'"
-      :class="activeTab === 'repos' ? 'border-b-2 border-accent-500 text-accent-600 dark:text-accent-400' : 'text-surface-600 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'"
+      :class="activeTab === 'repos' ? 'border-b-2 border-accent-500 text-link' : 'text-fg-muted hover:text-fg'"
       :aria-selected="(activeTab === 'repos').toString()"
       role="tab" id="gh-tab-repos" aria-controls="gh-panel-repos"
       class="flex items-center gap-1.5 px-2 py-2 text-xs font-medium transition-colors -mb-px"
@@ -30,7 +30,7 @@
     </button>
     <button
       @click="activeTab = 'featured'"
-      :class="activeTab === 'featured' ? 'border-b-2 border-accent-500 text-accent-600 dark:text-accent-400' : 'text-surface-600 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'"
+      :class="activeTab === 'featured' ? 'border-b-2 border-accent-500 text-link' : 'text-fg-muted hover:text-fg'"
       :aria-selected="(activeTab === 'featured').toString()"
       role="tab" id="gh-tab-featured" aria-controls="gh-panel-featured"
       class="flex items-center gap-1.5 px-2 py-2 text-xs font-medium transition-colors -mb-px"
@@ -39,7 +39,7 @@
     </button>
     <button
       @click="activeTab = 'prs'"
-      :class="activeTab === 'prs' ? 'border-b-2 border-accent-500 text-accent-600 dark:text-accent-400' : 'text-surface-600 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'"
+      :class="activeTab === 'prs' ? 'border-b-2 border-accent-500 text-link' : 'text-fg-muted hover:text-fg'"
       :aria-selected="(activeTab === 'prs').toString()"
       role="tab" id="gh-tab-prs" aria-controls="gh-panel-prs"
       class="flex items-center gap-1.5 px-2 py-2 text-xs font-medium transition-colors -mb-px"
@@ -52,7 +52,7 @@
   <div class="h-[420px] overflow-y-auto">
 
     {# Loading state #}
-    <div x-show="loading" class="text-sm text-surface-600 dark:text-surface-400 py-4 text-center" role="status" aria-live="polite">
+    <div x-show="loading" class="text-sm text-fg-muted py-4 text-center" role="status" aria-live="polite">
       Loading...
     </div>
 
@@ -60,11 +60,11 @@
     <div x-show="activeTab === 'commits' && !loading" x-cloak role="tabpanel" id="gh-panel-commits" aria-labelledby="gh-tab-commits">
       <ul x-show="commits.length > 0" class="space-y-3">
         <template x-for="commit in commits.slice(0, 5)" :key="commit.sha">
-          <li class="border-b border-surface-200 dark:border-surface-700 pb-3 last:border-0">
+          <li class="border-b border-border pb-3 last:border-0">
             <a :href="commit.url" target="_blank" rel="noopener" class="block group">
-              <p class="text-sm text-surface-700 dark:text-surface-300 group-hover:text-surface-900 dark:group-hover:text-surface-100 transition-colors line-clamp-2" x-text="commit.message"></p>
-              <div class="flex items-center gap-2 mt-1.5 text-xs text-surface-600 dark:text-surface-400">
-                <code class="text-xs font-mono bg-surface-100 dark:bg-surface-800 px-1 py-0.5 rounded" x-text="commit.sha"></code>
+              <p class="text-sm text-fg group-hover:text-heading transition-colors line-clamp-2" x-text="commit.message"></p>
+              <div class="flex items-center gap-2 mt-1.5 text-xs text-fg-muted">
+                <code class="text-xs font-mono bg-panel px-1 py-0.5 rounded" x-text="commit.sha"></code>
                 <span class="truncate" x-text="commit.repo?.split('/')[1] || commit.repo"></span>
                 <span class="font-mono" x-text="formatDate(commit.date)"></span>
               </div>
@@ -72,21 +72,21 @@
           </li>
         </template>
       </ul>
-      <div x-show="commits.length === 0" class="text-sm text-surface-600 dark:text-surface-400 py-2">No recent commits.</div>
+      <div x-show="commits.length === 0" class="text-sm text-fg-muted py-2">No recent commits.</div>
     </div>
 
     {# Repos Tab #}
     <div x-show="activeTab === 'repos' && !loading" x-cloak role="tabpanel" id="gh-panel-repos" aria-labelledby="gh-tab-repos">
       <ul x-show="repos.length > 0" class="space-y-3">
         <template x-for="repo in repos.slice(0, 5)" :key="repo.name">
-          <li class="border-b border-surface-200 dark:border-surface-700 pb-3 last:border-0">
+          <li class="border-b border-border pb-3 last:border-0">
             <a :href="repo.html_url" target="_blank" rel="noopener" class="block group">
               <div class="flex items-center gap-2">
-                <span class="font-medium text-sm text-surface-700 dark:text-surface-300 group-hover:underline truncate" x-text="repo.name"></span>
-                <span x-show="repo.language" class="text-xs px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400 flex-shrink-0" x-text="repo.language"></span>
+                <span class="font-medium text-sm text-fg group-hover:underline truncate" x-text="repo.name"></span>
+                <span x-show="repo.language" class="text-xs px-1.5 py-0.5 rounded bg-panel text-fg-muted flex-shrink-0" x-text="repo.language"></span>
               </div>
-              <p x-show="repo.description" class="text-xs text-surface-600 dark:text-surface-400 mt-1 line-clamp-2" x-text="repo.description"></p>
-              <div class="flex items-center gap-3 mt-1.5 text-xs text-surface-600 dark:text-surface-400">
+              <p x-show="repo.description" class="text-xs text-fg-muted mt-1 line-clamp-2" x-text="repo.description"></p>
+              <div class="flex items-center gap-3 mt-1.5 text-xs text-fg-muted">
                 <span x-show="repo.stargazers_count > 0" class="flex items-center gap-1">
                   <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                   <span x-text="repo.stargazers_count"></span>
@@ -97,21 +97,21 @@
           </li>
         </template>
       </ul>
-      <div x-show="repos.length === 0" class="text-sm text-surface-600 dark:text-surface-400 py-2">No repositories found.</div>
+      <div x-show="repos.length === 0" class="text-sm text-fg-muted py-2">No repositories found.</div>
     </div>
 
     {# Featured Tab #}
     <div x-show="activeTab === 'featured' && !loading" x-cloak role="tabpanel" id="gh-panel-featured" aria-labelledby="gh-tab-featured">
       <ul x-show="featured.length > 0" class="space-y-3">
         <template x-for="repo in featured.slice(0, 5)" :key="repo.fullName || repo.name">
-          <li class="border-b border-surface-200 dark:border-surface-700 pb-3 last:border-0">
+          <li class="border-b border-border pb-3 last:border-0">
             <a :href="repo.url" target="_blank" rel="noopener" class="block group">
               <div class="flex items-center gap-2">
-                <span class="font-medium text-sm text-surface-700 dark:text-surface-300 group-hover:underline truncate" x-text="repo.name"></span>
-                <span x-show="repo.language" class="text-xs px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400 flex-shrink-0" x-text="repo.language"></span>
+                <span class="font-medium text-sm text-fg group-hover:underline truncate" x-text="repo.name"></span>
+                <span x-show="repo.language" class="text-xs px-1.5 py-0.5 rounded bg-panel text-fg-muted flex-shrink-0" x-text="repo.language"></span>
               </div>
-              <p x-show="repo.description" class="text-xs text-surface-600 dark:text-surface-400 mt-1 line-clamp-2" x-text="repo.description"></p>
-              <div class="flex items-center gap-3 mt-1.5 text-xs text-surface-600 dark:text-surface-400">
+              <p x-show="repo.description" class="text-xs text-fg-muted mt-1 line-clamp-2" x-text="repo.description"></p>
+              <div class="flex items-center gap-3 mt-1.5 text-xs text-fg-muted">
                 <span x-show="repo.stars > 0" class="flex items-center gap-1">
                   <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                   <span x-text="repo.stars"></span>
@@ -125,14 +125,14 @@
           </li>
         </template>
       </ul>
-      <div x-show="featured.length === 0" class="text-sm text-surface-600 dark:text-surface-400 py-2">No featured projects.</div>
+      <div x-show="featured.length === 0" class="text-sm text-fg-muted py-2">No featured projects.</div>
     </div>
 
     {# PRs Tab #}
     <div x-show="activeTab === 'prs' && !loading" x-cloak role="tabpanel" id="gh-panel-prs" aria-labelledby="gh-tab-prs">
       <ul x-show="contributions.length > 0" class="space-y-3">
         <template x-for="item in contributions.slice(0, 5)" :key="item.url">
-          <li class="border-b border-surface-200 dark:border-surface-700 pb-3 last:border-0">
+          <li class="border-b border-border pb-3 last:border-0">
             <a :href="item.url" target="_blank" rel="noopener" class="block group">
               <div class="flex items-center gap-2">
                 <span
@@ -142,9 +142,9 @@
                   <svg x-show="item.type === 'pr'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                   <svg x-show="item.type === 'issue'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="2"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2"/></svg>
                 </span>
-                <span class="text-sm text-surface-700 dark:text-surface-300 group-hover:text-surface-900 dark:group-hover:text-surface-100 transition-colors truncate" x-text="item.title"></span>
+                <span class="text-sm text-fg group-hover:text-heading transition-colors truncate" x-text="item.title"></span>
               </div>
-              <div class="flex items-center gap-2 mt-1.5 text-xs text-surface-600 dark:text-surface-400 pl-6">
+              <div class="flex items-center gap-2 mt-1.5 text-xs text-fg-muted pl-6">
                 <span x-text="item.repo?.split('/')[1] || item.repo"></span>
                 <span x-show="item.number" x-text="'#' + item.number"></span>
                 <span class="font-mono" x-text="formatDate(item.date)"></span>
@@ -153,14 +153,14 @@
           </li>
         </template>
       </ul>
-      <div x-show="contributions.length === 0" class="text-sm text-surface-600 dark:text-surface-400 py-2">No recent PRs or issues.</div>
+      <div x-show="contributions.length === 0" class="text-sm text-fg-muted py-2">No recent PRs or issues.</div>
     </div>
 
   </div>
 
   {# Footer link #}
   {% if site.feeds.github %}
-  <a href="https://github.com/{{ site.feeds.github }}" target="_blank" rel="noopener" class="text-sm text-accent-600 dark:text-accent-400 hover:underline mt-3 inline-flex items-center gap-1">
+  <a href="https://github.com/{{ site.feeds.github }}" target="_blank" rel="noopener" class="text-sm text-link hover:underline mt-3 inline-flex items-center gap-1">
     View on GitHub
     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
   </a>

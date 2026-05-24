@@ -11,8 +11,8 @@ eleventyComputed:
   title: "{{ category }}"
 ---
 <div class="h-feed">
-  <h1 class="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100 mb-2">{{ category }}</h1>
-  <p class="text-surface-600 dark:text-surface-400 mb-6 sm:mb-8">
+  <h1 class="text-2xl sm:text-3xl font-bold text-heading mb-2">{{ category }}</h1>
+  <p class="text-fg-muted mb-6 sm:mb-8">
     Posts tagged with "{{ category }}".
   </p>
 
@@ -32,7 +32,7 @@ eleventyComputed:
   {% endfor %}
 
   {% if categoryPosts.length > 0 %}
-  <p class="text-sm text-surface-600 dark:text-surface-400 mb-4">{{ categoryPosts.length }} post{% if categoryPosts.length != 1 %}s{% endif %}</p>
+  <p class="text-sm text-fg-muted mb-4">{{ categoryPosts.length }} post{% if categoryPosts.length != 1 %}s{% endif %}</p>
   <ul class="post-list">
     {% for post in categoryPosts %}
     {% set postType = post.inputPath | replace("./content/", "") %}
@@ -54,7 +54,7 @@ eleventyComputed:
     <li class="h-entry post-card {{ borderClass }}">
       <div class="post-header">
         <h2 class="text-xl font-semibold mb-1 flex-1">
-          <a class="p-name u-url text-surface-900 dark:text-surface-100 hover:text-accent-600 dark:hover:text-accent-400" href="{{ post.url }}">
+          <a class="p-name u-url text-heading hover:text-link" href="{{ post.url }}">
             {{ post.data.title or post.templateContent | striptags | truncate(60) or "Untitled" }}
           </a>
         </h2>
@@ -65,20 +65,20 @@ eleventyComputed:
         </time>
         <span class="post-type">{{ postType }}</span>
       </div>
-      <p class="p-summary text-surface-700 dark:text-surface-300 mt-3">
+      <p class="p-summary text-fg mt-3">
         {{ post.templateContent | striptags | truncate(250) }}
       </p>
-      <a href="{{ post.url }}" class="text-sm text-accent-600 dark:text-accent-400 hover:underline mt-3 inline-block">
+      <a href="{{ post.url }}" class="text-sm text-link hover:underline mt-3 inline-block">
         View &rarr;
       </a>
     </li>
     {% endfor %}
   </ul>
   {% else %}
-  <p class="text-surface-600 dark:text-surface-400">No posts found with this category.</p>
+  <p class="text-fg-muted">No posts found with this category.</p>
   {% endif %}
 
   <div class="mt-8">
-    <a href="/categories/" class="text-accent-600 dark:text-accent-400 hover:underline">&larr; All categories</a>
+    <a href="/categories/" class="text-link hover:underline">&larr; All categories</a>
   </div>
 </div>

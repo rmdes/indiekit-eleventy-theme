@@ -11,13 +11,13 @@ permalink: "reposts/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNum
 ---
 <div class="h-feed">
   <div class="flex flex-wrap items-center gap-4 mb-2">
-    <h1 class="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100">Reposts</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold text-heading">Reposts</h1>
     {% set sparklineSvg = collections.reposts | postingFrequency %}
     {% if sparklineSvg %}
     <div class="flex-1 min-w-0 text-green-600 dark:text-green-400">{{ sparklineSvg | safe }}</div>
     {% endif %}
   </div>
-  <p class="text-surface-600 dark:text-surface-400 mb-6 sm:mb-8">
+  <p class="text-fg-muted mb-6 sm:mb-8">
     Content I've shared from others.
     <span class="text-sm">({{ collections.reposts.length }} total)</span>
   </p>
@@ -34,7 +34,7 @@ permalink: "reposts/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNum
         </div>
         <div class="flex-1 min-w-0">
           {% if post.data.title %}
-          <h2 class="p-name text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">
+          <h2 class="p-name text-lg font-semibold text-heading mb-2">
             <a class="hover:text-green-600 dark:hover:text-green-400" href="{{ post.url }}">{{ post.data.title }}</a>
           </h2>
           {% endif %}
@@ -58,7 +58,7 @@ permalink: "reposts/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNum
           {% set repostedUrl = post.data.repostOf or post.data.repost_of %}
           {% if repostedUrl %}
           {% unfurl repostedUrl %}
-          <a class="u-repost-of text-xs text-surface-600 dark:text-surface-400 hover:underline break-all mt-1 inline-block" href="{{ repostedUrl }}">
+          <a class="u-repost-of text-xs text-fg-muted hover:underline break-all mt-1 inline-block" href="{{ repostedUrl }}">
             {{ repostedUrl }}
           </a>
           {% endif %}

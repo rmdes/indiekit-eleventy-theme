@@ -28,21 +28,21 @@
 
     {# Introduction #}
     <div class="flex-1 min-w-0">
-      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-surface-900 dark:text-surface-100 mb-2">
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-heading mb-2">
         {{ authorName }}
       </h1>
-      <p class="text-lg sm:text-xl text-accent-600 dark:text-accent-400 mb-3 sm:mb-4">
+      <p class="text-lg sm:text-xl text-link mb-3 sm:mb-4">
         {{ authorTitle }}
       </p>
       {% if authorBio %}
-      <p class="text-base sm:text-lg text-surface-700 dark:text-surface-300 mb-4">
+      <p class="text-base sm:text-lg text-fg mb-4">
         {{ authorBio }}
       </p>
       {% endif %}
       {% if siteDescription %}
-      <p class="text-base sm:text-lg text-surface-700 dark:text-surface-300 mb-4 sm:mb-6">
+      <p class="text-base sm:text-lg text-fg mb-4 sm:mb-6">
         {{ siteDescription }}
-        <a href="/about/" class="text-accent-600 dark:text-accent-400 hover:underline font-medium">Read more &rarr;</a>
+        <a href="/about/" class="text-link hover:underline font-medium">Read more &rarr;</a>
       </p>
       {% endif %}
 
@@ -54,7 +54,7 @@
         <a
           href="{{ link.url }}"
           rel="{{ link.rel }} noopener"
-          class="inline-flex items-center gap-2 px-3 py-2 text-sm text-surface-700 dark:text-surface-300 bg-surface-100 dark:bg-surface-800 rounded-lg hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
+          class="inline-flex items-center gap-2 px-3 py-2 text-sm text-fg bg-panel rounded-lg hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
           target="_blank"
         >
           <span class="{{ socialIconColorClass(link.icon) }}">{{ socialIcon(link.icon, "w-5 h-5") }}</span>

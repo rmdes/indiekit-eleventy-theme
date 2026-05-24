@@ -13,27 +13,27 @@
 
   {# Mini stats — 2x2 grid #}
   <div class="grid grid-cols-2 gap-2 mb-3">
-    <div class="text-center p-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
-      <div class="text-lg font-bold text-surface-900 dark:text-surface-100">{{ stats.total }}</div>
-      <div class="text-[10px] text-surface-600 dark:text-surface-400">Total</div>
+    <div class="text-center p-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-border">
+      <div class="text-lg font-bold text-heading">{{ stats.total }}</div>
+      <div class="text-[10px] text-fg-muted">Total</div>
     </div>
-    <div class="text-center p-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+    <div class="text-center p-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-border">
       <div class="text-lg font-bold text-amber-600 dark:text-amber-400">{{ stats.aiCount }}</div>
-      <div class="text-[10px] text-surface-600 dark:text-surface-400">AI-involved</div>
+      <div class="text-[10px] text-fg-muted">AI-involved</div>
     </div>
-    <div class="text-center p-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+    <div class="text-center p-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-border">
       <div class="text-lg font-bold text-emerald-600 dark:text-emerald-400">{{ stats.total - stats.aiCount }}</div>
-      <div class="text-[10px] text-surface-600 dark:text-surface-400">Human-only</div>
+      <div class="text-[10px] text-fg-muted">Human-only</div>
     </div>
-    <div class="text-center p-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
-      <div class="text-lg font-bold text-surface-900 dark:text-surface-100">{{ stats.percentage }}%</div>
-      <div class="text-[10px] text-surface-600 dark:text-surface-400">AI ratio</div>
+    <div class="text-center p-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-border">
+      <div class="text-lg font-bold text-heading">{{ stats.percentage }}%</div>
+      <div class="text-[10px] text-fg-muted">AI ratio</div>
     </div>
   </div>
 
   {# Level breakdown — compact pills #}
   <div class="flex flex-wrap gap-1.5 text-[10px] mb-3">
-    <span class="px-2 py-0.5 rounded-full bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-300">
+    <span class="px-2 py-0.5 rounded-full bg-surface-100 dark:bg-surface-700 text-fg-muted">
       L0: {{ stats.byLevel[0] }}
     </span>
     <span class="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300">
@@ -49,7 +49,7 @@
 
   {# Compact post-graph — current year only, AI posts highlighted #}
   {% if aiPostsList and aiPostsList.length %}
-  <div class="text-[10px] text-surface-600 dark:text-surface-400 mb-2">AI-involved posts this year</div>
+  <div class="text-[10px] text-fg-muted mb-2">AI-involved posts this year</div>
   {% postGraph aiPostsList, { prefix: "ai-widget", limit: 1, noLabels: true, boxColorDark: "#44403c", highlightColorLight: "#d97706", highlightColorDark: "#fbbf24" } %}
   {% endif %}
 

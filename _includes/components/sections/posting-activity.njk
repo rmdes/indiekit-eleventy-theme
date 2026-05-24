@@ -4,7 +4,7 @@
 
 {% if collections.posts and collections.posts.length %}
 <section class="mb-8 sm:mb-12">
-  <h2 class="text-xl sm:text-2xl font-bold text-surface-900 dark:text-surface-100 mb-4 sm:mb-6">
+  <h2 class="text-xl sm:text-2xl font-bold text-heading mb-4 sm:mb-6">
     {{ graphTitle }}
   </h2>
   {% set graphOptions = {} %}
@@ -14,7 +14,7 @@
     {% set graphOptions = { limit: sectionConfig.limit } %}
   {% endif %}
   {% postGraph collections.posts, graphOptions %}
-  <a href="/graph/" class="text-sm text-accent-600 dark:text-accent-400 hover:underline mt-4 inline-flex items-center gap-1">
+  <a href="/graph/" class="text-sm text-link hover:underline mt-4 inline-flex items-center gap-1">
     View full history
     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>

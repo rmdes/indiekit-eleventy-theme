@@ -13,12 +13,12 @@
       >
     </a>
     <div>
-      <a href="{{ site.author.url }}" class="u-url p-name font-medium text-surface-900 dark:text-surface-100 hover:text-accent-600 dark:hover:text-accent-400 transition-colors">
+      <a href="{{ site.author.url }}" class="u-url p-name font-medium text-heading hover:text-link transition-colors">
         {{ site.author.name }}
       </a>
-      <p class="p-job-title text-xs text-surface-600 dark:text-surface-400">{{ site.author.title }}</p>
+      <p class="p-job-title text-xs text-fg-muted">{{ site.author.title }}</p>
       {% if site.author.locality %}
-      <p class="p-locality text-xs text-surface-600 dark:text-surface-400">{{ site.author.locality }}{% if site.author.country %}, <span class="p-country-name">{{ site.author.country }}</span>{% endif %}</p>
+      <p class="p-locality text-xs text-fg-muted">{{ site.author.locality }}{% if site.author.country %}, <span class="p-country-name">{{ site.author.country }}</span>{% endif %}</p>
       {% endif %}
     </div>
   </div>

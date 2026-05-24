@@ -5,14 +5,14 @@ permalink: /graph/
 withSidebar: true
 ---
 
-<h1 class="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100 mb-6">Posting Activity</h1>
+<h1 class="text-2xl sm:text-3xl font-bold text-heading mb-6">Posting Activity</h1>
 
-<p class="text-surface-600 dark:text-surface-400 mb-8">
+<p class="text-fg-muted mb-8">
   A contribution-style graph showing posting frequency across all years.
 </p>
 
 {% if collections.posts and collections.posts.length %}
   {% postGraph collections.posts, { limit: 0 } %}
 {% else %}
-  <p class="text-surface-600 dark:text-surface-400">No posts found.</p>
+  <p class="text-fg-muted">No posts found.</p>
 {% endif %}

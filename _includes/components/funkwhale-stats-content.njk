@@ -1,21 +1,21 @@
 {# Stats Summary Cards #}
 {% if summary %}
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-  <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 shadow-sm text-center">
+  <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-border shadow-sm text-center">
     <span class="text-2xl font-bold font-mono text-purple-600 dark:text-purple-400 block">{{ summary.totalPlays or 0 }}</span>
-    <span class="text-xs text-surface-600 dark:text-surface-400 uppercase tracking-wide">Plays</span>
+    <span class="text-xs text-fg-muted uppercase tracking-wide">Plays</span>
   </div>
-  <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 shadow-sm text-center">
+  <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-border shadow-sm text-center">
     <span class="text-2xl font-bold font-mono text-purple-600 dark:text-purple-400 block">{{ summary.uniqueTracks or 0 }}</span>
-    <span class="text-xs text-surface-600 dark:text-surface-400 uppercase tracking-wide">Tracks</span>
+    <span class="text-xs text-fg-muted uppercase tracking-wide">Tracks</span>
   </div>
-  <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 shadow-sm text-center">
+  <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-border shadow-sm text-center">
     <span class="text-2xl font-bold font-mono text-purple-600 dark:text-purple-400 block">{{ summary.uniqueArtists or 0 }}</span>
-    <span class="text-xs text-surface-600 dark:text-surface-400 uppercase tracking-wide">Artists</span>
+    <span class="text-xs text-fg-muted uppercase tracking-wide">Artists</span>
   </div>
-  <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 shadow-sm text-center">
+  <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-border shadow-sm text-center">
     <span class="text-2xl font-bold font-mono text-purple-600 dark:text-purple-400 block">{{ summary.totalDurationFormatted or '0m' }}</span>
-    <span class="text-xs text-surface-600 dark:text-surface-400 uppercase tracking-wide">Listened</span>
+    <span class="text-xs text-fg-muted uppercase tracking-wide">Listened</span>
   </div>
 </div>
 {% endif %}
@@ -23,13 +23,13 @@
 {# Top Artists #}
 {% if topArtists and topArtists.length %}
 <div class="mb-8">
-  <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-4">Top Artists</h3>
+  <h3 class="text-lg font-semibold text-heading mb-4">Top Artists</h3>
   <div class="space-y-2">
     {% for artist in topArtists | head(5) %}
-    <div class="flex items-center gap-3 p-3 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 shadow-sm">
-      <span class="w-6 h-6 flex items-center justify-center text-sm font-bold text-surface-600 dark:text-surface-400 bg-surface-100 dark:bg-surface-700 rounded-full">{{ loop.index }}</span>
-      <span class="flex-1 font-medium text-surface-900 dark:text-surface-100">{{ artist.name }}</span>
-      <span class="text-sm text-surface-600 dark:text-surface-400">{{ artist.playCount }} plays</span>
+    <div class="flex items-center gap-3 p-3 bg-surface-50 dark:bg-surface-800 rounded-lg border border-border shadow-sm">
+      <span class="w-6 h-6 flex items-center justify-center text-sm font-bold text-fg-muted bg-surface-100 dark:bg-surface-700 rounded-full">{{ loop.index }}</span>
+      <span class="flex-1 font-medium text-heading">{{ artist.name }}</span>
+      <span class="text-sm text-fg-muted">{{ artist.playCount }} plays</span>
     </div>
     {% endfor %}
   </div>
@@ -39,7 +39,7 @@
 {# Top Albums #}
 {% if topAlbums and topAlbums.length %}
 <div>
-  <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-4">Top Albums</h3>
+  <h3 class="text-lg font-semibold text-heading mb-4">Top Albums</h3>
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
     {% for album in topAlbums | head(5) %}
     <div class="text-center">
@@ -52,9 +52,9 @@
         </svg>
       </div>
       {% endif %}
-      <p class="text-sm font-medium text-surface-900 dark:text-surface-100 truncate">{{ album.title }}</p>
-      <p class="text-xs text-surface-600 dark:text-surface-400 truncate">{{ album.artist }}</p>
-      <p class="text-xs text-surface-600 dark:text-surface-400">{{ album.playCount }} plays</p>
+      <p class="text-sm font-medium text-heading truncate">{{ album.title }}</p>
+      <p class="text-xs text-fg-muted truncate">{{ album.artist }}</p>
+      <p class="text-xs text-fg-muted">{{ album.playCount }} plays</p>
     </div>
     {% endfor %}
   </div>
@@ -62,5 +62,5 @@
 {% endif %}
 
 {% if not summary and not topArtists and not topAlbums %}
-<p class="text-surface-600 dark:text-surface-400">No statistics available for this period.</p>
+<p class="text-fg-muted">No statistics available for this period.</p>
 {% endif %}

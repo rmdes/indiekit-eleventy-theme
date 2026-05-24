@@ -11,14 +11,14 @@ permalink: "featured/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNu
 ---
 <div class="h-feed">
   <div class="flex flex-wrap items-center gap-4 mb-2">
-    <h1 class="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100 flex items-center gap-2">
+    <h1 class="text-2xl sm:text-3xl font-bold text-heading flex items-center gap-2">
       <svg class="w-6 h-6 text-amber-500" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
       </svg>
       Featured
     </h1>
   </div>
-  <p class="text-surface-600 dark:text-surface-400 mb-6 sm:mb-8">
+  <p class="text-fg-muted mb-6 sm:mb-8">
     Curated posts pinned as featured.
     <span class="text-sm">({{ collections.featuredPosts.length }} total)</span>
   </p>
@@ -55,10 +55,10 @@ permalink: "featured/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNu
       <div class="post-header">
         <span class="text-xs font-medium text-rose-600 dark:text-rose-400">Liked</span>
         <a class="u-url ml-2" href="{{ post.url }}">
-          <time class="dt-published text-sm text-surface-600 dark:text-surface-400 font-mono" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
+          <time class="dt-published text-sm text-fg-muted font-mono" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
         </a>
       </div>
-      <a class="u-like-of text-sm text-surface-600 dark:text-surface-400 hover:underline break-all mt-2 inline-block" href="{{ likedUrl }}">{{ likedUrl }}</a>
+      <a class="u-like-of text-sm text-fg-muted hover:underline break-all mt-2 inline-block" href="{{ likedUrl }}">{{ likedUrl }}</a>
       {% if post.templateContent %}
       <div class="e-content prose dark:prose-invert prose-sm mt-3 max-w-none">{{ post.templateContent | safe }}</div>
       {% endif %}
@@ -67,14 +67,14 @@ permalink: "featured/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNu
       {# ── Bookmark ── #}
       <div class="post-header">
         <span class="text-xs font-medium text-amber-600 dark:text-amber-400">Bookmarked</span>
-        <time class="dt-published text-sm text-surface-600 dark:text-surface-400 ml-2 font-mono" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
+        <time class="dt-published text-sm text-fg-muted ml-2 font-mono" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
       </div>
       {% if post.data.title %}
       <h2 class="p-name text-lg font-semibold mt-2">
-        <a class="u-url text-surface-900 dark:text-surface-100 hover:underline" href="{{ post.url }}">{{ post.data.title }}</a>
+        <a class="u-url text-heading hover:underline" href="{{ post.url }}">{{ post.data.title }}</a>
       </h2>
       {% endif %}
-      <a class="u-bookmark-of text-sm text-surface-600 dark:text-surface-400 hover:underline break-all mt-1 inline-block" href="{{ bookmarkedUrl }}">{{ bookmarkedUrl }}</a>
+      <a class="u-bookmark-of text-sm text-fg-muted hover:underline break-all mt-1 inline-block" href="{{ bookmarkedUrl }}">{{ bookmarkedUrl }}</a>
       {% if post.templateContent %}
       <div class="e-content prose dark:prose-invert prose-sm mt-3 max-w-none">{{ post.templateContent | safe }}</div>
       {% endif %}
@@ -84,10 +84,10 @@ permalink: "featured/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNu
       <div class="post-header">
         <span class="text-xs font-medium text-rose-600 dark:text-rose-400">Reposted</span>
         <a class="u-url ml-2" href="{{ post.url }}">
-          <time class="dt-published text-sm text-surface-600 dark:text-surface-400 font-mono" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
+          <time class="dt-published text-sm text-fg-muted font-mono" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
         </a>
       </div>
-      <a class="u-repost-of text-sm text-surface-600 dark:text-surface-400 hover:underline break-all mt-2 inline-block" href="{{ repostedUrl }}">{{ repostedUrl }}</a>
+      <a class="u-repost-of text-sm text-fg-muted hover:underline break-all mt-2 inline-block" href="{{ repostedUrl }}">{{ repostedUrl }}</a>
       {% if post.templateContent %}
       <div class="e-content prose dark:prose-invert prose-sm mt-3 max-w-none">{{ post.templateContent | safe }}</div>
       {% endif %}
@@ -97,10 +97,10 @@ permalink: "featured/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNu
       <div class="post-header">
         <span class="text-xs font-medium text-rose-600 dark:text-rose-400">In reply to</span>
         <a class="u-url ml-2" href="{{ post.url }}">
-          <time class="dt-published text-sm text-surface-600 dark:text-surface-400 font-mono" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
+          <time class="dt-published text-sm text-fg-muted font-mono" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
         </a>
       </div>
-      <a class="u-in-reply-to text-sm text-surface-600 dark:text-surface-400 hover:underline break-all mt-2 inline-block" href="{{ replyToUrl }}">{{ replyToUrl }}</a>
+      <a class="u-in-reply-to text-sm text-fg-muted hover:underline break-all mt-2 inline-block" href="{{ replyToUrl }}">{{ replyToUrl }}</a>
       {% if post.templateContent %}
       <div class="e-content prose dark:prose-invert prose-sm mt-3 max-w-none">{{ post.templateContent | safe }}</div>
       {% endif %}
@@ -109,7 +109,7 @@ permalink: "featured/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNu
       {# ── Article/Page ── #}
       <div class="post-header">
         <h2 class="text-xl font-semibold mb-1 flex-1">
-          <a class="p-name u-url text-surface-900 dark:text-surface-100 hover:underline" href="{{ post.url }}">{{ post.data.title }}</a>
+          <a class="p-name u-url text-heading hover:underline" href="{{ post.url }}">{{ post.data.title }}</a>
         </h2>
       </div>
       <div class="post-meta mt-2">
@@ -119,15 +119,15 @@ permalink: "featured/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNu
         {% endif %}
       </div>
       {% if post.templateContent %}
-      <p class="p-summary text-surface-700 dark:text-surface-300 mt-3">{{ post.templateContent | striptags | truncate(250) }}</p>
+      <p class="p-summary text-fg mt-3">{{ post.templateContent | striptags | truncate(250) }}</p>
       {% endif %}
-      <a href="{{ post.url }}" class="text-sm text-accent-600 dark:text-accent-400 hover:underline mt-3 inline-block">Read more &rarr;</a>
+      <a href="{{ post.url }}" class="text-sm text-link hover:underline mt-3 inline-block">Read more &rarr;</a>
 
       {% else %}
       {# ── Note ── #}
       <div class="post-header">
         <a class="u-url" href="{{ post.url }}">
-          <time class="dt-published text-sm text-surface-600 dark:text-surface-400 font-medium font-mono" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
+          <time class="dt-published text-sm text-fg-muted font-medium font-mono" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
         </a>
         {% if post.data.postType %}
         <span class="px-2 py-0.5 bg-surface-100 dark:bg-surface-700 rounded text-xs ml-2">{{ post.data.postType }}</span>
@@ -137,7 +137,7 @@ permalink: "featured/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNu
       <div class="e-content prose dark:prose-invert prose-sm mt-3 max-w-none">{{ post.templateContent | safe }}</div>
       {% endif %}
       <div class="post-footer mt-3">
-        <a href="{{ post.url }}" class="text-sm text-accent-600 dark:text-accent-400 hover:underline" aria-label="Permalink: {{ post.data.title or ('Post from ' + (post.date | dateDisplay)) }}">Permalink</a>
+        <a href="{{ post.url }}" class="text-sm text-link hover:underline" aria-label="Permalink: {{ post.data.title or ('Post from ' + (post.date | dateDisplay)) }}">Permalink</a>
       </div>
       {% endif %}
 

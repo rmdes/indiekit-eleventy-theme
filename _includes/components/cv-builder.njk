@@ -33,25 +33,25 @@
       eleventy:ignore
     >
     <div class="flex-1 min-w-0">
-      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-surface-900 dark:text-surface-100 mb-2">
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-heading mb-2">
         {{ authorName }}
       </h1>
       {% if authorTitle %}
-      <p class="text-lg sm:text-xl text-accent-600 dark:text-accent-400 mb-3 sm:mb-4">
+      <p class="text-lg sm:text-xl text-link mb-3 sm:mb-4">
         {{ authorTitle }}
       </p>
       {% endif %}
       {% if authorBio %}
-      <p class="text-base sm:text-lg text-surface-700 dark:text-surface-300 mb-4">
+      <p class="text-base sm:text-lg text-fg mb-4">
         {{ authorBio }}
       </p>
       {% endif %}
       {% if authorDescription %}
       <details class="mb-4 sm:mb-6">
-        <summary class="text-sm font-medium text-accent-600 dark:text-accent-400 cursor-pointer hover:underline list-none">
+        <summary class="text-sm font-medium text-link cursor-pointer hover:underline list-none">
           More about me &darr;
         </summary>
-        <p class="text-base sm:text-lg text-surface-700 dark:text-surface-300 mt-3">
+        <p class="text-base sm:text-lg text-fg mt-3">
           {{ authorDescription }}
         </p>
       </details>
@@ -63,7 +63,7 @@
         <a
           href="{{ link.url }}"
           rel="{{ link.rel }} noopener"
-          class="inline-flex items-center gap-2 px-3 py-2 text-sm text-surface-700 dark:text-surface-300 bg-surface-100 dark:bg-surface-800 rounded-lg hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
+          class="inline-flex items-center gap-2 px-3 py-2 text-sm text-fg bg-panel rounded-lg hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
           target="_blank"
         >
           <span class="{{ socialIconColorClass(link.icon) }}">{{ socialIcon(link.icon, "w-5 h-5") }}</span>
@@ -74,7 +74,7 @@
       {% endif %}
       {# Contact details — location, organization, website, email, PGP #}
       {% if cvLocality or cvCountry or cvOrg or cvUrl or cvEmail or cvKeyUrl %}
-      <div class="flex flex-wrap gap-x-4 gap-y-1 mt-4 text-sm text-surface-600 dark:text-surface-400">
+      <div class="flex flex-wrap gap-x-4 gap-y-1 mt-4 text-sm text-fg-muted">
         {% if cvLocality or cvCountry %}
         <span>{% if cvLocality %}{{ cvLocality }}{% endif %}{% if cvLocality and cvCountry %}, {% endif %}{% if cvCountry %}{{ cvCountry }}{% endif %}</span>
         {% endif %}
@@ -82,13 +82,13 @@
         <span>{{ cvOrg }}</span>
         {% endif %}
         {% if cvUrl %}
-        <span><a href="{{ cvUrl }}" class="text-accent-600 dark:text-accent-400 hover:underline" target="_blank" rel="noopener">{{ cvUrl | replace("https://", "") | replace("http://", "") }}</a></span>
+        <span><a href="{{ cvUrl }}" class="text-link hover:underline" target="_blank" rel="noopener">{{ cvUrl | replace("https://", "") | replace("http://", "") }}</a></span>
         {% endif %}
         {% if cvEmail %}
-        <span><a href="mailto:{{ cvEmail }}" class="text-accent-600 dark:text-accent-400 hover:underline">{{ cvEmail }}</a></span>
+        <span><a href="mailto:{{ cvEmail }}" class="text-link hover:underline">{{ cvEmail }}</a></span>
         {% endif %}
         {% if cvKeyUrl %}
-        <span><a href="{{ cvKeyUrl }}" class="text-accent-600 dark:text-accent-400 hover:underline" target="_blank" rel="noopener">PGP Key</a></span>
+        <span><a href="{{ cvKeyUrl }}" class="text-link hover:underline" target="_blank" rel="noopener">PGP Key</a></span>
         {% endif %}
       </div>
       {% endif %}
@@ -160,7 +160,7 @@
 
 {# Last Updated #}
 {% if cv.lastUpdated %}
-<p class="text-sm text-surface-600 dark:text-surface-400 text-center mt-8">
+<p class="text-sm text-fg-muted text-center mt-8">
   Last updated: <time class="font-mono text-sm" datetime="{{ cv.lastUpdated }}">{{ cv.lastUpdated | date("PPP") }}</time>
 </p>
 {% endif %}

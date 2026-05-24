@@ -4,8 +4,8 @@ title: Interactions
 permalink: /interactions/
 ---
 <div class="page-header mb-6 sm:mb-8">
-  <h1 class="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100 mb-2">Interactions</h1>
-  <p class="text-surface-600 dark:text-surface-400">Activity across the IndieWeb - both my engagement and responses to my content.</p>
+  <h1 class="text-2xl sm:text-3xl font-bold text-heading mb-2">Interactions</h1>
+  <p class="text-fg-muted">Activity across the IndieWeb - both my engagement and responses to my content.</p>
 </div>
 
 <noscript>
@@ -17,35 +17,35 @@ permalink: /interactions/
 {# Tab navigation for Outbound/Inbound #}
 <div x-data="interactionsApp()" x-init="init()">
   {# Tab buttons #}
-  <div class="flex border-b border-surface-200 dark:border-surface-700 mb-6" role="tablist" aria-label="Interaction direction">
+  <div class="flex border-b border-border mb-6" role="tablist" aria-label="Interaction direction">
     <button
       @click="activeTab = 'outbound'"
-      :class="activeTab === 'outbound' ? 'border-rose-500 text-rose-600 dark:text-rose-400' : 'border-transparent text-surface-600 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'"
+      :class="activeTab === 'outbound' ? 'border-rose-500 text-rose-600 dark:text-rose-400' : 'border-transparent text-fg-muted hover:text-fg'"
       :aria-selected="(activeTab === 'outbound').toString()"
       role="tab" id="interactions-tab-outbound" aria-controls="interactions-panel-outbound"
       class="px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors">
       My Activity
-      <span class="ml-1 text-xs text-surface-600 dark:text-surface-400">(outbound)</span>
+      <span class="ml-1 text-xs text-fg-muted">(outbound)</span>
     </button>
     <button
       @click="activeTab = 'inbound'"
-      :class="activeTab === 'inbound' ? 'border-rose-500 text-rose-600 dark:text-rose-400' : 'border-transparent text-surface-600 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'"
+      :class="activeTab === 'inbound' ? 'border-rose-500 text-rose-600 dark:text-rose-400' : 'border-transparent text-fg-muted hover:text-fg'"
       :aria-selected="(activeTab === 'inbound').toString()"
       role="tab" id="interactions-tab-inbound" aria-controls="interactions-panel-inbound"
       class="px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors">
       Received
-      <span class="ml-1 text-xs text-surface-600 dark:text-surface-400">(inbound)</span>
+      <span class="ml-1 text-xs text-fg-muted">(inbound)</span>
       <span x-show="totalInbound > 0" x-text="totalInbound" class="ml-1 px-1.5 py-0.5 text-xs bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-300 rounded-full"></span>
     </button>
   </div>
 
   {# ===== OUTBOUND TAB - My Activity ===== #}
   <div x-show="activeTab === 'outbound'" x-transition role="tabpanel" id="interactions-panel-outbound" aria-labelledby="interactions-tab-outbound">
-    <p class="text-surface-600 dark:text-surface-400 text-sm mb-6">Content I've interacted with across the web.</p>
+    <p class="text-fg-muted text-sm mb-6">Content I've interacted with across the web.</p>
 
     <div class="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
       {# Likes #}
-      <a href="/likes/" class="block p-6 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors group shadow-sm">
+      <a href="/likes/" class="block p-6 bg-surface-50 dark:bg-surface-800 rounded-lg border border-border hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors group shadow-sm">
         <div class="flex items-center gap-4 mb-4">
           <div class="p-3 bg-rose-100 dark:bg-rose-900/30 rounded-full">
             <svg class="w-6 h-6 text-rose-500" fill="currentColor" viewBox="0 0 24 24">
@@ -53,15 +53,15 @@ permalink: /interactions/
             </svg>
           </div>
           <div>
-            <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100 group-hover:text-rose-600 dark:group-hover:text-rose-400">Likes</h2>
-            <p class="text-sm text-surface-600 dark:text-surface-400">{{ collections.likes.length }} item{% if collections.likes.length != 1 %}s{% endif %}</p>
+            <h2 class="text-lg font-semibold text-heading group-hover:text-rose-600 dark:group-hover:text-rose-400">Likes</h2>
+            <p class="text-sm text-fg-muted">{{ collections.likes.length }} item{% if collections.likes.length != 1 %}s{% endif %}</p>
           </div>
         </div>
-        <p class="text-surface-600 dark:text-surface-400 text-sm">Content I've appreciated across the web.</p>
+        <p class="text-fg-muted text-sm">Content I've appreciated across the web.</p>
       </a>
 
       {# Replies #}
-      <a href="/replies/" class="block p-6 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors group shadow-sm">
+      <a href="/replies/" class="block p-6 bg-surface-50 dark:bg-surface-800 rounded-lg border border-border hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors group shadow-sm">
         <div class="flex items-center gap-4 mb-4">
           <div class="p-3 bg-rose-100 dark:bg-rose-900/30 rounded-full">
             <svg class="w-6 h-6 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,15 +69,15 @@ permalink: /interactions/
             </svg>
           </div>
           <div>
-            <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100 group-hover:text-rose-600 dark:group-hover:text-rose-400">Replies</h2>
-            <p class="text-sm text-surface-600 dark:text-surface-400">{{ collections.replies.length }} item{% if collections.replies.length != 1 %}s{% endif %}</p>
+            <h2 class="text-lg font-semibold text-heading group-hover:text-rose-600 dark:group-hover:text-rose-400">Replies</h2>
+            <p class="text-sm text-fg-muted">{{ collections.replies.length }} item{% if collections.replies.length != 1 %}s{% endif %}</p>
           </div>
         </div>
-        <p class="text-surface-600 dark:text-surface-400 text-sm">My responses to posts across the web.</p>
+        <p class="text-fg-muted text-sm">My responses to posts across the web.</p>
       </a>
 
       {# Bookmarks #}
-      <a href="/bookmarks/" class="block p-6 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors group shadow-sm">
+      <a href="/bookmarks/" class="block p-6 bg-surface-50 dark:bg-surface-800 rounded-lg border border-border hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors group shadow-sm">
         <div class="flex items-center gap-4 mb-4">
           <div class="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-full">
             <svg class="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
@@ -85,15 +85,15 @@ permalink: /interactions/
             </svg>
           </div>
           <div>
-            <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100 group-hover:text-amber-600 dark:group-hover:text-amber-400">Bookmarks</h2>
-            <p class="text-sm text-surface-600 dark:text-surface-400">{{ collections.bookmarks.length }} item{% if collections.bookmarks.length != 1 %}s{% endif %}</p>
+            <h2 class="text-lg font-semibold text-heading group-hover:text-amber-600 dark:group-hover:text-amber-400">Bookmarks</h2>
+            <p class="text-sm text-fg-muted">{{ collections.bookmarks.length }} item{% if collections.bookmarks.length != 1 %}s{% endif %}</p>
           </div>
         </div>
-        <p class="text-surface-600 dark:text-surface-400 text-sm">Links I've saved for later.</p>
+        <p class="text-fg-muted text-sm">Links I've saved for later.</p>
       </a>
 
       {# Reposts #}
-      <a href="/reposts/" class="block p-6 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors group shadow-sm">
+      <a href="/reposts/" class="block p-6 bg-surface-50 dark:bg-surface-800 rounded-lg border border-border hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors group shadow-sm">
         <div class="flex items-center gap-4 mb-4">
           <div class="p-3 bg-rose-100 dark:bg-rose-900/30 rounded-full">
             <svg class="w-6 h-6 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,15 +101,15 @@ permalink: /interactions/
             </svg>
           </div>
           <div>
-            <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100 group-hover:text-rose-600 dark:group-hover:text-rose-400">Reposts</h2>
-            <p class="text-sm text-surface-600 dark:text-surface-400">{{ collections.reposts.length }} item{% if collections.reposts.length != 1 %}s{% endif %}</p>
+            <h2 class="text-lg font-semibold text-heading group-hover:text-rose-600 dark:group-hover:text-rose-400">Reposts</h2>
+            <p class="text-sm text-fg-muted">{{ collections.reposts.length }} item{% if collections.reposts.length != 1 %}s{% endif %}</p>
           </div>
         </div>
-        <p class="text-surface-600 dark:text-surface-400 text-sm">Content I've shared from others.</p>
+        <p class="text-fg-muted text-sm">Content I've shared from others.</p>
       </a>
 
       {# Photos #}
-      <a href="/photos/" class="block p-6 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors group shadow-sm">
+      <a href="/photos/" class="block p-6 bg-surface-50 dark:bg-surface-800 rounded-lg border border-border hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors group shadow-sm">
         <div class="flex items-center gap-4 mb-4">
           <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
             <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,21 +117,21 @@ permalink: /interactions/
             </svg>
           </div>
           <div>
-            <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100 group-hover:text-purple-600 dark:group-hover:text-purple-400">Photos</h2>
-            <p class="text-sm text-surface-600 dark:text-surface-400">{{ collections.photos.length }} item{% if collections.photos.length != 1 %}s{% endif %}</p>
+            <h2 class="text-lg font-semibold text-heading group-hover:text-purple-600 dark:group-hover:text-purple-400">Photos</h2>
+            <p class="text-sm text-fg-muted">{{ collections.photos.length }} item{% if collections.photos.length != 1 %}s{% endif %}</p>
           </div>
         </div>
-        <p class="text-surface-600 dark:text-surface-400 text-sm">Photo posts and images.</p>
+        <p class="text-fg-muted text-sm">Photo posts and images.</p>
       </a>
     </div>
 
-    <div class="mt-12 p-6 bg-surface-50 dark:bg-surface-800/50 rounded-lg border border-surface-200 dark:border-surface-700 shadow-sm">
-      <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">About IndieWeb Interactions</h2>
-      <p class="text-surface-600 dark:text-surface-400 text-sm mb-4">
+    <div class="mt-12 p-6 bg-surface-50 dark:bg-surface-800/50 rounded-lg border border-border shadow-sm">
+      <h2 class="text-lg font-semibold text-heading mb-2">About IndieWeb Interactions</h2>
+      <p class="text-fg-muted text-sm mb-4">
         These pages show different types of IndieWeb interactions I've made. Each type uses specific microformat properties
         to indicate the relationship to the original content.
       </p>
-      <ul class="text-sm text-surface-600 dark:text-surface-400 space-y-1">
+      <ul class="text-sm text-fg-muted space-y-1">
         <li><strong>Likes</strong> use <code class="bg-surface-200 dark:bg-surface-700 px-1 rounded">u-like-of</code></li>
         <li><strong>Replies</strong> use <code class="bg-surface-200 dark:bg-surface-700 px-1 rounded">u-in-reply-to</code></li>
         <li><strong>Bookmarks</strong> use <code class="bg-surface-200 dark:bg-surface-700 px-1 rounded">u-bookmark-of</code></li>
@@ -143,11 +143,11 @@ permalink: /interactions/
   {# ===== INBOUND TAB - Received Webmentions ===== #}
   <div x-show="activeTab === 'inbound'" x-transition role="tabpanel" id="interactions-panel-inbound" aria-labelledby="interactions-tab-inbound">
     <div class="flex items-center justify-between mb-6">
-      <p class="text-surface-600 dark:text-surface-400 text-sm">Webmentions and interactions others have made with my content.</p>
+      <p class="text-fg-muted text-sm">Webmentions and interactions others have made with my content.</p>
       <button
         @click="fetchWebmentions()"
         :disabled="loading"
-        class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 rounded-lg transition-colors disabled:opacity-50">
+        class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-panel hover:bg-surface-200 dark:hover:bg-surface-700 rounded-lg transition-colors disabled:opacity-50">
         <svg class="w-4 h-4" :class="loading ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
         </svg>
@@ -158,7 +158,7 @@ permalink: /interactions/
     {# Loading state #}
     <div x-show="loading && !webmentions.length" class="text-center py-12">
       <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500"></div>
-      <p class="mt-4 text-surface-600 dark:text-surface-400">Loading webmentions...</p>
+      <p class="mt-4 text-fg-muted">Loading webmentions...</p>
     </div>
 
     {# Setup required state — shown when webmentions proxy is not configured #}
@@ -185,31 +185,31 @@ permalink: /interactions/
     <div x-show="!notConfigured && (!loading || webmentions.length)" class="flex flex-wrap gap-2 mb-6">
       <button
         @click="filterType = 'all'"
-        :class="filterType === 'all' ? 'bg-rose-500 text-white' : 'bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300'"
+        :class="filterType === 'all' ? 'bg-rose-500 text-white' : 'bg-panel text-fg'"
         class="px-3 py-1.5 text-sm rounded-full transition-colors">
         All <span x-text="'(' + totalInbound + ')'" class="text-xs opacity-75"></span>
       </button>
       <button
         @click="filterType = 'like-of'"
-        :class="filterType === 'like-of' ? 'bg-red-500 text-white' : 'bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300'"
+        :class="filterType === 'like-of' ? 'bg-red-500 text-white' : 'bg-panel text-fg'"
         class="px-3 py-1.5 text-sm rounded-full transition-colors">
         ❤️ Likes <span x-text="'(' + likes.length + ')'" class="text-xs opacity-75"></span>
       </button>
       <button
         @click="filterType = 'repost-of'"
-        :class="filterType === 'repost-of' ? 'bg-green-500 text-white' : 'bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300'"
+        :class="filterType === 'repost-of' ? 'bg-green-500 text-white' : 'bg-panel text-fg'"
         class="px-3 py-1.5 text-sm rounded-full transition-colors">
         🔄 Reposts <span x-text="'(' + reposts.length + ')'" class="text-xs opacity-75"></span>
       </button>
       <button
         @click="filterType = 'in-reply-to'"
-        :class="filterType === 'in-reply-to' ? 'bg-sky-500 text-white' : 'bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300'"
+        :class="filterType === 'in-reply-to' ? 'bg-sky-500 text-white' : 'bg-panel text-fg'"
         class="px-3 py-1.5 text-sm rounded-full transition-colors">
         💬 Replies <span x-text="'(' + replies.length + ')'" class="text-xs opacity-75"></span>
       </button>
       <button
         @click="filterType = 'mention-of'"
-        :class="filterType === 'mention-of' ? 'bg-yellow-500 text-white' : 'bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300'"
+        :class="filterType === 'mention-of' ? 'bg-yellow-500 text-white' : 'bg-panel text-fg'"
         class="px-3 py-1.5 text-sm rounded-full transition-colors">
         📣 Mentions <span x-text="'(' + mentions.length + ')'" class="text-xs opacity-75"></span>
       </button>
@@ -218,7 +218,7 @@ permalink: /interactions/
     {# Webmentions list #}
     <div id="webmentions-list" x-show="!notConfigured && (!loading || webmentions.length)" class="space-y-4">
       <template x-for="wm in paginatedWebmentions" :key="wm['wm-id']">
-        <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 shadow-sm">
+        <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-border shadow-sm">
           <div class="flex gap-3">
             {# Author avatar #}
             <a :href="wm.author?.url || '#'" target="_blank" rel="noopener" class="flex-shrink-0">
@@ -234,7 +234,7 @@ permalink: /interactions/
             <div class="flex-1 min-w-0">
               {# Header with author, type badge, and date #}
               <div class="flex flex-wrap items-center gap-2 mb-1">
-                <a :href="wm.author?.url || '#'" target="_blank" rel="noopener" class="font-semibold text-surface-900 dark:text-surface-100 hover:underline" x-text="wm.author?.name || 'Anonymous'"></a>
+                <a :href="wm.author?.url || '#'" target="_blank" rel="noopener" class="font-semibold text-heading hover:underline" x-text="wm.author?.name || 'Anonymous'"></a>
 
                 {# Type badge #}
                 <span x-show="wm['wm-property'] === 'like-of'" class="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full">
@@ -267,16 +267,16 @@ permalink: /interactions/
                   <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
                 </span>
 
-                <a :href="wm.url || '#'" target="_blank" rel="noopener" class="text-xs text-surface-600 dark:text-surface-400 hover:underline">
+                <a :href="wm.url || '#'" target="_blank" rel="noopener" class="text-xs text-fg-muted hover:underline">
                   <time class="font-mono text-sm" :datetime="wm.published || wm['wm-received']" x-text="formatDate(wm.published || wm['wm-received'])"></time>
                 </a>
               </div>
 
               {# Content (for replies) #}
-              <div x-show="wm.content?.text" class="text-surface-700 dark:text-surface-300 text-sm mt-2" x-text="truncateText(wm.content?.text, 280)"></div>
+              <div x-show="wm.content?.text" class="text-fg text-sm mt-2" x-text="truncateText(wm.content?.text, 280)"></div>
 
               {# Target URL - which of my posts this is about #}
-              <div class="mt-2 text-xs text-surface-600 dark:text-surface-400">
+              <div class="mt-2 text-xs text-fg-muted">
                 <span>on </span>
                 <a :href="wm['wm-target']" class="text-rose-600 dark:text-rose-400 hover:underline" x-text="formatTargetUrl(wm['wm-target'])"></a>
               </div>
@@ -286,7 +286,7 @@ permalink: /interactions/
       </template>
 
       {# Empty state #}
-      <div x-show="!loading && filteredWebmentions.length === 0" class="text-center py-12 text-surface-600 dark:text-surface-400">
+      <div x-show="!loading && filteredWebmentions.length === 0" class="text-center py-12 text-fg-muted">
         <p>No webmentions found for this filter.</p>
       </div>
 
@@ -295,7 +295,7 @@ permalink: /interactions/
         <nav class="pagination" aria-label="Webmentions pagination">
           <div class="pagination-info">
             Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span>
-            <span class="text-surface-600 dark:text-surface-400 ml-1">(<span x-text="filteredWebmentions.length"></span> total)</span>
+            <span class="text-fg-muted ml-1">(<span x-text="filteredWebmentions.length"></span> total)</span>
           </div>
           <div class="pagination-links flex-wrap">
             <button
@@ -311,7 +311,7 @@ permalink: /interactions/
               <button
                 @click="typeof p === 'number' && goToPage(p)"
                 :disabled="p === '…'"
-                :class="p === currentPage ? 'bg-accent-600 text-white dark:bg-accent-500' : p === '…' ? 'cursor-default opacity-50' : 'bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700'"
+                :class="p === currentPage ? 'bg-action text-action-fg' : p === '…' ? 'cursor-default opacity-50' : 'bg-panel hover:bg-surface-200 dark:hover:bg-surface-700'"
                 class="px-3 py-1.5 text-sm rounded-lg transition-colors"
                 x-text="p">
               </button>
@@ -331,13 +331,13 @@ permalink: /interactions/
     </div>
 
     {# Info box #}
-    <div class="mt-12 p-6 bg-surface-50 dark:bg-surface-800/50 rounded-lg border border-surface-200 dark:border-surface-700 shadow-sm">
-      <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">About Webmentions</h2>
-      <p class="text-surface-600 dark:text-surface-400 text-sm mb-4">
+    <div class="mt-12 p-6 bg-surface-50 dark:bg-surface-800/50 rounded-lg border border-border shadow-sm">
+      <h2 class="text-lg font-semibold text-heading mb-2">About Webmentions</h2>
+      <p class="text-fg-muted text-sm mb-4">
         Webmentions are a W3C standard for cross-site communication. When someone likes, reposts, or replies to my content
         from their own site (or via Bluesky/Mastodon bridges), I receive a webmention notification.
       </p>
-      <ul class="text-sm text-surface-600 dark:text-surface-400 space-y-1">
+      <ul class="text-sm text-fg-muted space-y-1">
         <li><strong>Likes</strong> - Someone appreciated this post</li>
         <li><strong>Reposts</strong> - Someone shared this post</li>
         <li><strong>Replies</strong> - Someone responded to this post</li>

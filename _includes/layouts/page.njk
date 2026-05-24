@@ -7,16 +7,16 @@ withSidebar: true
 
 <article class="h-entry">
   <header class="mb-6 sm:mb-8">
-    <h1 class="p-name text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100 mb-2">
+    <h1 class="p-name text-2xl sm:text-3xl font-bold text-heading mb-2">
       {{ title }}
     </h1>
     {% if summary %}
-    <p class="p-summary text-lg text-surface-600 dark:text-surface-400">
+    <p class="p-summary text-lg text-fg-muted">
       {{ summary }}
     </p>
     {% endif %}
     {% if updated %}
-    <p class="text-sm text-surface-600 dark:text-surface-400 mt-2">
+    <p class="text-sm text-fg-muted mt-2">
       Last updated: <time class="dt-updated font-mono text-sm" datetime="{{ updated | isoDate }}">{{ updated | dateDisplay }}</time>
     </p>
     {% endif %}
@@ -30,30 +30,30 @@ withSidebar: true
   {% if page.url == "/ai/" and collections.posts %}
   {% set stats = collections.posts | aiStats %}
   {% set aiPostsList = collections.posts | aiPosts %}
-  <section class="mt-8 sm:mt-12 p-6 rounded-lg bg-surface-50 dark:bg-surface-800/50 border border-surface-200 dark:border-surface-700 shadow-sm">
-    <h2 class="text-xl font-bold text-surface-900 dark:text-surface-100 mb-4">AI Usage Across Posts</h2>
+  <section class="mt-8 sm:mt-12 p-6 rounded-lg bg-surface-50 dark:bg-surface-800/50 border border-border shadow-sm">
+    <h2 class="text-xl font-bold text-heading mb-4">AI Usage Across Posts</h2>
     <div class="grid gap-4 sm:grid-cols-4 mb-6">
-      <div class="text-center p-3 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm">
-        <div class="text-2xl font-bold text-surface-900 dark:text-surface-100">{{ stats.total }}</div>
-        <div class="text-xs text-surface-600 dark:text-surface-400">Total posts</div>
+      <div class="text-center p-3 rounded-lg bg-surface-50 dark:bg-surface-800 border border-border shadow-sm">
+        <div class="text-2xl font-bold text-heading">{{ stats.total }}</div>
+        <div class="text-xs text-fg-muted">Total posts</div>
       </div>
-      <div class="text-center p-3 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm">
+      <div class="text-center p-3 rounded-lg bg-surface-50 dark:bg-surface-800 border border-border shadow-sm">
         <div class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ stats.aiCount }}</div>
-        <div class="text-xs text-surface-600 dark:text-surface-400">AI-involved</div>
+        <div class="text-xs text-fg-muted">AI-involved</div>
       </div>
-      <div class="text-center p-3 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm">
+      <div class="text-center p-3 rounded-lg bg-surface-50 dark:bg-surface-800 border border-border shadow-sm">
         <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ stats.total - stats.aiCount }}</div>
-        <div class="text-xs text-surface-600 dark:text-surface-400">Human-only</div>
+        <div class="text-xs text-fg-muted">Human-only</div>
       </div>
-      <div class="text-center p-3 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm">
-        <div class="text-2xl font-bold text-surface-900 dark:text-surface-100">{{ stats.percentage }}%</div>
-        <div class="text-xs text-surface-600 dark:text-surface-400">AI ratio</div>
+      <div class="text-center p-3 rounded-lg bg-surface-50 dark:bg-surface-800 border border-border shadow-sm">
+        <div class="text-2xl font-bold text-heading">{{ stats.percentage }}%</div>
+        <div class="text-xs text-fg-muted">AI ratio</div>
       </div>
     </div>
 
     {# Breakdown by level #}
     <div class="flex flex-wrap gap-3 text-sm mb-6">
-      <span class="px-3 py-1 rounded-full bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-300">
+      <span class="px-3 py-1 rounded-full bg-surface-100 dark:bg-surface-700 text-fg-muted">
         Level 0 (None): {{ stats.byLevel[0] }}
       </span>
       <span class="px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300">
@@ -68,8 +68,8 @@ withSidebar: true
     </div>
 
     {# Post graph showing AI posts (highlighted) on the full year grid #}
-    <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-3">AI-Involved Posts Over Time</h3>
-    <p class="text-sm text-surface-600 dark:text-surface-400 mb-4">Highlighted days had posts with AI involvement (level 1+). Empty boxes represent days with no AI-involved posts.</p>
+    <h3 class="text-lg font-semibold text-heading mb-3">AI-Involved Posts Over Time</h3>
+    <p class="text-sm text-fg-muted mb-4">Highlighted days had posts with AI involvement (level 1+). Empty boxes represent days with no AI-involved posts.</p>
     {% postGraph aiPostsList, { prefix: "ai", highlightColorLight: "#d97706", highlightColorDark: "#fbbf24" } %}
   </section>
   {% endif %}
@@ -80,14 +80,14 @@ withSidebar: true
   {% set aiTools = aiTools or ai_tools %}
   {% set aiDescription = aiDescription or ai_description %}
   {% if aiTextLevel or aiCodeLevel or aiTools %}
-  <aside class="mt-6 p-4 rounded-lg bg-surface-50 dark:bg-surface-800/50 border border-surface-200 dark:border-surface-700 shadow-sm">
+  <aside class="mt-6 p-4 rounded-lg bg-surface-50 dark:bg-surface-800/50 border border-border shadow-sm">
     <div class="flex items-center gap-2 mb-2">
-      <svg class="w-4 h-4 text-surface-600 dark:text-surface-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <svg class="w-4 h-4 text-fg-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 01-1.59.659H9.06a2.25 2.25 0 01-1.591-.659L5 14.5m14 0V17a2 2 0 01-2 2H7a2 2 0 01-2-2v-2.5"/>
       </svg>
-      <strong class="text-sm font-semibold text-surface-700 dark:text-surface-300">AI Usage</strong>
+      <strong class="text-sm font-semibold text-fg">AI Usage</strong>
     </div>
-    <div class="flex flex-wrap gap-3 text-xs text-surface-600 dark:text-surface-400">
+    <div class="flex flex-wrap gap-3 text-xs text-fg-muted">
       {% if aiTextLevel %}
       <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-100 dark:bg-surface-700">
         Text: {% if aiTextLevel === "0" %}None{% elif aiTextLevel === "1" %}Editorial{% elif aiTextLevel === "2" %}Co-drafted{% elif aiTextLevel === "3" %}AI-generated{% endif %}
@@ -105,23 +105,23 @@ withSidebar: true
       {% endif %}
     </div>
     {% if aiDescription %}
-    <p class="mt-2 text-xs text-surface-600 dark:text-surface-400">{{ aiDescription }}</p>
+    <p class="mt-2 text-xs text-fg-muted">{{ aiDescription }}</p>
     {% endif %}
-    <p class="mt-2 text-xs"><a href="/ai/" class="text-accent-600 dark:text-accent-400 hover:underline">Learn more about AI usage on this site &rarr;</a></p>
+    <p class="mt-2 text-xs"><a href="/ai/" class="text-link hover:underline">Learn more about AI usage on this site &rarr;</a></p>
   </aside>
   {% endif %}
 
   {# Categories/tags if present #}
   {% if category %}
-  <footer class="mt-8 pt-6 border-t border-surface-200 dark:border-surface-700">
+  <footer class="mt-8 pt-6 border-t border-border">
     <div class="flex flex-wrap gap-2">
       {% if category is string %}
-      <a href="/categories/{{ category | slugify }}/" class="p-category text-sm px-3 py-1 bg-surface-100 dark:bg-surface-800 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors">
+      <a href="/categories/{{ category | slugify }}/" class="p-category text-sm px-3 py-1 bg-panel rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors">
         {{ category }}
       </a>
       {% else %}
       {% for cat in category %}
-      <a href="/categories/{{ cat | slugify }}/" class="p-category text-sm px-3 py-1 bg-surface-100 dark:bg-surface-800 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors">
+      <a href="/categories/{{ cat | slugify }}/" class="p-category text-sm px-3 py-1 bg-panel rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors">
         {{ cat }}
       </a>
       {% endfor %}

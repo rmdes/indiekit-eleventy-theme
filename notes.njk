@@ -11,13 +11,13 @@ permalink: "notes/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNumbe
 ---
 <div class="h-feed">
   <div class="flex flex-wrap items-center gap-4 mb-2">
-    <h1 class="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100">Notes</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold text-heading">Notes</h1>
     {% set sparklineSvg = collections.notes | postingFrequency %}
     {% if sparklineSvg %}
     <div class="flex-1 min-w-0 text-teal-600 dark:text-teal-400">{{ sparklineSvg | safe }}</div>
     {% endif %}
   </div>
-  <p class="text-surface-600 dark:text-surface-400 mb-6 sm:mb-8">
+  <p class="text-fg-muted mb-6 sm:mb-8">
     Short thoughts, updates, and quick posts.
     <span class="text-sm">({{ collections.notes.length }} total)</span>
   </p>
@@ -28,7 +28,7 @@ permalink: "notes/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNumbe
     <li class="h-entry post-card border-l-[3px] border-l-teal-400 dark:border-l-teal-500">
       <div class="post-header">
         <a class="u-url" href="{{ post.url }}">
-          <time class="dt-published text-sm text-surface-600 dark:text-surface-400 font-medium font-mono" datetime="{{ post.date | isoDate }}">
+          <time class="dt-published text-sm text-fg-muted font-medium font-mono" datetime="{{ post.date | isoDate }}">
             {{ post.date | dateDisplay }}
           </time>
         </a>

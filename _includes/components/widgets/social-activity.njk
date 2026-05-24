@@ -5,11 +5,11 @@
   <h3 class="widget-title">Social Activity</h3>
 
   {# Tab buttons #}
-  <div class="flex gap-1 mb-4 border-b border-surface-200 dark:border-surface-700" role="tablist" aria-label="Social feeds">
+  <div class="flex gap-1 mb-4 border-b border-border" role="tablist" aria-label="Social feeds">
     {% if blueskyFeed and blueskyFeed.length %}
     <button
       @click="activeTab = 'bluesky'"
-      :class="activeTab === 'bluesky' ? 'border-b-2 border-[#0085ff] text-[#0085ff]' : 'text-surface-600 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'"
+      :class="activeTab === 'bluesky' ? 'border-b-2 border-[#0085ff] text-[#0085ff]' : 'text-fg-muted hover:text-fg'"
       :aria-selected="(activeTab === 'bluesky').toString()"
       role="tab" id="social-tab-bluesky" aria-controls="social-panel-bluesky"
       class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors -mb-px"
@@ -23,7 +23,7 @@
     {% if mastodonFeed and mastodonFeed.length %}
     <button
       @click="activeTab = 'mastodon'"
-      :class="activeTab === 'mastodon' ? 'border-b-2 border-[#a730b8] text-[#a730b8]' : 'text-surface-600 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'"
+      :class="activeTab === 'mastodon' ? 'border-b-2 border-[#a730b8] text-[#a730b8]' : 'text-fg-muted hover:text-fg'"
       :aria-selected="(activeTab === 'mastodon').toString()"
       role="tab" id="social-tab-mastodon" aria-controls="social-panel-mastodon"
       class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors -mb-px"
@@ -41,12 +41,12 @@
   <div x-show="activeTab === 'bluesky'" x-cloak role="tabpanel" id="social-panel-bluesky" aria-labelledby="social-tab-bluesky">
     <ul class="space-y-3">
       {% for post in blueskyFeed | head(5) %}
-      <li class="border-b border-surface-200 dark:border-surface-700 pb-3 last:border-0">
+      <li class="border-b border-border pb-3 last:border-0">
         <a href="{{ post.url }}" target="_blank" rel="noopener" class="block group">
-          <p class="text-sm text-surface-700 dark:text-surface-300 group-hover:text-[#0085ff] transition-colors">
+          <p class="text-sm text-fg group-hover:text-[#0085ff] transition-colors">
             {{ post.text | truncate(140) }}
           </p>
-          <div class="flex items-center gap-3 mt-2 text-xs text-surface-600 dark:text-surface-400">
+          <div class="flex items-center gap-3 mt-2 text-xs text-fg-muted">
             <time class="font-mono" datetime="{{ post.createdAt }}">{{ post.createdAt | date("MMM d, yyyy") }}</time>
             {% if post.likeCount > 0 %}
             <span class="flex items-center gap-1">
@@ -71,12 +71,12 @@
   <div x-show="activeTab === 'mastodon'" x-cloak role="tabpanel" id="social-panel-mastodon" aria-labelledby="social-tab-mastodon">
     <ul class="space-y-3">
       {% for post in mastodonFeed | head(5) %}
-      <li class="border-b border-surface-200 dark:border-surface-700 pb-3 last:border-0">
+      <li class="border-b border-border pb-3 last:border-0">
         <a href="{{ post.url }}" target="_blank" rel="noopener" class="block group">
-          <p class="text-sm text-surface-700 dark:text-surface-300 group-hover:text-[#a730b8] transition-colors">
+          <p class="text-sm text-fg group-hover:text-[#a730b8] transition-colors">
             {{ post.text | truncate(140) }}
           </p>
-          <div class="flex items-center gap-3 mt-2 text-xs text-surface-600 dark:text-surface-400">
+          <div class="flex items-center gap-3 mt-2 text-xs text-fg-muted">
             <time class="font-mono" datetime="{{ post.createdAt }}">{{ post.createdAt | date("MMM d, yyyy") }}</time>
             {% if post.favouritesCount > 0 %}
             <span class="flex items-center gap-1">

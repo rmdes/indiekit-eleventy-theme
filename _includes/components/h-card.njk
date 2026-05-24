@@ -37,15 +37,15 @@
       >
     </a>
     <div>
-      <a href="{{ authorUrl }}" class="u-url p-name font-bold text-lg block hover:text-accent-600 dark:hover:text-accent-400" itemprop="name">
+      <a href="{{ authorUrl }}" class="u-url p-name font-bold text-lg block hover:text-link" itemprop="name">
         {{ authorName }}
       </a>
       {% if authorPronoun %}
-      <span class="p-pronoun text-xs text-surface-600 dark:text-surface-400">({{ authorPronoun }})</span>
+      <span class="p-pronoun text-xs text-fg-muted">({{ authorPronoun }})</span>
       {% endif %}
-      <p class="p-job-title text-sm text-surface-600 dark:text-surface-400" itemprop="jobTitle">{{ authorTitle }}</p>
+      <p class="p-job-title text-sm text-fg-muted" itemprop="jobTitle">{{ authorTitle }}</p>
       {# Structured address #}
-      <p class="p-adr h-adr text-sm text-surface-600 dark:text-surface-400" itemprop="address" itemscope itemtype="http://schema.org/PostalAddress">
+      <p class="p-adr h-adr text-sm text-fg-muted" itemprop="address" itemscope itemtype="http://schema.org/PostalAddress">
         {% if authorLocality %}
         <span class="p-locality" itemprop="addressLocality">{{ authorLocality }}</span>{% if authorCountry %}, {% endif %}
         {% endif %}
@@ -61,11 +61,11 @@
   </div>
 
   {# Bio #}
-  <p class="p-note mt-3 text-sm text-surface-700 dark:text-surface-300" itemprop="description">{{ authorBio }}</p>
+  <p class="p-note mt-3 text-sm text-fg" itemprop="description">{{ authorBio }}</p>
 
   {# Organization #}
   {% if authorOrg %}
-  <p class="mt-2 text-sm text-surface-600 dark:text-surface-400">
+  <p class="mt-2 text-sm text-fg-muted">
     <span class="p-org" itemprop="worksFor">{{ authorOrg }}</span>
   </p>
   {% endif %}
@@ -74,12 +74,12 @@
   <div class="mt-2 flex flex-wrap gap-3 text-sm">
     {% if authorEmail %}
     {# Display text obfuscated to deter spam harvesters; href kept plain for browser compatibility #}
-    <a href="mailto:{{ authorEmail }}" class="u-email text-accent-600 dark:text-accent-400 hover:underline" itemprop="email" aria-label="Email {{ authorEmail }}">
+    <a href="mailto:{{ authorEmail }}" class="u-email text-link hover:underline" itemprop="email" aria-label="Email {{ authorEmail }}">
       ✉️ {{ authorEmail | obfuscateEmail | safe }}
     </a>
     {% endif %}
     {% if authorKeyUrl %}
-    <a href="{{ authorKeyUrl }}" class="u-key text-surface-600 dark:text-surface-400 hover:underline" rel="pgpkey">
+    <a href="{{ authorKeyUrl }}" class="u-key text-fg-muted hover:underline" rel="pgpkey">
       🔐 PGP Key
     </a>
     {% endif %}
@@ -89,7 +89,7 @@
   {% if authorCategories and authorCategories.length %}
   <ul class="mt-3 flex flex-wrap gap-1 list-none p-0 m-0" role="list" aria-label="Skills and interests">
     {% for category in authorCategories %}
-    <li class="p-category text-xs px-2 py-0.5 bg-surface-100 dark:bg-surface-800 rounded-full">{{ category }}</li>
+    <li class="p-category text-xs px-2 py-0.5 bg-panel rounded-full">{{ category }}</li>
     {% endfor %}
   </ul>
   {% endif %}
@@ -102,7 +102,7 @@
     <a
       href="{{ link.url }}"
       rel="{{ link.rel }} noopener"
-      class="u-url text-surface-600 dark:text-surface-400 hover:text-accent-600 dark:hover:text-accent-400 transition-colors"
+      class="u-url text-fg-muted hover:text-link transition-colors"
       aria-label="{{ link.name }} (opens in new tab)"
       target="_blank">
       {{ socialIcon(link.icon, "w-5 h-5") }}

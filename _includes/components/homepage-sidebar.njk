@@ -27,7 +27,7 @@
     {% if widget.type == "social-activity" %}
       {% set widgetIcon = "globe" %}{% set widgetIconClass = "w-5 h-5 text-[#0085ff]" %}{% set widgetBorder = "border-l-[3px] border-l-[#0085ff]" %}
     {% elif widget.type == "github-repos" %}
-      {% set widgetIcon = "github" %}{% set widgetIconClass = "w-5 h-5 text-surface-800 dark:text-surface-200" %}{% set widgetBorder = "border-l-[3px] border-l-surface-400 dark:border-l-surface-500" %}
+      {% set widgetIcon = "github" %}{% set widgetIconClass = "w-5 h-5 text-fg" %}{% set widgetBorder = "border-l-[3px] border-l-surface-400 dark:border-l-surface-500" %}
     {% elif widget.type == "funkwhale" %}
       {% set widgetIcon = "headphones" %}{% set widgetIconClass = "w-5 h-5 text-purple-500" %}{% set widgetBorder = "border-l-[3px] border-l-purple-400 dark:border-l-purple-500" %}
     {% elif widget.type == "blogroll" %}
@@ -39,17 +39,17 @@
     {% elif widget.type == "fediverse-follow" %}
       {% set widgetIcon = "user-plus" %}{% set widgetIconClass = "w-5 h-5 text-[#a730b8]" %}{% set widgetBorder = "border-l-[3px] border-l-[#a730b8]" %}
     {% elif widget.type == "author-card" %}
-      {% set widgetIcon = "user" %}{% set widgetIconClass = "w-5 h-5 text-surface-600 dark:text-surface-400" %}{% set widgetBorder = "" %}
+      {% set widgetIcon = "user" %}{% set widgetIconClass = "w-5 h-5 text-fg-muted" %}{% set widgetBorder = "" %}
     {% elif widget.type == "recent-posts" %}
-      {% set widgetIcon = "list" %}{% set widgetIconClass = "w-5 h-5 text-surface-600 dark:text-surface-400" %}{% set widgetBorder = "" %}
+      {% set widgetIcon = "list" %}{% set widgetIconClass = "w-5 h-5 text-fg-muted" %}{% set widgetBorder = "" %}
     {% elif widget.type == "categories" %}
-      {% set widgetIcon = "tag" %}{% set widgetIconClass = "w-5 h-5 text-surface-600 dark:text-surface-400" %}{% set widgetBorder = "" %}
+      {% set widgetIcon = "tag" %}{% set widgetIconClass = "w-5 h-5 text-fg-muted" %}{% set widgetBorder = "" %}
     {% elif widget.type == "recent-comments" %}
-      {% set widgetIcon = "chat" %}{% set widgetIconClass = "w-5 h-5 text-surface-600 dark:text-surface-400" %}{% set widgetBorder = "" %}
+      {% set widgetIcon = "chat" %}{% set widgetIconClass = "w-5 h-5 text-fg-muted" %}{% set widgetBorder = "" %}
     {% elif widget.type == "search" %}
-      {% set widgetIcon = "search" %}{% set widgetIconClass = "w-5 h-5 text-surface-600 dark:text-surface-400" %}{% set widgetBorder = "" %}
+      {% set widgetIcon = "search" %}{% set widgetIconClass = "w-5 h-5 text-fg-muted" %}{% set widgetBorder = "" %}
     {% elif widget.type == "webmentions" %}
-      {% set widgetIcon = "share" %}{% set widgetIconClass = "w-5 h-5 text-surface-600 dark:text-surface-400" %}{% set widgetBorder = "" %}
+      {% set widgetIcon = "share" %}{% set widgetIconClass = "w-5 h-5 text-fg-muted" %}{% set widgetBorder = "" %}
     {% elif widget.type == "ai-usage" %}
       {% set widgetIcon = "zap" %}{% set widgetIconClass = "w-5 h-5 text-amber-500" %}{% set widgetBorder = "border-l-[3px] border-l-amber-400 dark:border-l-amber-500" %}
     {% else %}
@@ -64,7 +64,7 @@
       class="widget-collapsible mb-4"
       x-data="{ open: localStorage.getItem('{{ widgetKey }}') !== null ? localStorage.getItem('{{ widgetKey }}') === 'true' : {{ defaultOpen }} }"
     >
-      <div class="bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 shadow-sm overflow-hidden {{ widgetBorder }}">
+      <div class="bg-surface-50 dark:bg-surface-800 rounded-lg border border-border shadow-sm overflow-hidden {{ widgetBorder }}">
         <button
           class="widget-header w-full p-4"
           @click="open = !open; localStorage.setItem('{{ widgetKey }}', open)"

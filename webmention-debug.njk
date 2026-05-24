@@ -6,8 +6,8 @@ eleventyExcludeFromCollections: true
 pagefindIgnore: true
 ---
 <div class="page-header mb-6 sm:mb-8">
-  <h1 class="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100 mb-2">Webmention Debug</h1>
-  <p class="text-surface-600 dark:text-surface-400">
+  <h1 class="text-2xl sm:text-3xl font-bold text-heading mb-2">Webmention Debug</h1>
+  <p class="text-fg-muted">
     Debug page for webmention recovery from legacy URLs.
     This page is excluded from collections and won't appear in feeds.
   </p>
@@ -15,15 +15,15 @@ pagefindIgnore: true
 
 <div class="space-y-8">
   {# Summary #}
-  <section class="p-4 bg-surface-100 dark:bg-surface-800 rounded-lg">
+  <section class="p-4 bg-panel rounded-lg">
     <h2 class="text-xl font-bold mb-4">Summary</h2>
     <dl class="grid grid-cols-2 gap-4 text-sm">
       <div>
-        <dt class="font-semibold text-surface-600 dark:text-surface-400">Total URL Mappings</dt>
+        <dt class="font-semibold text-fg-muted">Total URL Mappings</dt>
         <dd class="text-2xl font-bold">{{ urlAliases.aliases | length }}</dd>
       </div>
       <div>
-        <dt class="font-semibold text-surface-600 dark:text-surface-400">Total Webmentions</dt>
+        <dt class="font-semibold text-fg-muted">Total Webmentions</dt>
         <dd class="text-2xl font-bold">{{ webmentions | length }}</dd>
       </div>
     </dl>
@@ -34,7 +34,7 @@ pagefindIgnore: true
     <h2 class="text-xl font-bold mb-4">Posts with Webmentions</h2>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-surface-100 dark:bg-surface-800">
+        <thead class="bg-panel">
           <tr>
             <th class="p-2 text-left">Current URL</th>
             <th class="p-2 text-left">Legacy URLs</th>
@@ -48,17 +48,17 @@ pagefindIgnore: true
             {% if allMentions.length > 0 or legacyUrls.length > 0 %}
             <tr class="hover:bg-surface-50 dark:hover:bg-surface-800/50">
               <td class="p-2">
-                <a href="{{ post.url }}" class="text-accent-600 dark:text-accent-400 hover:underline">
+                <a href="{{ post.url }}" class="text-link hover:underline">
                   {{ post.url }}
                 </a>
               </td>
-              <td class="p-2 text-xs text-surface-600 dark:text-surface-400 font-mono">
+              <td class="p-2 text-xs text-fg-muted font-mono">
                 {% if legacyUrls.length %}
                   {% for legacyUrl in legacyUrls %}
                     <div>{{ legacyUrl }}</div>
                   {% endfor %}
                 {% else %}
-                  <span class="text-surface-600 dark:text-surface-400">-</span>
+                  <span class="text-fg-muted">-</span>
                 {% endif %}
               </td>
               <td class="p-2 text-right">
@@ -67,7 +67,7 @@ pagefindIgnore: true
                     {{ allMentions.length }}
                   </span>
                 {% else %}
-                  <span class="text-surface-600 dark:text-surface-400">0</span>
+                  <span class="text-fg-muted">0</span>
                 {% endif %}
               </td>
             </tr>
@@ -83,7 +83,7 @@ pagefindIgnore: true
     <h2 class="text-xl font-bold mb-4">URL Alias Sample (first 20)</h2>
     <div class="overflow-x-auto">
       <table class="w-full text-sm font-mono">
-        <thead class="bg-surface-100 dark:bg-surface-800">
+        <thead class="bg-panel">
           <tr>
             <th class="p-2 text-left">New URL</th>
             <th class="p-2 text-left">Old URL(s)</th>
@@ -94,7 +94,7 @@ pagefindIgnore: true
           {% for newUrl, oldUrls in aliasEntries | head(20) %}
           <tr>
             <td class="p-2 text-xs break-all">{{ newUrl }}</td>
-            <td class="p-2 text-xs break-all text-surface-600 dark:text-surface-400">
+            <td class="p-2 text-xs break-all text-fg-muted">
               {% for oldUrl in oldUrls %}
                 <div>{{ oldUrl }}</div>
               {% endfor %}
@@ -109,13 +109,13 @@ pagefindIgnore: true
   {# Raw Webmention Targets (for debugging) #}
   <section>
     <h2 class="text-xl font-bold mb-4">Recent Webmention Targets</h2>
-    <p class="text-sm text-surface-600 dark:text-surface-400 mb-4">
+    <p class="text-sm text-fg-muted mb-4">
       Shows which URLs webmentions were sent to (useful for verifying legacy URL matches).
     </p>
     <ul class="space-y-1 font-mono text-xs">
       {% for wm in webmentions | head(30) %}
       <li class="p-2 bg-surface-50 dark:bg-surface-800/50 rounded">
-        <span class="text-surface-600 dark:text-surface-400">{{ wm["wm-property"] }}:</span>
+        <span class="text-fg-muted">{{ wm["wm-property"] }}:</span>
         <span class="break-all">{{ wm["wm-target"] }}</span>
       </li>
       {% endfor %}

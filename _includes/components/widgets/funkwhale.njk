@@ -33,14 +33,14 @@
       <img src="{{ np.coverUrl }}" alt="" class="w-10 h-10 rounded object-cover flex-shrink-0 shadow-lg" loading="lazy" eleventy:ignore>
       {% endif %}
       <div class="min-w-0 flex-1">
-        <p class="font-medium text-sm text-surface-900 dark:text-surface-100 truncate">
+        <p class="font-medium text-sm text-heading truncate">
           {% if np.trackUrl %}
           <a href="{{ np.trackUrl }}" class="hover:text-purple-600 dark:hover:text-purple-400" target="_blank" rel="noopener">{{ np.track }}</a>
           {% else %}
           {{ np.track }}
           {% endif %}
         </p>
-        <p class="text-xs text-surface-600 dark:text-surface-400 truncate">{{ np.artist }}</p>
+        <p class="text-xs text-fg-muted truncate">{{ np.artist }}</p>
       </div>
     </div>
   </div>
@@ -61,14 +61,14 @@
       </div>
       {% endif %}
       <div class="min-w-0 flex-1">
-        <p class="text-sm text-surface-900 dark:text-surface-100 truncate">
+        <p class="text-sm text-heading truncate">
           {% if listening.trackUrl %}
           <a href="{{ listening.trackUrl }}" class="hover:text-purple-600 dark:hover:text-purple-400" target="_blank" rel="noopener">{{ listening.track }}</a>
           {% else %}
           {{ listening.track }}
           {% endif %}
         </p>
-        <p class="text-xs text-surface-600 dark:text-surface-400 truncate">{{ listening.artist }}
+        <p class="text-xs text-fg-muted truncate">{{ listening.artist }}
           <span class="text-purple-500 ml-1">Funkwhale</span>
         </p>
       </div>
@@ -89,7 +89,7 @@
       </div>
       {% endif %}
       <div class="min-w-0 flex-1">
-        <p class="text-sm text-surface-900 dark:text-surface-100 truncate">
+        <p class="text-sm text-heading truncate">
           {% if scrobble.trackUrl %}
           <a href="{{ scrobble.trackUrl }}" class="hover:text-red-600 dark:hover:text-red-400" target="_blank" rel="noopener">{{ scrobble.track }}</a>
           {% else %}
@@ -97,7 +97,7 @@
           {% endif %}
           {% if scrobble.loved %}<span class="text-red-500 ml-0.5">&#9829;</span>{% endif %}
         </p>
-        <p class="text-xs text-surface-600 dark:text-surface-400 truncate">{{ scrobble.artist }}
+        <p class="text-xs text-fg-muted truncate">{{ scrobble.artist }}
           <span class="text-red-500 ml-1">Last.fm</span>
         </p>
       </div>

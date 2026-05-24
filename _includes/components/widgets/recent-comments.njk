@@ -13,9 +13,9 @@
         {% endif %}
         <div>
           <span class="font-medium">{{ comment.author.name or "Anonymous" }}</span>
-          <p class="text-surface-600 dark:text-surface-400 line-clamp-2">{{ comment.content.text | truncate(80) }}</p>
+          <p class="text-fg-muted line-clamp-2">{{ comment.content.text | truncate(80) }}</p>
           {% if comment["comment-target"] %}
-          <a href="{{ comment['comment-target'] }}" class="text-xs text-accent-600 dark:text-accent-400 hover:underline">View post</a>
+          <a href="{{ comment['comment-target'] }}" class="text-xs text-link hover:underline">View post</a>
           {% endif %}
         </div>
       </div>

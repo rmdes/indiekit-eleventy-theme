@@ -11,13 +11,13 @@ permalink: "photos/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNumb
 ---
 <div class="h-feed">
   <div class="flex flex-wrap items-center gap-4 mb-2">
-    <h1 class="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100">Photos</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold text-heading">Photos</h1>
     {% set sparklineSvg = collections.photos | postingFrequency %}
     {% if sparklineSvg %}
     <div class="flex-1 min-w-0 text-purple-600 dark:text-purple-400">{{ sparklineSvg | safe }}</div>
     {% endif %}
   </div>
-  <p class="text-surface-600 dark:text-surface-400 mb-6 sm:mb-8">
+  <p class="text-fg-muted mb-6 sm:mb-8">
     Photo posts and images.
     <span class="text-sm">({{ collections.photos.length }} total)</span>
   </p>

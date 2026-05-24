@@ -11,13 +11,13 @@ permalink: "bookmarks/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageN
 ---
 <div class="h-feed">
   <div class="flex flex-wrap items-center gap-4 mb-2">
-    <h1 class="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100">Bookmarks</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold text-heading">Bookmarks</h1>
     {% set sparklineSvg = collections.bookmarks | postingFrequency %}
     {% if sparklineSvg %}
     <div class="flex-1 min-w-0 text-amber-600 dark:text-amber-400">{{ sparklineSvg | safe }}</div>
     {% endif %}
   </div>
-  <p class="text-surface-600 dark:text-surface-400 mb-6 sm:mb-8">
+  <p class="text-fg-muted mb-6 sm:mb-8">
     Links I've saved for later.
     <span class="text-sm">({{ collections.bookmarks.length }} total)</span>
   </p>
@@ -29,7 +29,7 @@ permalink: "bookmarks/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageN
       <div class="post-header">
         {% if post.data.title %}
         <h2 class="text-xl font-semibold mb-1 flex-1">
-          <a class="p-name u-url text-surface-900 dark:text-surface-100 hover:text-amber-600 dark:hover:text-amber-400" href="{{ post.url }}">
+          <a class="p-name u-url text-heading hover:text-amber-600 dark:hover:text-amber-400" href="{{ post.url }}">
             {{ post.data.title }}
           </a>
         </h2>
@@ -55,7 +55,7 @@ permalink: "bookmarks/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageN
       {% set bookmarkedUrl = post.data.bookmarkOf or post.data.bookmark_of %}
       {% if bookmarkedUrl %}
       {% unfurl bookmarkedUrl %}
-      <a class="u-bookmark-of text-xs text-surface-600 dark:text-surface-400 hover:underline break-all mt-1 inline-block" href="{{ bookmarkedUrl }}">
+      <a class="u-bookmark-of text-xs text-fg-muted hover:underline break-all mt-1 inline-block" href="{{ bookmarkedUrl }}">
         {{ bookmarkedUrl }}
       </a>
       {% endif %}

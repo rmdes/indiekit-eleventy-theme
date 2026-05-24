@@ -13,14 +13,14 @@
 <aside class="reply-context mb-6" aria-label="Reply context">
   {% if replyTo %}
   <div class="u-in-reply-to h-cite">
-    <p class="text-sm text-surface-600 dark:text-surface-400 mb-2 flex items-center gap-2">
+    <p class="text-sm text-fg-muted mb-2 flex items-center gap-2">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
       </svg>
       <span>In reply to:</span>
     </p>
     {% unfurl replyTo %}
-    <a class="u-url text-xs text-surface-600 dark:text-surface-400 hover:underline break-all" href="{{ replyTo }}">
+    <a class="u-url text-xs text-fg-muted hover:underline break-all" href="{{ replyTo }}">
       {{ replyTo }}
     </a>
   </div>
@@ -28,14 +28,14 @@
 
   {% if likedUrl %}
   <div class="u-like-of h-cite">
-    <p class="text-sm text-surface-600 dark:text-surface-400 mb-2 flex items-center gap-2">
+    <p class="text-sm text-fg-muted mb-2 flex items-center gap-2">
       <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
       </svg>
       <span>Liked:</span>
     </p>
     {% unfurl likedUrl %}
-    <a class="u-url text-xs text-surface-600 dark:text-surface-400 hover:underline break-all" href="{{ likedUrl }}">
+    <a class="u-url text-xs text-fg-muted hover:underline break-all" href="{{ likedUrl }}">
       {{ likedUrl }}
     </a>
   </div>
@@ -43,14 +43,14 @@
 
   {% if repostedUrl %}
   <div class="u-repost-of h-cite">
-    <p class="text-sm text-surface-600 dark:text-surface-400 mb-2 flex items-center gap-2">
+    <p class="text-sm text-fg-muted mb-2 flex items-center gap-2">
       <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
       </svg>
       <span>Reposted:</span>
     </p>
     {% unfurl repostedUrl %}
-    <a class="u-url text-xs text-surface-600 dark:text-surface-400 hover:underline break-all" href="{{ repostedUrl }}">
+    <a class="u-url text-xs text-fg-muted hover:underline break-all" href="{{ repostedUrl }}">
       {{ repostedUrl }}
     </a>
   </div>
@@ -58,14 +58,14 @@
 
   {% if bookmarkedUrl %}
   <div class="u-bookmark-of h-cite">
-    <p class="text-sm text-surface-600 dark:text-surface-400 mb-2 flex items-center gap-2">
+    <p class="text-sm text-fg-muted mb-2 flex items-center gap-2">
       <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
       </svg>
       <span>Bookmarked:</span>
     </p>
     {% unfurl bookmarkedUrl %}
-    <a class="u-url text-xs text-surface-600 dark:text-surface-400 hover:underline break-all" href="{{ bookmarkedUrl }}">
+    <a class="u-url text-xs text-fg-muted hover:underline break-all" href="{{ bookmarkedUrl }}">
       {{ bookmarkedUrl }}
     </a>
   </div>

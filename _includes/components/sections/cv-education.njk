@@ -8,7 +8,7 @@
 
 {% if hasEducation %}
 <section class="mb-8 sm:mb-12" id="education" x-data="{ expanded: {} }">
-  <h2 class="text-xl sm:text-2xl font-bold text-surface-900 dark:text-surface-100 mb-4 sm:mb-6">
+  <h2 class="text-xl sm:text-2xl font-bold text-heading mb-4 sm:mb-6">
     {{ section.config.title or "Education" }}
   </h2>
 
@@ -16,7 +16,7 @@
     {% for item in cv.education %}
     {% if not filterType or item.educationType == filterType or not item.educationType %}
     {% set ci = loop.index0 % 8 %}
-    <div class="bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 shadow-sm transition-colors overflow-hidden border-l-[3px]
+    <div class="bg-surface-50 dark:bg-surface-800 rounded-lg border border-border shadow-sm transition-colors overflow-hidden border-l-[3px]
       {% if ci == 0 %}border-l-amber-400 dark:border-l-amber-500
       {% elif ci == 1 %}border-l-emerald-400 dark:border-l-emerald-500
       {% elif ci == 2 %}border-l-sky-400 dark:border-l-sky-500
@@ -33,18 +33,18 @@
         :aria-expanded="expanded[{{ loop.index0 }}] ? 'true' : 'false'"
       >
         <div class="min-w-0 flex-1">
-          <h3 class="font-semibold text-surface-900 dark:text-surface-100 truncate">{{ item.degree }}</h3>
-          <p class="text-sm text-surface-600 dark:text-surface-400 truncate">
+          <h3 class="font-semibold text-heading truncate">{{ item.degree }}</h3>
+          <p class="text-sm text-fg-muted truncate">
             {{ item.institution }}{% if item.location %} &middot; {{ item.location }}{% endif %}
           </p>
         </div>
         <div class="flex items-center gap-2 shrink-0">
           {% if item.startDate %}
-          <span class="text-xs text-surface-600 dark:text-surface-400 hidden sm:inline font-mono">
+          <span class="text-xs text-fg-muted hidden sm:inline font-mono">
             {{ item.startDate }}{% if item.endDate %} – {{ item.endDate }}{% else %} – Present{% endif %}
           </span>
           {% elif item.year %}
-          <span class="text-xs text-surface-600 dark:text-surface-400 hidden sm:inline font-mono">{{ item.year }}</span>
+          <span class="text-xs text-fg-muted hidden sm:inline font-mono">{{ item.year }}</span>
           {% endif %}
           <svg
             class="w-4 h-4 text-surface-400 transition-transform duration-200"
@@ -69,15 +69,15 @@
         class="px-4 pb-4"
       >
         {% if item.startDate %}
-        <p class="text-xs text-surface-600 dark:text-surface-400 mb-1 sm:hidden font-mono">
+        <p class="text-xs text-fg-muted mb-1 sm:hidden font-mono">
           {{ item.startDate }}{% if item.endDate %} – {{ item.endDate }}{% else %} – Present{% endif %}
         </p>
         {% elif item.year %}
-        <p class="text-xs text-surface-600 dark:text-surface-400 mb-1 sm:hidden font-mono">{{ item.year }}</p>
+        <p class="text-xs text-fg-muted mb-1 sm:hidden font-mono">{{ item.year }}</p>
         {% endif %}
 
         {% if item.description %}
-        <p class="text-sm text-surface-600 dark:text-surface-400">{{ item.description }}</p>
+        <p class="text-sm text-fg-muted">{{ item.description }}</p>
         {% endif %}
       </div>
     </div>

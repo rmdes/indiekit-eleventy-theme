@@ -15,10 +15,10 @@ eleventyComputed:
 permalink: "digest/{{ digest.slug }}/"
 ---
 <article class="h-feed">
-  <h1 class="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100 mb-2">
+  <h1 class="text-2xl sm:text-3xl font-bold text-heading mb-2">
     {{ digest.label }}
   </h1>
-  <p class="text-surface-600 dark:text-surface-400 mb-6 sm:mb-8">
+  <p class="text-fg-muted mb-6 sm:mb-8">
     <time class="font-mono" datetime="{{ digest.startDate | isoDate }}">{{ digest.startDate | dateDisplay }}</time> &ndash; <time class="font-mono" datetime="{{ digest.endDate | isoDate }}">{{ digest.endDate | dateDisplay }}</time>
     <span class="text-sm">({{ digest.posts.length }} post{% if digest.posts.length != 1 %}s{% endif %})</span>
   </p>
@@ -37,9 +37,9 @@ permalink: "digest/{{ digest.slug }}/"
     {% set typePosts = digest.byType[typeInfo.key] %}
     {% if typePosts and typePosts.length %}
     <section class="mb-8">
-      <h2 class="text-lg sm:text-xl font-semibold text-surface-800 dark:text-surface-200 mb-4 border-b border-surface-200 dark:border-surface-700 pb-2">
+      <h2 class="text-lg sm:text-xl font-semibold text-fg mb-4 border-b border-border pb-2">
         {{ typeInfo.label }}
-        <span class="text-sm font-normal text-surface-600 dark:text-surface-400">({{ typePosts.length }})</span>
+        <span class="text-sm font-normal text-fg-muted">({{ typePosts.length }})</span>
       </h2>
       <ul class="space-y-4">
         {% for post in typePosts %}
@@ -49,8 +49,8 @@ permalink: "digest/{{ digest.slug }}/"
             <div class="flex items-start gap-2">
               <span class="text-red-500 flex-shrink-0">&#x2764;</span>
               <div>
-                <a href="{{ targetUrl }}" class="text-accent-600 dark:text-accent-400 hover:underline break-all">{{ targetUrl }}</a>
-                <div class="text-sm text-surface-600 dark:text-surface-400 mt-1">
+                <a href="{{ targetUrl }}" class="text-link hover:underline break-all">{{ targetUrl }}</a>
+                <div class="text-sm text-fg-muted mt-1">
                   <time class="dt-published font-mono text-sm" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
                   &middot; <a href="{{ post.url }}" class="hover:underline" aria-label="Permalink: {{ post.data.title or (post.date | dateDisplay) }}">Permalink</a>
                 </div>
@@ -63,11 +63,11 @@ permalink: "digest/{{ digest.slug }}/"
               <span class="text-amber-500 flex-shrink-0">&#x1F516;</span>
               <div>
                 {% if post.data.title %}
-                  <a href="{{ post.url }}" class="font-medium text-surface-900 dark:text-surface-100 hover:text-accent-600 dark:hover:text-accent-400">{{ post.data.title }}</a>
+                  <a href="{{ post.url }}" class="font-medium text-heading hover:text-link">{{ post.data.title }}</a>
                 {% else %}
-                  <a href="{{ targetUrl }}" class="text-accent-600 dark:text-accent-400 hover:underline break-all">{{ targetUrl }}</a>
+                  <a href="{{ targetUrl }}" class="text-link hover:underline break-all">{{ targetUrl }}</a>
                 {% endif %}
-                <div class="text-sm text-surface-600 dark:text-surface-400 mt-1">
+                <div class="text-sm text-fg-muted mt-1">
                   <time class="dt-published font-mono text-sm" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
                   &middot; <a href="{{ post.url }}" class="hover:underline" aria-label="Permalink: {{ post.data.title or (post.date | dateDisplay) }}">Permalink</a>
                 </div>
@@ -79,8 +79,8 @@ permalink: "digest/{{ digest.slug }}/"
             <div class="flex items-start gap-2">
               <span class="text-green-500 flex-shrink-0">&#x1F501;</span>
               <div>
-                <a href="{{ targetUrl }}" class="text-accent-600 dark:text-accent-400 hover:underline break-all">{{ targetUrl }}</a>
-                <div class="text-sm text-surface-600 dark:text-surface-400 mt-1">
+                <a href="{{ targetUrl }}" class="text-link hover:underline break-all">{{ targetUrl }}</a>
+                <div class="text-sm text-fg-muted mt-1">
                   <time class="dt-published font-mono text-sm" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
                   &middot; <a href="{{ post.url }}" class="hover:underline" aria-label="Permalink: {{ post.data.title or (post.date | dateDisplay) }}">Permalink</a>
                 </div>
@@ -99,11 +99,11 @@ permalink: "digest/{{ digest.slug }}/"
                 </a>
               {% endif %}
               {% if post.data.title %}
-                <a href="{{ post.url }}" class="font-medium text-surface-900 dark:text-surface-100 hover:text-accent-600 dark:hover:text-accent-400">{{ post.data.title }}</a>
+                <a href="{{ post.url }}" class="font-medium text-heading hover:text-link">{{ post.data.title }}</a>
               {% elif post.templateContent %}
-                <p class="text-surface-700 dark:text-surface-300 text-sm">{{ post.templateContent | striptags | truncate(120) }}</p>
+                <p class="text-fg text-sm">{{ post.templateContent | striptags | truncate(120) }}</p>
               {% endif %}
-              <div class="text-sm text-surface-600 dark:text-surface-400 mt-1">
+              <div class="text-sm text-fg-muted mt-1">
                 <time class="dt-published font-mono text-sm" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
                 &middot; <a href="{{ post.url }}" class="hover:underline" aria-label="Permalink: {{ post.data.title or (post.date | dateDisplay) }}">Permalink</a>
               </div>
@@ -111,13 +111,13 @@ permalink: "digest/{{ digest.slug }}/"
 
           {% elif typeInfo.key == "articles" %}
             <div>
-              <a href="{{ post.url }}" class="font-medium text-surface-900 dark:text-surface-100 hover:text-accent-600 dark:hover:text-accent-400">
+              <a href="{{ post.url }}" class="font-medium text-heading hover:text-link">
                 {{ post.data.title | default("Untitled") }}
               </a>
               {% if post.templateContent %}
-              <p class="text-surface-700 dark:text-surface-300 text-sm mt-1">{{ post.templateContent | striptags | truncate(200) }}</p>
+              <p class="text-fg text-sm mt-1">{{ post.templateContent | striptags | truncate(200) }}</p>
               {% endif %}
-              <div class="text-sm text-surface-600 dark:text-surface-400 mt-1">
+              <div class="text-sm text-fg-muted mt-1">
                 <time class="dt-published font-mono text-sm" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
                 &middot; <a href="{{ post.url }}" class="hover:underline" aria-label="Permalink: {{ post.data.title or (post.date | dateDisplay) }}">Permalink</a>
               </div>
@@ -125,8 +125,8 @@ permalink: "digest/{{ digest.slug }}/"
 
           {% else %}
             <div>
-              <p class="text-surface-700 dark:text-surface-300">{{ post.templateContent | striptags | truncate(200) }}</p>
-              <div class="text-sm text-surface-600 dark:text-surface-400 mt-1">
+              <p class="text-fg">{{ post.templateContent | striptags | truncate(200) }}</p>
+              <div class="text-sm text-fg-muted mt-1">
                 <time class="dt-published font-mono text-sm" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
                 &middot; <a href="{{ post.url }}" class="hover:underline" aria-label="Permalink: {{ post.data.title or (post.date | dateDisplay) }}">Permalink</a>
               </div>
@@ -148,7 +148,7 @@ permalink: "digest/{{ digest.slug }}/"
     {% endif %}
   {% endfor %}
 
-  <nav class="flex justify-between items-center mt-8 pt-6 border-t border-surface-200 dark:border-surface-700" aria-label="Digest navigation">
+  <nav class="flex justify-between items-center mt-8 pt-6 border-t border-border" aria-label="Digest navigation">
     {% if currentIndex > 0 %}
       {% set newer = allDigests[currentIndex - 1] %}
       <a href="/digest/{{ newer.slug }}/" class="text-amber-600 dark:text-amber-400 hover:underline">

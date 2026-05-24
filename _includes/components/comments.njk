@@ -3,13 +3,13 @@
 {% set absoluteUrl = site.url + page.url %}
 
 <is-land on:visible>
-<section class="comments mt-8 pt-8 border-t border-surface-200 dark:border-surface-700" id="comments"
+<section class="comments mt-8 pt-8 border-t border-border" id="comments"
          x-data="commentsSection('{{ absoluteUrl }}')"
          x-init="init()">
 
   <details class="group" x-bind:open="comments.length > 0 || showForm">
     <summary class="flex items-center justify-between cursor-pointer list-none [&::-webkit-details-marker]:hidden" @click="showForm = true">
-      <h2 class="text-lg font-semibold text-surface-700 dark:text-surface-300">
+      <h2 class="text-lg font-semibold text-fg">
         Comments
         <span x-show="comments.length > 0" x-text="'(' + comments.length + ')'" class="text-sm font-normal" x-cloak></span>
       </h2>
@@ -31,13 +31,13 @@
 
       {# Sign-in form (shown when not authenticated) #}
       <div x-show="!user && !isOwner" x-cloak>
-        <p class="text-sm text-surface-600 dark:text-surface-400 mb-3">Sign in with your website to comment:</p>
+        <p class="text-sm text-fg-muted mb-3">Sign in with your website to comment:</p>
         <form x-on:submit.prevent="startAuth()" class="flex gap-2 items-end flex-wrap">
           <div class="flex-1 min-w-[200px]">
             <label for="comment-me" class="block text-sm font-medium mb-1">Your website</label>
             <input id="comment-me" type="url" x-model="meUrl"
                    placeholder="https://yourdomain.com" required
-                   class="w-full px-3 py-2 border rounded-lg dark:bg-surface-800 dark:border-surface-700 dark:text-surface-100">
+                   class="w-full px-3 py-2 border rounded-lg bg-panel border-border text-heading">
           </div>
           <button type="submit" class="button" x-bind:disabled="authLoading">
             <span x-show="!authLoading">Sign In</span>
@@ -48,7 +48,7 @@
 
       {# Comment form (shown when authenticated via IndieAuth OR as site owner) #}
       <div x-show="user || isOwner" x-cloak>
-        <div class="flex items-center gap-2 mb-3 text-sm text-surface-600 dark:text-surface-400">
+        <div class="flex items-center gap-2 mb-3 text-sm text-fg-muted">
           <span>Signed in as</span>
           <a x-bind:href="user?.url || ownerProfile?.url" class="font-medium hover:underline"
              x-text="user?.name || ownerProfile?.name || user?.url || 'Owner'" target="_blank" rel="noopener"></a>
@@ -59,10 +59,10 @@
           <label for="comment-text" class="sr-only">Your comment</label>
           <textarea id="comment-text" x-model="commentText" rows="4" required
                     placeholder="Share your thoughts... (supports **bold**, *italic*, and [links](url))"
-                    class="w-full px-3 py-2 border rounded-lg mb-2 dark:bg-surface-800 dark:border-surface-700 dark:text-surface-100"
+                    class="w-full px-3 py-2 border rounded-lg mb-2 bg-panel border-border text-heading"
                     x-bind:maxlength="maxLength"></textarea>
           <div class="flex items-center justify-between">
-            <span class="text-xs text-surface-600 dark:text-surface-400" x-text="commentText.length + '/' + maxLength"></span>
+            <span class="text-xs text-fg-muted" x-text="commentText.length + '/' + maxLength"></span>
             <button type="submit" class="button" x-bind:disabled="submitting">
               <span x-show="!submitting">Post Comment</span>
               <span x-show="submitting" x-cloak>Posting...</span>
@@ -74,13 +74,13 @@
       {# Comment list #}
       <div class="mt-6 space-y-4">
         <template x-if="loading">
-          <p class="text-sm text-surface-600 dark:text-surface-400">Loading comments...</p>
+          <p class="text-sm text-fg-muted">Loading comments...</p>
         </template>
 
         <template x-for="comment in comments.filter(c => !c.parent_id)" x-bind:key="comment._id || comment.published">
           <div>
             {# Parent comment #}
-            <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 shadow-sm">
+            <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-border shadow-sm">
               <div class="flex items-start gap-3">
                 <template x-if="comment.author?.photo">
                   <img x-bind:src="comment.author.photo" x-bind:alt="comment.author.name"
@@ -99,7 +99,7 @@
                           class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">
                       Author
                     </span>
-                    <time class="text-xs text-surface-600 dark:text-surface-400 font-mono" x-bind:datetime="comment.published"
+                    <time class="text-xs text-fg-muted font-mono" x-bind:datetime="comment.published"
                           x-text="new Date(comment.published).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })"></time>
                   </div>
                   <div class="mt-1 text-sm prose dark:prose-invert" x-html="comment.content?.html || comment.content?.text"></div>
@@ -117,7 +117,7 @@
             <div x-show="replyingTo && replyingTo.commentId === comment._id && replyingTo.platform === 'comment'"
                  class="ml-8 mt-2 p-3 bg-surface-100 dark:bg-surface-900 rounded-lg border-l-2 border-primary-400" x-cloak>
               <textarea x-model="replyText" rows="3" placeholder="Write your reply..."
-                        class="w-full px-3 py-2 border rounded-lg text-sm dark:bg-surface-800 dark:border-surface-700 dark:text-surface-100"></textarea>
+                        class="w-full px-3 py-2 border rounded-lg text-sm bg-panel border-border text-heading"></textarea>
               <div class="flex gap-2 mt-2">
                 <button class="button text-sm" @click="submitReply()" x-bind:disabled="replySubmitting">
                   <span x-show="!replySubmitting">Send Reply</span>
@@ -146,7 +146,7 @@
                       <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">
                         Author
                       </span>
-                      <time class="text-xs text-surface-600 dark:text-surface-400 font-mono" x-bind:datetime="reply.published"
+                      <time class="text-xs text-fg-muted font-mono" x-bind:datetime="reply.published"
                             x-text="new Date(reply.published).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })"></time>
                     </div>
                     <div class="mt-1 text-sm prose dark:prose-invert" x-html="reply.content?.html || reply.content?.text"></div>
@@ -158,7 +158,7 @@
         </template>
 
         <template x-if="!loading && comments.length === 0">
-          <p class="text-sm text-surface-600 dark:text-surface-400">No comments yet. Be the first to share your thoughts!</p>
+          <p class="text-sm text-fg-muted">No comments yet. Be the first to share your thoughts!</p>
         </template>
       </div>
     </div>

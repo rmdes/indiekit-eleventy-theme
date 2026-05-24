@@ -11,13 +11,13 @@ permalink: "replies/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNum
 ---
 <div class="h-feed">
   <div class="flex flex-wrap items-center gap-4 mb-2">
-    <h1 class="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100">Replies</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold text-heading">Replies</h1>
     {% set sparklineSvg = collections.replies | postingFrequency %}
     {% if sparklineSvg %}
     <div class="flex-1 min-w-0 text-sky-600 dark:text-sky-400">{{ sparklineSvg | safe }}</div>
     {% endif %}
   </div>
-  <p class="text-surface-600 dark:text-surface-400 mb-6 sm:mb-8">
+  <p class="text-fg-muted mb-6 sm:mb-8">
     My responses to posts across the web.
     <span class="text-sm">({{ collections.replies.length }} total)</span>
   </p>
@@ -34,7 +34,7 @@ permalink: "replies/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNum
         </div>
         <div class="flex-1 min-w-0">
           {% if post.data.title %}
-          <h2 class="p-name text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">
+          <h2 class="p-name text-lg font-semibold text-heading mb-2">
             <a class="hover:text-sky-600 dark:hover:text-sky-400" href="{{ post.url }}">{{ post.data.title }}</a>
           </h2>
           {% endif %}
@@ -61,7 +61,7 @@ permalink: "replies/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNum
           {% unfurl replyTo %}
           <p class="mt-2 text-sm flex items-center gap-2 flex-wrap">
             <span class="text-surface-600">In reply to:</span>
-            <a class="u-in-reply-to text-xs text-surface-600 dark:text-surface-400 hover:underline break-all" href="{{ replyTo }}">
+            <a class="u-in-reply-to text-xs text-fg-muted hover:underline break-all" href="{{ replyTo }}">
               {{ replyTo | replace("https://", "") | replace("http://", "") | truncate(60) }}
             </a>
             {% if protocol == "atmosphere" %}
@@ -79,7 +79,7 @@ permalink: "replies/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNum
               via Fediverse
             </span>
             {% else %}
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 text-xs font-medium">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-panel text-fg-muted text-xs font-medium">
               <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
               </svg>
