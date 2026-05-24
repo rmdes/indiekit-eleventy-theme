@@ -146,10 +146,20 @@
   <script>
     // Apply theme immediately to prevent flash
     (function() {
+      // Mode resolution: explicit user choice in localStorage wins; otherwise
+      // let CSS @media (prefers-color-scheme) decide.
+      //
+      // Why both .dark AND .light classes: theme.css emits the dark @media
+      // block scoped to :root:not(.light), so when a user on a dark-OS toggles
+      // the site to light, the .light class blocks the @media override.
+      // Without this, light text would render on light background.
       const theme = localStorage.getItem('theme');
-      if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      if (theme === 'dark') {
         document.documentElement.classList.add('dark');
+      } else if (theme === 'light') {
+        document.documentElement.classList.add('light');
       }
+      // else: no class, CSS @media handles OS preference
     })();
   </script>
   <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -398,10 +408,23 @@
       });
     }
 
-    // Theme toggle functionality (desktop and mobile)
+    // Theme toggle functionality (desktop and mobile).
+    // Toggles BOTH .dark and .light classes so the @media (prefers-color-scheme: dark)
+    // override in theme.css (scoped to :root:not(.light)) is respected: explicit
+    // user choice always wins over OS preference.
     function toggleTheme() {
-      const isDark = document.documentElement.classList.toggle('dark');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      const root = document.documentElement;
+      const wasDark = root.classList.contains('dark') ||
+        (!root.classList.contains('light') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (wasDark) {
+        root.classList.remove('dark');
+        root.classList.add('light');
+        localStorage.setItem('theme', 'light');
+      } else {
+        root.classList.remove('light');
+        root.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
     }
 
     const themeToggle = document.getElementById('theme-toggle');
