@@ -554,6 +554,7 @@ export default function (eleventyConfig) {
   eleventyConfig.addWatchTarget("./content/_data/theme.css");
   eleventyConfig.addWatchTarget("./content/_data/critical.css");
   eleventyConfig.addWatchTarget("./content/_data/site-config.json");
+  eleventyConfig.addWatchTarget("./content/_data/homepage.json");
 
   // Webmentions plugin configuration
   const wmDomain = siteUrl.replace("https://", "").replace("http://", "");

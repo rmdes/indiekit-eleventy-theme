@@ -5,10 +5,15 @@
  * @rmdes/indiekit-endpoint-site-config at runtime) with a fallback to
  * _data/site.example.json for theme-only development.
  *
- * The JSON covers identity, branding, layout, and features. Fields not yet
- * in the JSON schema (author, social, feeds, webmentions, support, etc.)
- * continue to be resolved from environment variables so all existing
- * templates keep working without change.
+ * v3 schema (unified plugin) covers: identity (rich h-card), branding (Path D),
+ * navigation (header menu), features (flags). The legacy `layout` subtree
+ * was dropped in v3 — `site.layout` resolves to `{}` here for any template
+ * that still references it. Templates should migrate to `site.identity.*`
+ * (canonical h-card source) in a follow-up theme migration pass.
+ *
+ * Author/social/feeds/webmentions/support fields not yet in the JSON
+ * schema continue to be resolved from environment variables so existing
+ * templates keep working unchanged.
  */
 
 import { readFileSync, existsSync } from "node:fs";
