@@ -1,30 +1,41 @@
 {# Author Compact Card - h-card microformat (compact version for blog sidebars) #}
+{# v3 identity migration: site.identity (site-config Identity tab) canonical; site.author.* env-var fallback retained #}
+{% set id = site.identity if site.identity else {} %}
+{% set authorName = id.name or site.author.name %}
+{% set authorAvatar = id.avatar or site.author.avatar %}
+{% set authorUrl = id.url or site.author.url %}
+{% set authorTitle = id.title or site.author.title %}
+{% set authorBio = id.bio or site.author.bio %}
+{% set authorLocality = id.locality or site.author.locality %}
+{% set authorCountry = id.country or site.author.country %}
+{% set authorEmail = id.email or site.author.email %}
+{% set authorOrg = id.org or site.author.org %}
 <is-land on:visible>
 <div class="widget">
   <div class="h-card p-author flex items-center gap-3">
     {# Hidden u-photo for reliable microformat parsing #}
-    <data class="u-photo hidden" value="{{ site.author.avatar }}"></data>
-    <a href="{{ site.author.url }}" class="u-url u-uid" rel="me" itemprop="url" aria-label="{{ site.author.name }}">
+    <data class="u-photo hidden" value="{{ authorAvatar }}"></data>
+    <a href="{{ authorUrl }}" class="u-url u-uid" rel="me" itemprop="url" aria-label="{{ authorName }}">
       <img
-        src="{{ site.author.avatar }}"
+        src="{{ authorAvatar }}"
         alt=""
         class="w-12 h-12 rounded-full object-cover shadow-lg"
         loading="lazy"
       >
     </a>
     <div>
-      <a href="{{ site.author.url }}" class="u-url p-name font-medium text-heading hover:text-link transition-colors">
-        {{ site.author.name }}
+      <a href="{{ authorUrl }}" class="u-url p-name font-medium text-heading hover:text-link transition-colors">
+        {{ authorName }}
       </a>
-      <p class="p-job-title text-xs text-fg-muted">{{ site.author.title }}</p>
-      {% if site.author.locality %}
-      <p class="p-locality text-xs text-fg-muted">{{ site.author.locality }}{% if site.author.country %}, <span class="p-country-name">{{ site.author.country }}</span>{% endif %}</p>
+      <p class="p-job-title text-xs text-fg-muted">{{ authorTitle }}</p>
+      {% if authorLocality %}
+      <p class="p-locality text-xs text-fg-muted">{{ authorLocality }}{% if authorCountry %}, <span class="p-country-name">{{ authorCountry }}</span>{% endif %}</p>
       {% endif %}
     </div>
   </div>
   {# Hidden but present for microformat completeness #}
-  <p class="p-note hidden">{{ site.author.bio }}</p>
-  {% if site.author.email %}<data class="u-email hidden" value="{{ site.author.email }}"></data>{% endif %}
-  {% if site.author.org %}<data class="p-org hidden" value="{{ site.author.org }}"></data>{% endif %}
+  <p class="p-note hidden">{{ authorBio }}</p>
+  {% if authorEmail %}<data class="u-email hidden" value="{{ authorEmail }}"></data>{% endif %}
+  {% if authorOrg %}<data class="p-org hidden" value="{{ authorOrg }}"></data>{% endif %}
 </div>
 </is-land>

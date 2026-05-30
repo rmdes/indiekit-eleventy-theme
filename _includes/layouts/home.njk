@@ -9,12 +9,19 @@ withSidebar: true
 
 {# Default hero — only shown for Tier 2 (plugin controls its own hero) #}
 {% if not (homepageConfig and homepageConfig.sections) %}
+{# v3 identity migration: site.identity canonical; site.author.* env-var fallback retained #}
+{% set id = site.identity if site.identity else {} %}
+{% set authorName = id.name or site.author.name %}
+{% set authorAvatar = id.avatar or site.author.avatar %}
+{% set authorTitle = id.title or site.author.title %}
+{% set authorBio = id.bio or site.author.bio %}
+{% set socialLinks = id.social if (id.social and id.social.length) else site.social %}
 <section class="mb-8 sm:mb-12">
   <div class="flex flex-col sm:flex-row gap-6 sm:gap-8 items-start">
     {# Avatar #}
     <img
-      src="{{ site.author.avatar }}"
-      alt="{{ site.author.name }}"
+      src="{{ authorAvatar }}"
+      alt="{{ authorName }}"
       width="128"
       height="128"
       class="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover shadow-lg flex-shrink-0"
@@ -24,14 +31,14 @@ withSidebar: true
     {# Introduction #}
     <div class="flex-1 min-w-0">
       <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-heading mb-2">
-        {{ site.author.name }}
+        {{ authorName }}
       </h1>
       <p class="text-lg sm:text-xl text-link mb-3 sm:mb-4">
-        {{ site.author.title }}
+        {{ authorTitle }}
       </p>
-      {% if site.author.bio %}
+      {% if authorBio %}
       <p class="text-base sm:text-lg text-fg mb-4">
-        {{ site.author.bio }}
+        {{ authorBio }}
       </p>
       {% endif %}
       {% if site.description %}
@@ -43,7 +50,7 @@ withSidebar: true
 
       {# Social Links #}
       <div class="flex flex-wrap gap-3">
-        {% for link in site.social %}
+        {% for link in socialLinks %}
         <a
           href="{{ link.url }}"
           rel="{{ link.rel }} noopener"

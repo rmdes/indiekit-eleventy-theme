@@ -4,7 +4,8 @@
 #}
 
 {% set heroConfig = homepageConfig.hero or {} %}
-{% set id = homepageConfig.identity if (homepageConfig and homepageConfig.identity) else {} %}
+{# v3 identity migration: site-config Identity tab is canonical; site.author.* env-var fallback retained as defense-in-depth #}
+{% set id = site.identity if site.identity else {} %}
 {% set authorName = id.name or site.author.name %}
 {% set authorAvatar = id.avatar or site.author.avatar %}
 {% set authorTitle = id.title or site.author.title %}

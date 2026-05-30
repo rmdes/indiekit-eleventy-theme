@@ -9,6 +9,12 @@ withBlogSidebar: true
   {% set replyTo = inReplyTo or in_reply_to %}
   {% set repostedUrl = repostOf or repost_of %}
 
+  {# v3 identity migration: site.identity canonical; site.author.* env-var fallback retained #}
+  {% set id = site.identity if site.identity else {} %}
+  {% set postAuthorName = id.name or site.author.name %}
+  {% set postAuthorUrl = id.url or site.author.url %}
+  {% set postAuthorAvatar = id.avatar or site.author.avatar %}
+
   {% if title %}
   <h1 class="p-name text-2xl sm:text-3xl font-bold text-heading mb-3 sm:mb-4">{{ title }}</h1>
   {% else %}
@@ -204,8 +210,8 @@ withBlogSidebar: true
 
   {# Author h-card for IndieWeb authorship #}
   <span class="p-author h-card hidden">
-    <a class="p-name u-url" href="{{ site.author.url }}">{{ site.author.name }}</a>
-    <img class="u-photo" src="{{ site.author.avatar }}" alt="{{ site.author.name }}" hidden>
+    <a class="p-name u-url" href="{{ postAuthorUrl }}">{{ postAuthorName }}</a>
+    <img class="u-photo" src="{{ postAuthorAvatar }}" alt="{{ postAuthorName }}" hidden>
   </span>
 
   {# Pagefind filter metadata — hidden elements for search filtering #}
@@ -257,8 +263,8 @@ withBlogSidebar: true
     "dateModified": "{{ date.toISOString() }}",
     "author": {
       "@type": "Person",
-      "name": "{{ site.author.name }}",
-      "url": "{{ site.author.url }}"
+      "name": "{{ postAuthorName }}",
+      "url": "{{ postAuthorUrl }}"
     },
     "publisher": {
       "@type": "Organization",

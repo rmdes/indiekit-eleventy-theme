@@ -5,6 +5,10 @@ withSidebar: true
 {# Layout for slash pages (/about, /now, /uses, etc.) #}
 {# These are root-level pages created via Indiekit's page post type #}
 
+{# v3 identity migration: site.identity canonical; site.author.* env-var fallback retained #}
+{% set id = site.identity if site.identity else {} %}
+{% set pageAuthorName = id.name or site.author.name %}
+
 <article class="h-entry">
   <header class="mb-6 sm:mb-8">
     <h1 class="p-name text-2xl sm:text-3xl font-bold text-heading mb-2">
@@ -132,7 +136,7 @@ withSidebar: true
 
   {# Hidden metadata for microformats #}
   <a class="u-url hidden" href="{{ page.url }}"></a>
-  <data class="p-author h-card hidden" value="{{ site.author.name }}"></data>
+  <data class="p-author h-card hidden" value="{{ pageAuthorName }}"></data>
 
   {# Pagefind filter metadata #}
   <div hidden>

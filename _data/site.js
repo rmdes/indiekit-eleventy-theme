@@ -124,15 +124,16 @@ export default function siteData() {
     // -----------------------------------------------------------------------
 
     // Basic site info
-    // Env vars take precedence over plugin identity (allows operator overrides
-    // without waiting for MongoDB to be updated via the admin UI)
-    name: process.env.SITE_NAME || identity.name || "My IndieWeb Blog",
+    // v3 schema: site-config Identity tab is canonical, env vars are
+    // defense-in-depth fallback. Sole-operator dispensation. If MongoDB
+    // ever wiped, the site degrades to env-var output instead of blank.
+    name: identity.name || process.env.SITE_NAME || "My IndieWeb Blog",
     url: siteUrlBase,
     me: siteUrlWithSlash,
-    locale: process.env.SITE_LOCALE || identity.locale || "en",
+    locale: identity.locale || process.env.SITE_LOCALE || "en",
     description:
-      process.env.SITE_DESCRIPTION ||
       identity.description ||
+      process.env.SITE_DESCRIPTION ||
       "An IndieWeb-powered blog with Micropub support",
 
     // -----------------------------------------------------------------------

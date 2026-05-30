@@ -3,13 +3,15 @@
 {# Determines actor URI from site social links: prefers self-hosted AP, falls back to Mastodon #}
 
 {% set actorUrl = "" %}
-{% for link in site.social %}
+{# v3 identity migration: site.identity.social canonical; env-var site.social fallback #}
+{% set socialLinks = site.identity.social if (site.identity.social and site.identity.social.length) else site.social %}
+{% for link in socialLinks %}
   {% if link.icon == "activitypub" and not actorUrl %}
     {% set actorUrl = link.url %}
   {% endif %}
 {% endfor %}
 {% if not actorUrl %}
-  {% for link in site.social %}
+  {% for link in socialLinks %}
     {% if link.icon == "mastodon" and not actorUrl %}
       {% set actorUrl = link.url %}
     {% endif %}

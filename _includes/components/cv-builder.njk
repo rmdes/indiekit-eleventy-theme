@@ -6,8 +6,8 @@
 {% set layout = cvPageConfig.layout or "single-column" %}
 {% set hasSidebar = cvPageConfig.sidebar and cvPageConfig.sidebar.length %}
 
-{# CV identity — check cvPageConfig.identity first, fall back to site.author #}
-{% set cvId = cvPageConfig.identity if (cvPageConfig and cvPageConfig.identity) else {} %}
+{# v3 identity migration: site-config Identity tab is the canonical source for CV page identity too. site.author.* env-var fallback retained. cvPageConfig.identity is dead data (CV plugin v1.0.27 stops writing it). #}
+{% set cvId = site.identity if site.identity else {} %}
 {% set authorName = cvId.name or site.author.name %}
 {% set authorAvatar = cvId.avatar or site.author.avatar %}
 {% set authorTitle = cvId.title or site.author.title %}
@@ -17,7 +17,7 @@
 {% set cvLocality = cvId.locality or site.author.locality %}
 {% set cvCountry = cvId.country or site.author.country %}
 {% set cvOrg = cvId.org or site.author.org %}
-{% set cvUrl = cvId.url or '' %}
+{% set cvUrl = cvId.url or site.author.url or '' %}
 {% set cvEmail = cvId.email or site.author.email %}
 {% set cvKeyUrl = cvId.keyUrl or site.author.keyUrl %}
 
