@@ -184,16 +184,14 @@
 
       {# Desktop nav + Theme toggle (visible on desktop) #}
       <div class="header-actions">
-        {# v3 navigation migration: site.navigation.items[] from site-config Navigation tab; falls back to existing/hardcoded nav if empty #}
+        {# v3 navigation: site.navigation.items[] from site-config Navigation tab prepended; existing rich nav (dropdowns, Dashboard) always renders after. Tail-append preserves UX. #}
         {% set navItems = site.navigation.items if (site.navigation and site.navigation.items and site.navigation.items.length) else [] %}
-        {% if navItems.length %}
         <nav class="site-nav" id="site-nav" aria-label="Main navigation">
+          {% if navItems.length %}
           {% for item in navItems %}
           <a href="{{ item.url }}"{% if item.external %} rel="external"{% endif %} class="nav-link">{{ item.label }}</a>
           {% endfor %}
-        </nav>
-        {% else %}
-        <nav class="site-nav" id="site-nav">
+          {% endif %}
           <a href="/">Home</a>
           <a href="/about/">About</a>
           <a href="/now/">Now</a>
@@ -241,7 +239,6 @@
             Dashboard
           </a>
         </nav>
-        {% endif %}
         <a href="/search/" aria-label="Search" title="Search" class="p-2 rounded-lg text-fg-muted hover:bg-panel transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
