@@ -100,6 +100,7 @@ export default function siteData() {
   const branding = config.branding || {};
   const layout = config.layout || {};
   const features = config.features || {};
+  const navigation = config.navigation || {};
 
   // site.url: no trailing slash — used as URL base for path concatenation
   // site.me / site.author.url: trailing slash — Mastodon rel="me" requires exact match
@@ -134,6 +135,7 @@ export default function siteData() {
     branding,
     layout,
     features,
+    navigation,
 
     // -----------------------------------------------------------------------
     // Fields mapped from JSON → flat structure for template compatibility
