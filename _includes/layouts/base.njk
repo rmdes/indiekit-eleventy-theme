@@ -137,10 +137,11 @@
   {% endif %}
 
   {# IndieAuth rel="me" links for identity verification #}
-  {# Note: Bluesky links use "me atproto" for verification #}
-  {# v3 identity migration: site.identity.social canonical; site.social env-var fallback #}
-  {% set relMeLinks = site.identity.social if (site.identity.social and site.identity.social.length) else site.social %}
-  {% for social in relMeLinks %}
+  {# Pre-computed in _data/site.js as union of identity.social and env-var social, #}
+  {# deduped by URL, with bsky.app URLs forced to rel="me atproto" for Bluesky's #}
+  {# verification flow. Identity tab entries win on shape; env-var entries fill #}
+  {# URLs the operator hasn't entered into the Identity tab. #}
+  {% for social in site.relMeLinks %}
   <link rel="{{ social.rel }}" href="{{ social.url }}">
   {% endfor %}
 </head>

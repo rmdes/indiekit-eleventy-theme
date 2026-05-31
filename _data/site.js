@@ -108,6 +108,22 @@ export default function siteData() {
 
   // Parse SITE_SOCIAL once; reuse for the length check and the assigned value
   const parsedSocial = parseSocialLinks(process.env.SITE_SOCIAL);
+  const envSocial = parsedSocial.length > 0 ? parsedSocial : buildSocialFromFeeds();
+
+  // IndieAuth rel="me" link set: union of identity.social and envSocial, deduped
+  // by URL. Identity wins on shape, env-var entries fill gaps the operator hasn't
+  // entered into the Site-Config Identity tab. bsky.app URLs always emit
+  // rel="me atproto" regardless of stored rel value — Bluesky's verification
+  // flow requires the atproto token.
+  const identitySocial = identity.social || [];
+  const identityUrls = new Set(identitySocial.map((s) => s.url));
+  const relMeLinks = [
+    ...identitySocial,
+    ...envSocial.filter((s) => !identityUrls.has(s.url)),
+  ].map((s) => ({
+    ...s,
+    rel: s.url && s.url.includes("bsky.app") ? "me atproto" : (s.rel || "me"),
+  }));
 
   return {
     // -----------------------------------------------------------------------
@@ -162,7 +178,12 @@ export default function siteData() {
     // Social links (for rel="me" and h-card)
     // Set SITE_SOCIAL env var as: "GitHub|https://github.com/user|github,..."
     // Falls back to auto-generating from feed config (GITHUB_USERNAME, BLUESKY_HANDLE, etc.)
-    social: parsedSocial.length > 0 ? parsedSocial : buildSocialFromFeeds(),
+    social: envSocial,
+
+    // Pre-computed rel=me link set: identity.social ∪ envSocial (deduped by URL),
+    // with bsky.app URLs forced to rel="me atproto". Consumed by base.njk to
+    // render <link rel="me" ...> tags for IndieAuth verification chains.
+    relMeLinks,
 
     // Feed integrations (usernames for data fetching)
     feeds: {
