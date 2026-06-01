@@ -7,21 +7,21 @@ eleventyImport:
 ---
 {
   "version": "https://jsonfeed.org/version/1.1",
-  "title": "{{ site.name }}",
-  "home_page_url": "{{ site.url }}/",
-  "feed_url": "{{ site.url }}/feed.json",
+  "title": {{ site.name | jsonEncode | safe }},
+  "home_page_url": {{ (site.url + "/") | jsonEncode | safe }},
+  "feed_url": {{ (site.url + "/feed.json") | jsonEncode | safe }},
   "hubs": [
     {
       "type": "WebSub",
       "url": "https://websubhub.com/hub"
     }
   ],
-  "description": "{{ site.description }}",
-  "language": "{{ site.locale | default('en') }}",
+  "description": {{ site.description | jsonEncode | safe }},
+  "language": {{ (site.locale | default('en')) | jsonEncode | safe }},
   "authors": [
     {
-      "name": "{{ site.author.name | default(site.name) }}",
-      "url": "{{ site.url }}/"
+      "name": {{ (site.author.name | default(site.name)) | jsonEncode | safe }},
+      "url": {{ (site.url + "/") | jsonEncode | safe }}
     }
   ],
   "_textcasting": {
@@ -46,15 +46,15 @@ eleventyImport:
       {%- set postImage = post.data.image or (post.content | extractFirstImage) %}
     {%- endif %}
     {
-      "id": "{{ absolutePostUrl }}",
-      "url": "{{ absolutePostUrl }}",
+      "id": {{ absolutePostUrl | jsonEncode | safe }},
+      "url": {{ absolutePostUrl | jsonEncode | safe }},
       "title": {% if post.data.title %}{{ post.data.title | jsonEncode | safe }}{% else %}null{% endif %},
       "content_html": {{ post.content | htmlToAbsoluteUrls(absolutePostUrl) | jsonEncode | safe }},
       "content_text": {{ post.content | striptags | jsonEncode | safe }},
-      "date_published": "{{ post.date | dateToRfc3339 }}",
-      "date_modified": "{{ (post.data.updated or post.date) | dateToRfc3339 }}"
+      "date_published": {{ (post.date | dateToRfc3339) | jsonEncode | safe }},
+      "date_modified": {{ ((post.data.updated or post.date) | dateToRfc3339) | jsonEncode | safe }}
       {%- if postImage and postImage != "" and (postImage | length) > 10 %},
-      "image": "{{ postImage | url | absoluteUrl(site.url) }}"
+      "image": {{ (postImage | url | absoluteUrl(site.url)) | jsonEncode | safe }}
       {%- endif %}
       {%- set attachments = post.data | feedAttachments %}
       {%- if attachments.length > 0 %},
