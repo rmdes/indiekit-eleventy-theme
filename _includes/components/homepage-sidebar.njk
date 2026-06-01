@@ -5,6 +5,10 @@
 {% if homepageConfig.sidebar and homepageConfig.sidebar.length %}
   {% for widget in homepageConfig.sidebar %}
 
+    {# Skip widgets whose backing plugin isn't loaded (Plan B multi-site). #}
+    {% set widgetRequiredPlugin = widgetPluginRequirements[widget.type] %}
+    {% if not widgetRequiredPlugin or loadedPlugins[widgetRequiredPlugin] %}
+
     {# Resolve widget title #}
     {% if widget.type == "search" %}{% set widgetTitle = "Search" %}
     {% elif widget.type == "social-activity" %}{% set widgetTitle = "Social Activity" %}
@@ -139,5 +143,6 @@
       </div>
     </div>
 
+    {% endif %} {# end widgetRequiredPlugin check #}
   {% endfor %}
 {% endif %}

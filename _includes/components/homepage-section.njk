@@ -1,4 +1,8 @@
-{# Homepage Section Dispatcher — maps section.type to the right partial #}
+{# Homepage Section Dispatcher — maps section.type to the right partial.
+   Plan B multi-site: skip sections whose backing plugin isn't loaded
+   (sectionPluginRequirements maps section.type → required plugin key). #}
+{% set sectionRequiredPlugin = sectionPluginRequirements[section.type] %}
+{% if not sectionRequiredPlugin or loadedPlugins[sectionRequiredPlugin] %}
 {% if section.type == "featured-posts" %}
   {% include "components/sections/featured-posts.njk" %}
 {% elif section.type == "recent-posts" %}
@@ -56,3 +60,4 @@
 {% else %}
   <!-- Unknown section type: {{ section.type }} -->
 {% endif %}
+{% endif %} {# end sectionRequiredPlugin check #}

@@ -1,6 +1,9 @@
 {# CV Page Builder Sidebar — renders widgets from cvPageConfig.sidebar #}
 {% if cvPageConfig.sidebar and cvPageConfig.sidebar.length %}
   {% for widget in cvPageConfig.sidebar %}
+    {# Skip widgets whose backing plugin isn't loaded (Plan B multi-site). #}
+    {% set widgetRequiredPlugin = widgetPluginRequirements[widget.type] %}
+    {% if not widgetRequiredPlugin or loadedPlugins[widgetRequiredPlugin] %}
     {% if widget.type == "author-card" %}
       {% include "components/widgets/author-card.njk" %}
     {% elif widget.type == "social-activity" %}
@@ -39,5 +42,6 @@
     {% else %}
       <!-- Unknown widget type: {{ widget.type }} -->
     {% endif %}
+    {% endif %} {# end widgetRequiredPlugin check #}
   {% endfor %}
 {% endif %}

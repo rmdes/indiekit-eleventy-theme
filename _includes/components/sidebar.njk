@@ -7,6 +7,12 @@
   {# === Data-driven mode: render configured widgets === #}
   {% for widget in homepageConfig.blogListingSidebar %}
 
+    {# Skip widgets whose backing plugin isn't loaded for this site (Plan B multi-site).
+       widgetPluginRequirements maps widget.type → required plugin key; widgets without
+       a plugin requirement (theme-level: author-card, search, etc.) always render. #}
+    {% set widgetRequiredPlugin = widgetPluginRequirements[widget.type] %}
+    {% if not widgetRequiredPlugin or loadedPlugins[widgetRequiredPlugin] %}
+
     {# Resolve widget title #}
     {% if widget.type == "search" %}{% set widgetTitle = "Search" %}
     {% elif widget.type == "social-activity" %}{% set widgetTitle = "Social Activity" %}
@@ -149,6 +155,7 @@
       </div>
     </div>
 
+    {% endif %} {# end widgetRequiredPlugin check #}
   {% endfor %}
 {% else %}
   {# === Fallback: current hardcoded sidebar (backward compatibility) === #}
