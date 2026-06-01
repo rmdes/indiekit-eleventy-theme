@@ -220,8 +220,8 @@
               </svg>
             </a>
             <div class="nav-dropdown-menu" x-show="open" x-transition x-cloak role="menu">
-              {% if blogrollStatus and blogrollStatus.source == "indiekit" %}<a href="/blogroll/" role="menuitem">Blogroll</a>{% endif %}
-              {% if podrollStatus and podrollStatus.source == "indiekit" %}<a href="/podroll/" role="menuitem">Podroll</a>{% endif %}
+              {% if loadedPlugins.blogroll %}<a href="/blogroll/" role="menuitem">Blogroll</a>{% endif %}
+              {% if loadedPlugins.podroll %}<a href="/podroll/" role="menuitem">Podroll</a>{% endif %}
               {% if newsActivity and newsActivity.source == "indiekit" %}<a href="/news/" role="menuitem">News</a>{% endif %}
               <a href="/slashes/" role="menuitem">All Pages</a>
             </div>
@@ -286,8 +286,8 @@
           </svg>
         </button>
         <div id="mobile-pages-submenu" class="mobile-nav-submenu" x-show="pagesOpen" x-collapse>
-          {% if blogrollStatus and blogrollStatus.source == "indiekit" %}<a href="/blogroll/">Blogroll</a>{% endif %}
-          {% if podrollStatus and podrollStatus.source == "indiekit" %}<a href="/podroll/">Podroll</a>{% endif %}
+          {% if loadedPlugins.blogroll %}<a href="/blogroll/">Blogroll</a>{% endif %}
+          {% if loadedPlugins.podroll %}<a href="/podroll/">Podroll</a>{% endif %}
           {% if newsActivity and newsActivity.source == "indiekit" %}<a href="/news/">News</a>{% endif %}
           <a href="/slashes/">All Pages</a>
         </div>
@@ -353,7 +353,7 @@
           <ul class="space-y-2">
             <li><a href="/" class="text-sm text-fg-muted hover:text-heading hover:underline">Home</a></li>
             <li><a href="/about/" class="text-sm text-fg-muted hover:text-heading hover:underline">About</a></li>
-            <li><a href="/cv/" class="text-sm text-fg-muted hover:text-heading hover:underline">CV</a></li>
+            {% if loadedPlugins.cv %}<li><a href="/cv/" class="text-sm text-fg-muted hover:text-heading hover:underline">CV</a></li>{% endif %}
             <li x-data="{ show: false }" x-show="show" x-cloak @indiekit:auth.window="show = $event.detail.loggedIn"><a href="/dashboard" class="text-sm text-fg-muted hover:text-heading hover:underline">Dashboard</a></li>
           </ul>
         </div>

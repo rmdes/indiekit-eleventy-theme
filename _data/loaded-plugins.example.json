@@ -1,0 +1,18 @@
+{
+  "selected": [
+    {"key": "site-config",  "tier": "core"},
+    {"key": "post-type-page", "tier": "core"},
+    {"key": "json-feed",    "tier": "core"},
+    {"key": "article",      "tier": "post_types"},
+    {"key": "note",         "tier": "post_types"},
+    {"key": "photo",        "tier": "post_types"},
+    {"key": "bookmark",     "tier": "post_types"},
+    {"key": "reply",        "tier": "post_types"},
+    {"key": "repost",       "tier": "post_types"},
+    {"key": "like",         "tier": "post_types"}
+  ],
+  "summary": {
+    "total": 10,
+    "note": "Fallback fixture used when running theme outside the cloudron container (no composer output mounted). Includes only a minimal core+post-types set so templates that gate plugin-specific UI render nothing extra."
+  }
+}
