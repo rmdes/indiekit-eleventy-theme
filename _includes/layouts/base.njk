@@ -185,48 +185,58 @@
 
       {# Desktop nav + Theme toggle (visible on desktop) #}
       <div class="header-actions">
-        {# v3 navigation: site.navigation.items[] from site-config Navigation tab prepended; existing rich nav (dropdowns, Dashboard) always renders after. Tail-append preserves UX. #}
+        {# v3 navigation (Option B semantics):
+           - If site-config Navigation tab has items → render ONLY those + Dashboard.
+             Operator has explicitly taken control; theme defaults stand aside.
+           - If Navigation tab is empty → render theme defaults (Home/About/Now/
+             Blog dropdown/Pages dropdown/Interactions) + Dashboard. Useful for
+             a fresh install before the operator has configured anything.
+           Dashboard is always rendered (auth-gated via Alpine), not configurable. #}
         {% set navItems = site.navigation.items if (site.navigation and site.navigation.items and site.navigation.items.length) else [] %}
         <nav class="site-nav" id="site-nav" aria-label="Main navigation">
           {% if navItems.length %}
-          {% for item in navItems %}
-          <a href="{{ item.url }}"{% if item.external %} rel="external"{% endif %} class="nav-link">{{ item.label }}</a>
-          {% endfor %}
+            {# Operator-driven nav — render their items only #}
+            {% for item in navItems %}
+            <a href="{{ item.url }}"{% if item.external %} rel="external"{% endif %} class="nav-link">{{ item.label }}</a>
+            {% endfor %}
+          {% else %}
+            {# Theme defaults (fresh install / not yet configured) #}
+            <a href="/">Home</a>
+            <a href="/about/">About</a>
+            <a href="/now/">Now</a>
+            {# Blog dropdown #}
+            <div class="nav-dropdown" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false" @focusin="open = true" @focusout="!$el.contains($event.relatedTarget) && (open = false)" @keydown.escape="open = false">
+              <a href="/blog/" class="nav-dropdown-trigger" :aria-expanded="open.toString()" aria-haspopup="true">
+                Blog
+                <svg class="w-3 h-3 ml-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </a>
+              <div class="nav-dropdown-menu" x-show="open" x-transition x-cloak role="menu">
+                <a href="/blog/" role="menuitem">All Posts</a>
+                {% for pt in enabledPostTypes %}
+                <a href="{{ pt.path }}" role="menuitem">{{ pt.label }}</a>
+                {% endfor %}
+              </div>
+            </div>
+            {# Pages dropdown #}
+            <div class="nav-dropdown" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false" @focusin="open = true" @focusout="!$el.contains($event.relatedTarget) && (open = false)" @keydown.escape="open = false">
+              <a href="/slashes/" class="nav-dropdown-trigger" :aria-expanded="open.toString()" aria-haspopup="true">
+                Pages
+                <svg class="w-3 h-3 ml-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </a>
+              <div class="nav-dropdown-menu" x-show="open" x-transition x-cloak role="menu">
+                {% if loadedPlugins.blogroll %}<a href="/blogroll/" role="menuitem">Blogroll</a>{% endif %}
+                {% if loadedPlugins.podroll %}<a href="/podroll/" role="menuitem">Podroll</a>{% endif %}
+                {% if newsActivity and newsActivity.source == "indiekit" %}<a href="/news/" role="menuitem">News</a>{% endif %}
+                <a href="/slashes/" role="menuitem">All Pages</a>
+              </div>
+            </div>
+            <a href="/interactions/">Interactions</a>
           {% endif %}
-          <a href="/">Home</a>
-          <a href="/about/">About</a>
-          <a href="/now/">Now</a>
-          {# Blog dropdown #}
-          <div class="nav-dropdown" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false" @focusin="open = true" @focusout="!$el.contains($event.relatedTarget) && (open = false)" @keydown.escape="open = false">
-            <a href="/blog/" class="nav-dropdown-trigger" :aria-expanded="open.toString()" aria-haspopup="true">
-              Blog
-              <svg class="w-3 h-3 ml-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </a>
-            <div class="nav-dropdown-menu" x-show="open" x-transition x-cloak role="menu">
-              <a href="/blog/" role="menuitem">All Posts</a>
-              {% for pt in enabledPostTypes %}
-              <a href="{{ pt.path }}" role="menuitem">{{ pt.label }}</a>
-              {% endfor %}
-            </div>
-          </div>
-          {# Pages dropdown #}
-          <div class="nav-dropdown" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false" @focusin="open = true" @focusout="!$el.contains($event.relatedTarget) && (open = false)" @keydown.escape="open = false">
-            <a href="/slashes/" class="nav-dropdown-trigger" :aria-expanded="open.toString()" aria-haspopup="true">
-              Pages
-              <svg class="w-3 h-3 ml-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </a>
-            <div class="nav-dropdown-menu" x-show="open" x-transition x-cloak role="menu">
-              {% if loadedPlugins.blogroll %}<a href="/blogroll/" role="menuitem">Blogroll</a>{% endif %}
-              {% if loadedPlugins.podroll %}<a href="/podroll/" role="menuitem">Podroll</a>{% endif %}
-              {% if newsActivity and newsActivity.source == "indiekit" %}<a href="/news/" role="menuitem">News</a>{% endif %}
-              <a href="/slashes/" role="menuitem">All Pages</a>
-            </div>
-          </div>
-          <a href="/interactions/">Interactions</a>
+          {# Dashboard — always rendered (auth-gated via Alpine), independent of operator nav #}
           <a href="/dashboard"
              x-data="{ show: false }"
              x-show="show"
@@ -257,42 +267,50 @@
       </div>
     </div>
 
-    {# Mobile nav dropdown #}
+    {# Mobile nav dropdown — same Option B semantics as desktop nav above #}
     <nav class="mobile-nav hidden" id="mobile-nav" x-data="{ blogOpen: false, pagesOpen: false }">
-      <a href="/">Home</a>
-      <a href="/about/">About</a>
-      <a href="/now/">Now</a>
-      {# Blog section #}
-      <div class="mobile-nav-section">
-        <button type="button" class="mobile-nav-toggle" @click="blogOpen = !blogOpen" :aria-expanded="blogOpen.toString()" aria-controls="mobile-blog-submenu">
-          Blog
-          <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': blogOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </button>
-        <div id="mobile-blog-submenu" class="mobile-nav-submenu" x-show="blogOpen" x-collapse>
-          <a href="/blog/">All Posts</a>
-          {% for pt in enabledPostTypes %}
-          <a href="{{ pt.path }}">{{ pt.label }}</a>
-          {% endfor %}
+      {% if navItems.length %}
+        {# Operator-driven nav — render their items only #}
+        {% for item in navItems %}
+        <a href="{{ item.url }}"{% if item.external %} rel="external"{% endif %}>{{ item.label }}</a>
+        {% endfor %}
+      {% else %}
+        {# Theme defaults #}
+        <a href="/">Home</a>
+        <a href="/about/">About</a>
+        <a href="/now/">Now</a>
+        {# Blog section #}
+        <div class="mobile-nav-section">
+          <button type="button" class="mobile-nav-toggle" @click="blogOpen = !blogOpen" :aria-expanded="blogOpen.toString()" aria-controls="mobile-blog-submenu">
+            Blog
+            <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': blogOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div id="mobile-blog-submenu" class="mobile-nav-submenu" x-show="blogOpen" x-collapse>
+            <a href="/blog/">All Posts</a>
+            {% for pt in enabledPostTypes %}
+            <a href="{{ pt.path }}">{{ pt.label }}</a>
+            {% endfor %}
+          </div>
         </div>
-      </div>
-      {# Pages section #}
-      <div class="mobile-nav-section">
-        <button type="button" class="mobile-nav-toggle" @click="pagesOpen = !pagesOpen" :aria-expanded="pagesOpen.toString()" aria-controls="mobile-pages-submenu">
-          Pages
-          <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': pagesOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </button>
-        <div id="mobile-pages-submenu" class="mobile-nav-submenu" x-show="pagesOpen" x-collapse>
-          {% if loadedPlugins.blogroll %}<a href="/blogroll/">Blogroll</a>{% endif %}
-          {% if loadedPlugins.podroll %}<a href="/podroll/">Podroll</a>{% endif %}
-          {% if newsActivity and newsActivity.source == "indiekit" %}<a href="/news/">News</a>{% endif %}
-          <a href="/slashes/">All Pages</a>
+        {# Pages section #}
+        <div class="mobile-nav-section">
+          <button type="button" class="mobile-nav-toggle" @click="pagesOpen = !pagesOpen" :aria-expanded="pagesOpen.toString()" aria-controls="mobile-pages-submenu">
+            Pages
+            <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': pagesOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div id="mobile-pages-submenu" class="mobile-nav-submenu" x-show="pagesOpen" x-collapse>
+            {% if loadedPlugins.blogroll %}<a href="/blogroll/">Blogroll</a>{% endif %}
+            {% if loadedPlugins.podroll %}<a href="/podroll/">Podroll</a>{% endif %}
+            {% if newsActivity and newsActivity.source == "indiekit" %}<a href="/news/">News</a>{% endif %}
+            <a href="/slashes/">All Pages</a>
+          </div>
         </div>
-      </div>
-      <a href="/interactions/">Interactions</a>
+        <a href="/interactions/">Interactions</a>
+      {% endif %}
       <a href="/search/">Search</a>
       <a href="/dashboard"
          x-data="{ show: false }"
