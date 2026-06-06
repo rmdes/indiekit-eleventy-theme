@@ -97,7 +97,7 @@
         </svg>
         <div class="min-w-0">
           <a href="{{ post.url }}" class="text-sm text-teal-600 dark:text-teal-400 hover:underline line-clamp-1">
-            {{ post.templateContent | striptags | truncate(50) or "Note" }}
+            {{ post.templateContent | ogDescription(50) or "Note" }}
           </a>
           <time class="text-xs text-fg-muted block font-mono" datetime="{{ post.data.published }}">
             {{ (post.data.published or post.date) | dateDisplay }}

@@ -29,7 +29,7 @@
         <svg class="w-3.5 h-3.5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
         Reply to {{ _replyToUrl | replace("https://", "") | truncate(35) }}
         {% else %}
-        {{ _prevPost.data.title or _prevPost.data.name or (_prevPost.templateContent | striptags | truncate(50)) or "Note" }}
+        {{ _prevPost.data.title or _prevPost.data.name or (_prevPost.templateContent | ogDescription(50)) or "Note" }}
         {% endif %}
       </a>
     </div>
@@ -55,7 +55,7 @@
         <svg class="w-3.5 h-3.5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
         Reply to {{ _replyToUrl | replace("https://", "") | truncate(35) }}
         {% else %}
-        {{ _nextPost.data.title or _nextPost.data.name or (_nextPost.templateContent | striptags | truncate(50)) or "Note" }}
+        {{ _nextPost.data.title or _nextPost.data.name or (_nextPost.templateContent | ogDescription(50)) or "Note" }}
         {% endif %}
       </a>
     </div>

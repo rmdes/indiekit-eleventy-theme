@@ -205,7 +205,7 @@
       </h3>
       {% if showSummary and post.templateContent %}
       <p class="text-sm text-fg-muted mb-2 line-clamp-2">
-        {{ post.templateContent | striptags | truncate(250) }}
+        {{ post.templateContent | ogDescription(250) }}
       </p>
       {% endif %}
       <div class="flex items-center gap-3 text-xs text-fg-muted">

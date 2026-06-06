@@ -27,7 +27,7 @@
       {% elif _replyToUrl %}
         {% set _prevTitle = "Reply to " + (_replyToUrl | replace("https://", "") | truncate(35)) %}
       {% else %}
-        {% set _prevTitle = (_prevPost.templateContent | striptags | truncate(60)) or "Note" %}
+        {% set _prevTitle = (_prevPost.templateContent | ogDescription(60)) or "Note" %}
       {% endif %}
     {% endif %}
 
@@ -73,7 +73,7 @@
       {% elif _replyToUrl %}
         {% set _nextTitle = "Reply to " + (_replyToUrl | replace("https://", "") | truncate(35)) %}
       {% else %}
-        {% set _nextTitle = (_nextPost.templateContent | striptags | truncate(60)) or "Note" %}
+        {% set _nextTitle = (_nextPost.templateContent | ogDescription(60)) or "Note" %}
       {% endif %}
     {% endif %}
 

@@ -67,7 +67,7 @@
 
       {% else %}
       <a href="{{ post.url }}" class="text-sm text-link hover:underline line-clamp-2">
-        {{ post.data.title or post.data.name or (post.templateContent | striptags | truncate(50)) or "Note" }}
+        {{ post.data.title or post.data.name or (post.templateContent | ogDescription(50)) or "Note" }}
       </a>
       <time class="text-xs text-fg-muted block font-mono" datetime="{{ post.data.published or post.date }}">
         {{ (post.data.published or post.date) | dateDisplay }}
