@@ -74,11 +74,15 @@ withBlogSidebar: true
   {# Rich reply context with h-cite microformat #}
   {% include "components/reply-context.njk" %}
 
-  {# AI usage disclosure — always shown, collapsed by default, placed after reply context #}
+  {# AI usage disclosure — only when the site opts in via site-config → General
+     (site.features.aiTransparency). When enabled it shows on every post;
+     collapsed by default, placed after reply context. #}
+  {% if site.features and site.features.aiTransparency %}
   {% set aiTextLevel = aiTextLevel or ai_text_level or "0" %}
   {% set aiCodeLevel = aiCodeLevel or ai_code_level %}
   {% set aiTools = aiTools or ai_tools %}
   {% set aiDescription = aiDescription or ai_description %}
+  {% set aiUrl = site.features.aiTransparencyUrl or "/ai" %}
   <details class="mt-4 text-xs text-fg-muted">
     <summary class="cursor-pointer hover:text-fg-muted list-none flex items-center gap-1.5 [&::-webkit-details-marker]:hidden">
       <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -91,8 +95,9 @@ withBlogSidebar: true
     {% if aiDescription %}
     <p class="mt-1 pl-5">{{ aiDescription }}</p>
     {% endif %}
-    <p class="mt-1 pl-5"><a href="/ai/" class="hover:text-link underline">Learn more about AI usage on this site</a></p>
+    <p class="mt-1 pl-5"><a href="{{ aiUrl }}" class="hover:text-link underline">Learn more about AI usage on this site</a></p>
   </details>
+  {% endif %}
 
   {# Pending syndication targets (for services like IndieNews that require u-syndication before webmention) #}
   {% if mpSyndicateTo %}
@@ -276,8 +281,8 @@ withBlogSidebar: true
       }
     },
     "description": {{ postDesc | dump | safe }}{% if postImage and postImage != "" and (postImage | length) > 10 %},
-    "image": ["{% if postImage.startsWith('http') %}{{ postImage }}{% elif '/' in postImage and postImage[0] == '/' %}{{ site.url }}{{ postImage }}{% else %}{{ site.url }}/{{ postImage }}{% endif %}"]{% endif %}{% if aiTextLevel or aiCodeLevel or aiTools %},
-    "usageInfo": "{{ site.url }}/ai"{% set _aiParts = [] %}{% if aiTextLevel %}{% set _textLabel %}{% if aiTextLevel === "0" %}None{% elif aiTextLevel === "1" %}Editorial assistance{% elif aiTextLevel === "2" %}Co-drafting{% elif aiTextLevel === "3" %}AI-generated{% endif %}{% endset %}{% set _aiParts = (_aiParts.push("Text: " + _textLabel), _aiParts) %}{% endif %}{% if aiCodeLevel %}{% set _codeLabel %}{% if aiCodeLevel === "0" %}Human-written{% elif aiCodeLevel === "1" %}AI-assisted{% elif aiCodeLevel === "2" %}AI-generated{% endif %}{% endset %}{% set _aiParts = (_aiParts.push("Code: " + _codeLabel), _aiParts) %}{% endif %}{% if aiTools %}{% set _aiParts = (_aiParts.push("Tools: " + aiTools), _aiParts) %}{% endif %},
+    "image": ["{% if postImage.startsWith('http') %}{{ postImage }}{% elif '/' in postImage and postImage[0] == '/' %}{{ site.url }}{{ postImage }}{% else %}{{ site.url }}/{{ postImage }}{% endif %}"]{% endif %}{% if site.features and site.features.aiTransparency and (aiTextLevel or aiCodeLevel or aiTools) %},
+    "usageInfo": "{% set _aiUrl = site.features.aiTransparencyUrl or '/ai' %}{% if _aiUrl.startsWith('http') %}{{ _aiUrl }}{% else %}{{ site.url }}{{ _aiUrl }}{% endif %}"{% set _aiParts = [] %}{% if aiTextLevel %}{% set _textLabel %}{% if aiTextLevel === "0" %}None{% elif aiTextLevel === "1" %}Editorial assistance{% elif aiTextLevel === "2" %}Co-drafting{% elif aiTextLevel === "3" %}AI-generated{% endif %}{% endset %}{% set _aiParts = (_aiParts.push("Text: " + _textLabel), _aiParts) %}{% endif %}{% if aiCodeLevel %}{% set _codeLabel %}{% if aiCodeLevel === "0" %}Human-written{% elif aiCodeLevel === "1" %}AI-assisted{% elif aiCodeLevel === "2" %}AI-generated{% endif %}{% endset %}{% set _aiParts = (_aiParts.push("Code: " + _codeLabel), _aiParts) %}{% endif %}{% if aiTools %}{% set _aiParts = (_aiParts.push("Tools: " + aiTools), _aiParts) %}{% endif %},
     "creativeWorkStatus": "{{ _aiParts | join(', ') }}"{% endif %}
   }
   </script>

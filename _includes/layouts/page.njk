@@ -30,8 +30,8 @@ withSidebar: true
     {{ content | safe }}
   </div>
 
-  {# AI post-graph — shown only on the /ai/ page #}
-  {% if page.url == "/ai/" and collections.posts %}
+  {# AI post-graph — shown only on the /ai/ page, and only when AI transparency is enabled #}
+  {% if site.features and site.features.aiTransparency and page.url == "/ai/" and collections.posts %}
   {% set stats = collections.posts | aiStats %}
   {% set aiPostsList = collections.posts | aiPosts %}
   <section class="mt-8 sm:mt-12 p-6 rounded-lg bg-surface-50 dark:bg-surface-800/50 border border-border shadow-sm">
@@ -78,12 +78,14 @@ withSidebar: true
   </section>
   {% endif %}
 
-  {# AI usage disclosure #}
-  {% set aiTextLevel = aiTextLevel or ai_text_level %}
+  {# AI usage disclosure — only when the site opts in via site-config → General
+     (site.features.aiTransparency). When enabled, shown on every page. #}
+  {% if site.features and site.features.aiTransparency %}
+  {% set aiTextLevel = aiTextLevel or ai_text_level or "0" %}
   {% set aiCodeLevel = aiCodeLevel or ai_code_level %}
   {% set aiTools = aiTools or ai_tools %}
   {% set aiDescription = aiDescription or ai_description %}
-  {% if aiTextLevel or aiCodeLevel or aiTools %}
+  {% set aiUrl = site.features.aiTransparencyUrl or "/ai" %}
   <aside class="mt-6 p-4 rounded-lg bg-surface-50 dark:bg-surface-800/50 border border-border shadow-sm">
     <div class="flex items-center gap-2 mb-2">
       <svg class="w-4 h-4 text-fg-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -111,7 +113,7 @@ withSidebar: true
     {% if aiDescription %}
     <p class="mt-2 text-xs text-fg-muted">{{ aiDescription }}</p>
     {% endif %}
-    <p class="mt-2 text-xs"><a href="/ai/" class="text-link hover:underline">Learn more about AI usage on this site &rarr;</a></p>
+    <p class="mt-2 text-xs"><a href="{{ aiUrl }}" class="text-link hover:underline">Learn more about AI usage on this site &rarr;</a></p>
   </aside>
   {% endif %}
 
