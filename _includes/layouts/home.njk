@@ -44,7 +44,7 @@ withSidebar: true
       {% if site.description %}
       <p class="text-base sm:text-lg text-fg mb-4 sm:mb-6">
         {{ site.description }}
-        <a href="/about/" class="text-link hover:underline font-medium">Read more &rarr;</a>
+        <a href="{{ homepageConfig.hero.ctaUrl or '/about' }}" class="text-link hover:underline font-medium">{{ homepageConfig.hero.ctaText or 'Read more' }} &rarr;</a>
       </p>
       {% endif %}
 
