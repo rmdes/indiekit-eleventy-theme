@@ -339,7 +339,7 @@
     {% if withSidebar and page.url == "/" and homepageConfig and homepageConfig.sections %}
     {# Homepage: builder controls its own layout and sidebar #}
     {{ content | safe }}
-    {% elif withSidebar %}
+    {% elif withSidebar and homepageConfig and homepageConfig.blogListingSidebar and homepageConfig.blogListingSidebar.length %}
     <div class="layout-with-sidebar">
       <div class="main-content">
         {{ content | safe }}
@@ -348,7 +348,7 @@
         {% include "components/sidebar.njk" %}
       </aside>
     </div>
-    {% elif withBlogSidebar %}
+    {% elif withBlogSidebar and homepageConfig and homepageConfig.blogPostSidebar and homepageConfig.blogPostSidebar.length %}
     <div class="layout-with-sidebar">
       <div class="main-content">
         {{ content | safe }}
@@ -358,6 +358,9 @@
       </aside>
     </div>
     {% else %}
+    {# No sidebar widgets configured in site-config → render full-width, no empty
+       sidebar column. The sidebar is purely data-driven (homepageConfig); a site
+       that defines no widgets gets no sidebar at all. #}
     {{ content | safe }}
     {% endif %}
   </main>
