@@ -119,7 +119,7 @@ permalink: "featured/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNu
         {% endif %}
       </div>
       {% if post.templateContent %}
-      <p class="p-summary text-fg mt-3">{{ post.templateContent | striptags | truncate(250) }}</p>
+      <p class="p-summary text-fg mt-3">{{ post.templateContent | ogDescription(250) }}</p>
       {% endif %}
       <a href="{{ post.url }}" class="text-sm text-link hover:underline mt-3 inline-block">Read more &rarr;</a>
 

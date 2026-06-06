@@ -50,7 +50,7 @@ eleventyImport:
       "url": {{ absolutePostUrl | jsonEncode | safe }},
       "title": {% if post.data.title %}{{ post.data.title | jsonEncode | safe }}{% else %}null{% endif %},
       "content_html": {{ post.content | htmlToAbsoluteUrls(absolutePostUrl) | jsonEncode | safe }},
-      "content_text": {{ post.content | striptags | jsonEncode | safe }},
+      "content_text": {{ post.content | plainText | jsonEncode | safe }},
       "date_published": {{ (post.date | dateToRfc3339) | jsonEncode | safe }},
       "date_modified": {{ ((post.data.updated or post.date) | dateToRfc3339) | jsonEncode | safe }}
       {%- if postImage and postImage != "" and (postImage | length) > 10 %},

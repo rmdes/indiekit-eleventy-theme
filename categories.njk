@@ -55,7 +55,7 @@ eleventyComputed:
       <div class="post-header">
         <h2 class="text-xl font-semibold mb-1 flex-1">
           <a class="p-name u-url text-heading hover:text-link" href="{{ post.url }}">
-            {{ post.data.title or post.templateContent | striptags | truncate(60) or "Untitled" }}
+            {{ post.data.title or post.templateContent | ogDescription(60) or "Untitled" }}
           </a>
         </h2>
       </div>
@@ -66,7 +66,7 @@ eleventyComputed:
         <span class="post-type">{{ postType }}</span>
       </div>
       <p class="p-summary text-fg mt-3">
-        {{ post.templateContent | striptags | truncate(250) }}
+        {{ post.templateContent | ogDescription(250) }}
       </p>
       <a href="{{ post.url }}" class="text-sm text-link hover:underline mt-3 inline-block">
         View &rarr;

@@ -674,21 +674,30 @@ export default function (eleventyConfig) {
     return str.slice(0, len).trim() + "...";
   });
 
-  // Clean excerpt for OpenGraph - strips HTML, decodes entities, removes extra whitespace
-  eleventyConfig.addFilter("ogDescription", (content, len = 200) => {
+  // Strip HTML tags and decode common entities → clean plain text.
+  // Shared by `plainText` (full) and `ogDescription` (truncated excerpt).
+  // Decoding matters: a bare `striptags` leaves entities like &quot; encoded,
+  // and Nunjucks auto-escaping then double-encodes them (&amp;quot; → literal
+  // &quot;). Decoding here yields real chars that escape cleanly on output.
+  const toPlainText = (content) => {
     if (!content) return "";
-    // Strip HTML tags
     let text = content.replace(/<[^>]+>/g, ' ');
-    // Decode common HTML entities
     text = text.replace(/&amp;/g, '&')
                .replace(/&lt;/g, '<')
                .replace(/&gt;/g, '>')
                .replace(/&quot;/g, '"')
                .replace(/&#39;/g, "'")
                .replace(/&nbsp;/g, ' ');
-    // Remove extra whitespace
-    text = text.replace(/\s+/g, ' ').trim();
-    // Truncate
+    return text.replace(/\s+/g, ' ').trim();
+  };
+
+  // Plain-text content (HTML stripped, entities decoded), NOT truncated.
+  // Use for excerpts/feeds that must not double-encode entities.
+  eleventyConfig.addFilter("plainText", (content) => toPlainText(content));
+
+  // Clean excerpt for OpenGraph / cards - plain text, truncated.
+  eleventyConfig.addFilter("ogDescription", (content, len = 200) => {
+    let text = toPlainText(content);
     if (text.length > len) {
       text = text.slice(0, len).trim() + "...";
     }

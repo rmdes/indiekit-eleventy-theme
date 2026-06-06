@@ -101,7 +101,7 @@ permalink: "digest/{{ digest.slug }}/"
               {% if post.data.title %}
                 <a href="{{ post.url }}" class="font-medium text-heading hover:text-link">{{ post.data.title }}</a>
               {% elif post.templateContent %}
-                <p class="text-fg text-sm">{{ post.templateContent | striptags | truncate(120) }}</p>
+                <p class="text-fg text-sm">{{ post.templateContent | ogDescription(120) }}</p>
               {% endif %}
               <div class="text-sm text-fg-muted mt-1">
                 <time class="dt-published font-mono text-sm" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
@@ -115,7 +115,7 @@ permalink: "digest/{{ digest.slug }}/"
                 {{ post.data.title | default("Untitled") }}
               </a>
               {% if post.templateContent %}
-              <p class="text-fg text-sm mt-1">{{ post.templateContent | striptags | truncate(200) }}</p>
+              <p class="text-fg text-sm mt-1">{{ post.templateContent | ogDescription(200) }}</p>
               {% endif %}
               <div class="text-sm text-fg-muted mt-1">
                 <time class="dt-published font-mono text-sm" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
@@ -125,7 +125,7 @@ permalink: "digest/{{ digest.slug }}/"
 
           {% else %}
             <div>
-              <p class="text-fg">{{ post.templateContent | striptags | truncate(200) }}</p>
+              <p class="text-fg">{{ post.templateContent | ogDescription(200) }}</p>
               <div class="text-sm text-fg-muted mt-1">
                 <time class="dt-published font-mono text-sm" datetime="{{ post.date | isoDate }}">{{ post.date | dateDisplay }}</time>
                 &middot; <a href="{{ post.url }}" class="hover:underline" aria-label="Permalink: {{ post.data.title or (post.date | dateDisplay) }}">Permalink</a>

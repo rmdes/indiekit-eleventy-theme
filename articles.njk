@@ -50,7 +50,7 @@ permalink: "articles/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNu
         {% endif %}
       </div>
       <p class="p-summary text-fg mt-3">
-        {{ post.templateContent | striptags | truncate(250) }}
+        {{ post.templateContent | ogDescription(250) }}
       </p>
       <a href="{{ post.url }}" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline mt-3 inline-block">
         Read more &rarr;

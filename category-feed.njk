@@ -31,7 +31,7 @@ permalink: "categories/{{ categoryFeed.slug }}/feed.xml"
       {%- set postImage = post.data.image or (post.content | extractFirstImage) %}
     {%- endif %}
     <item>
-      <title>{{ post.data.title | default(post.content | striptags | truncate(80)) | escape }}</title>
+      <title>{{ post.data.title | default(post.content | ogDescription(80)) | escape }}</title>
       <link>{{ absolutePostUrl }}</link>
       <guid isPermaLink="true">{{ absolutePostUrl }}</guid>
       <pubDate>{{ post.date | dateToRfc822 }}</pubDate>
