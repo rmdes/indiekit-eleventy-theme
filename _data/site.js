@@ -145,7 +145,20 @@ export default function siteData() {
     // v3 schema: site-config Identity tab is canonical, env vars are
     // defense-in-depth fallback. Sole-operator dispensation. If MongoDB
     // ever wiped, the site degrades to env-var output instead of blank.
-    name: identity.name || process.env.SITE_NAME || "My IndieWeb Blog",
+    //
+    // site.name is the SITE TITLE / brand — it drives the header, <title>,
+    // og:site_name and the schema.org publisher. It is intentionally distinct
+    // from the PERSON behind the site: the h-card / hero / author cards read
+    // identity.name directly (via `id.name`), never site.name. So on a personal
+    // site, identity.name = "Ricardo Mendes" (h-card) while identity.siteName =
+    // "Node on the web" (header). Fallback chain: explicit Site title →
+    // SITE_NAME env → the person's name (single-author sites where the brand IS
+    // the person) → generic default.
+    name:
+      identity.siteName ||
+      process.env.SITE_NAME ||
+      identity.name ||
+      "My IndieWeb Blog",
     url: siteUrlBase,
     me: siteUrlWithSlash,
     locale: identity.locale || process.env.SITE_LOCALE || "en",

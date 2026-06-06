@@ -23,6 +23,33 @@ const postGraph = esmRequire("@rknightuk/eleventy-plugin-post-graph");
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const siteUrl = process.env.SITE_URL || "https://example.com";
 
+/**
+ * Resolve the site TITLE/brand for build-time consumers (e.g. the OG card
+ * generator) using the same precedence as _data/site.js:
+ *   identity.siteName → SITE_NAME env → identity.name → "My IndieWeb Blog".
+ * Reads the runtime site-config.json written by the site-config plugin, with a
+ * fallback to the theme's _data/site.example.json for theme-only dev. Wrapped in
+ * try/catch so a missing/broken file degrades to the env var, never throwing
+ * during the build.
+ */
+function resolveSiteName() {
+  const RUNTIME = "/app/data/content/_data/site-config.json";
+  const EXAMPLE = resolve(__dirname, "_data", "site.example.json");
+  let identity = {};
+  try {
+    const source = existsSync(RUNTIME) ? RUNTIME : EXAMPLE;
+    identity = JSON.parse(readFileSync(source, "utf8")).identity || {};
+  } catch {
+    identity = {};
+  }
+  return (
+    identity.siteName ||
+    process.env.SITE_NAME ||
+    identity.name ||
+    "My IndieWeb Blog"
+  );
+}
+
 // Memory profiler — logs RSS + V8 heap at key build phases
 // Writes to file (log buffer gets flushed by AP inbox traffic) AND stdout
 const MEM_LOG = "/app/data/.eleventy-mem.log";
@@ -1283,7 +1310,11 @@ export default function (eleventyConfig) {
     logMemory("before-build (OG start)");
     const contentDir = resolve(__dirname, "content");
     const cacheDir = resolve(__dirname, ".cache");
-    const siteName = process.env.SITE_NAME || "My IndieWeb Blog";
+    // Resolve the SITE TITLE the same way _data/site.js does so OG card images
+    // match the header/<title>: identity.siteName → SITE_NAME env → identity.name
+    // → default. Reading the runtime site-config.json (written by the site-config
+    // plugin) keeps the UI-configured brand authoritative without an env var.
+    const siteName = resolveSiteName();
     const BATCH_SIZE = 100;
     let totalGenerated = 0;
     let batch = 0;

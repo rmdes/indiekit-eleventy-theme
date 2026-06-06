@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
   "identity": {
-    "name": "My IndieWeb Site",
+    "name": "Jane Doe",
+    "siteName": "My IndieWeb Site",
     "description": "A site built with Indiekit",
     "tagline": "",
     "defaultAuthor": "",
