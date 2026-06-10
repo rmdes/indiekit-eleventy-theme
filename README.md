@@ -1,6 +1,6 @@
 # Indiekit Eleventy Theme
 
-A modern, IndieWeb-native Eleventy theme designed for [Indiekit](https://getindiekit.com/)-powered personal websites. Own your content, syndicate everywhere.
+A modern, IndieWeb-native Eleventy theme designed for [Indiekit](https://getindiekit.com/)-powered personal websites. Neutral and reusable across multiple deployments via the site-config plugin. Own your content, syndicate everywhere.
 
 ## Features
 
@@ -90,9 +90,41 @@ cd indiekit-eleventy-theme
 npm install
 ```
 
+## Multi-Site Architecture
+
+This theme is neutral and reusable across multiple Indiekit deployments. Per-site configuration is managed entirely through the **@rmdes/indiekit-endpoint-site-config** plugin, which provides a unified admin interface for:
+
+- **Identity** (author name, avatar, bio, title, social links)
+- **Branding** (colors, fonts via CSS custom properties)
+- **Navigation** (header menu items, "Option B" mode: operator-configured or defaults)
+- **Features** (toggles for AI transparency disclosure, markdown agents, etc.)
+- **Homepage** (layout, sections, sidebar widgets)
+
+**How it works:**
+
+1. Operator edits Site-Config admin UI in Indiekit
+2. Plugin writes JSON/CSS artifacts to `/app/data/content/_data/`
+   - `site-config.json` (core config)
+   - `theme.css` (Tier 2 semantic color tokens)
+   - `critical.css` (inlined, critical path CSS)
+   - `homepage.json` (homepage layout)
+3. Theme watches these files; changes trigger Eleventy rebuild
+4. Templates read from `site.*` data and conditionally render based on `loadedPlugins` and `site.features`
+
+**Why site-config?**
+
+- **No personal data in theme** — the same code runs on rmendes.net, v2.chardonsbleus.org, and other deployments
+- **Runtime configuration** — operator edits take effect without Docker rebuild
+- **Colors and typography** — centralized in CSS custom properties, no hardcoded palette
+- **Feature flags** — control which UI elements appear per-site
+
 ## Configuration
 
-**All configuration is done via environment variables** — the theme contains no hardcoded personal data.
+**Site-level configuration:** Use the @rmdes/indiekit-endpoint-site-config plugin admin UI (recommended).
+
+**Theme-level configuration:** Environment variables serve as fallbacks for the plugin and for theme-only development.
+
+**All configuration is done via environment variables OR site-config plugin** — the theme contains no hardcoded personal data.
 
 ### Required Variables
 
@@ -339,27 +371,78 @@ Override files are copied over the submodule during build.
 
 ## Plugin Integration
 
+### Site-Config Plugin (Core)
+
+The **@rmdes/indiekit-endpoint-site-config** plugin is the central hub for all per-site configuration:
+
+**Admin tabs:**
+- **Identity** — Author h-card (name, avatar, bio, title, location, social links)
+- **Branding** — Colors, fonts, visual direction (written as CSS custom properties to `theme.css`)
+- **Navigation** — Header menu items (Option B: operator-configured XOR theme defaults)
+- **Features** — Feature flags (AI transparency, markdown agents, etc.)
+- **Homepage** — (if homepage plugin enabled) Layout, sections, sidebar widgets
+
+**Files written to `/app/data/content/_data/`:**
+- `site-config.json` — Core config object
+- `theme.css` — CSS custom properties for colors and fonts
+- `critical.css` — Critical path CSS (inlined for fast first paint)
+- `homepage.json` — Homepage layout (if configured)
+
+**Eleventy watches these files** — changes trigger rebuild without Docker restart.
+
 ### How Plugins Provide Data
 
-Indiekit plugins write JSON files to `content/.indiekit/*.json`. The theme's `_data/*.js` files read these JSON files at build time.
+Indiekit plugins write JSON files to `content/_data/` (a symlink to `/app/data/content/_data/`). The theme's `_data/*.js` files read these JSON files at build time.
 
 **Example flow:**
 
 1. User edits CV in Indiekit admin UI (`/cv`)
-2. `@rmdes/indiekit-endpoint-cv` saves to `content/.indiekit/cv.json`
+2. `@rmdes/indiekit-endpoint-cv` saves to `/app/data/content/_data/cv.json`
 3. Eleventy rebuild triggers (`_data/cv.js` reads the JSON file)
 4. CV sections render with new data
 
 ### Homepage Builder
 
-The homepage builder is controlled by `@rmdes/indiekit-endpoint-homepage`:
+**Unified into site-config plugin.** The homepage layout is configured via Site-Config → Homepage tab:
 
-1. Plugin provides admin UI at `/homepage`
-2. User configures layout, sections, sidebar widgets
-3. Plugin writes `content/.indiekit/homepage.json`
-4. Theme renders configured layout (or falls back to default)
+1. Operator enables homepage builder and configures layout
+2. Site-Config plugin writes `homepage.json` to `/app/data/content/_data/`
+3. `_data/homepageConfig.js` reads the JSON
+4. `home.njk` → `homepage-builder.njk` renders configured layout
 
-**Fallback:** If no homepage plugin is installed, the theme shows a default layout (hero + recent posts + sidebar).
+**Fallback:** If no homepage config exists, the theme shows a default layout (hero + recent posts + sidebar).
+
+**Homepage sections (plugin-gated):**
+- `hero` — Author intro with avatar, bio, social links (configurable CTA)
+- `recent-posts` — Grid of recent posts (configurable post type filter)
+- `cv-experience`, `cv-skills`, `cv-education`, `cv-projects`, `cv-interests` — CV sections (requires CV plugin)
+- `custom-html` — Arbitrary HTML from admin UI
+
+**Sidebar widgets (plugin-gated):**
+- `author-card` — Sidebar h-card
+- `recent-posts` — Recent posts list
+- `social-activity` — Bluesky/Mastodon feed
+- `github-repos` — Featured GitHub repos
+- `funkwhale` — Now playing widget
+- `blogroll` — Recently updated blogs
+- `categories` — Category list
+
+### Plugin Loadout (Which Plugins Are Active)
+
+The **plugin-loadout.json** controls which optional plugins are loaded. The theme gates all conditional rendering on this file:
+
+```javascript
+// _data/loadedPlugins.js converts plugin-loadout.json to a truthy map
+{ cv: true, github: true, podroll: true, ... }
+```
+
+**Usage in templates:**
+```nunjucks
+{% if loadedPlugins.cv %}<a href="/cv/">CV</a>{% endif %}
+{% if loadedPlugins.github %}<a href="/github/">GitHub</a>{% endif %}
+```
+
+**Why gating?** The same theme runs on multiple deployments with different plugin configurations. Gating prevents 404s when optional plugins aren't installed.
 
 ### Adding Custom Sections
 
@@ -530,7 +613,7 @@ When the site owner clicks "Reply" on an interaction, the routing depends on the
 
 ## Contributing
 
-This theme is tailored for a specific Indiekit deployment but designed to be adaptable. Contributions welcome:
+This theme is shared across multiple Indiekit deployments. Contributions welcome, but must maintain neutrality:
 
 1. Fork the repository
 2. Create a feature branch
@@ -539,11 +622,13 @@ This theme is tailored for a specific Indiekit deployment but designed to be ada
 5. Submit a pull request
 
 **Guidelines:**
-- Keep theme neutral (no hardcoded personal data)
-- Use environment variables for all configuration
-- Maintain microformats2 markup
-- Test dark mode
-- Follow existing code style (ESM, Nunjucks, Tailwind)
+- **Keep theme neutral** (no hardcoded personal data, no site-specific content)
+- **Use site-config plugin** for all per-site configuration (identity, branding, navigation, features)
+- **Use environment variables** for theme-level development fallbacks
+- **Gate optional features** behind `loadedPlugins` or `site.features` flags
+- **Maintain microformats2 markup** (h-card, h-entry, h-feed, h-cite)
+- **Test dark mode** and multiple color schemes
+- **Follow existing code style** (ESM, Nunjucks, Tailwind CSS)
 
 ## License
 

@@ -4,12 +4,13 @@ This file provides guidance to Claude Code when working with the Indiekit Eleven
 
 ## Project Overview
 
-This is a comprehensive Eleventy theme designed for IndieWeb-powered personal websites using Indiekit. It renders Micropub posts (articles, notes, photos, bookmarks, likes, replies, reposts), integrates with Indiekit endpoint plugins for enhanced functionality (CV, homepage builder, GitHub, Funkwhale, Last.fm, YouTube, RSS, Microsub, etc.), and includes full webmention support.
+This is a comprehensive, neutral Eleventy theme designed for IndieWeb-powered personal websites using Indiekit. It renders Micropub posts (articles, notes, photos, bookmarks, likes, replies, reposts), integrates with Indiekit endpoint plugins for enhanced functionality (CV, homepage builder, GitHub, Funkwhale, Last.fm, YouTube, RSS, Microsub, etc.), and includes full webmention support.
 
-**Live Site:** https://rmendes.net
+**Key property:** This theme contains no hardcoded personal data. It is shared as a Git submodule across multiple deployments (rmendes.net, v2.chardonsbleus.org, etc.). Per-site variance comes from the `@rmdes/indiekit-endpoint-site-config` plugin, which writes configuration JSON/CSS artifacts into the site content directory, and from the `plugin-loadout.json` file that controls which plugins are available.
+
 **Used as Git submodule in:**
-- `/home/rick/code/indiekit-dev/indiekit-cloudron` (Cloudron deployment)
-- `/home/rick/code/indiekit-dev/indiekit-deploy` (Docker Compose deployment)
+- `/home/rick/code/indiekit-dev/indiekit-cloudron` (Cloudron deployment to rmendes.net)
+- `/home/rick/code/indiekit-dev/indiekit-deploy` (Docker Compose deployment, multi-site)
 
 ## CRITICAL: Submodule Workflow
 
@@ -80,21 +81,120 @@ export default async function () {
 
 ## Architecture
 
+### Multi-Site / Site-Config Architecture
+
+This theme is **neutral and reusable across multiple Indiekit deployments**. Per-site configuration comes from two sources:
+
+1. **Configuration JSON/CSS from `@rmdes/indiekit-endpoint-site-config`** (MongoDB-backed plugin)
+   - **Runtime path:** `/app/data/content/_data/`
+   - **Files written:**
+     - `site-config.json` — Core config (identity, branding, navigation, features)
+     - `theme.css` — Runtime Tier 2 semantic color tokens (replaces hardcoded colors)
+     - `critical.css` — Critical path CSS with baked-in colors (inlined in `<head>`)
+     - `homepage.json` — Homepage builder layout (if enabled)
+   - When the operator edits the Site-Config admin UI, these JSON/CSS files are written at runtime
+   - The theme watches these paths; changes trigger an Eleventy rebuild without a Docker rebuild
+
+2. **Plugin loadout from `plugin-loadout.json`** (baked at build time)
+   - **Path:** `/app/data/content/_data/loaded-plugins.json` (symlinked from repo root)
+   - **Created by:** `indiekit-cloudron/scripts/compose-site.mjs` at build time
+   - **Maps to:** `_data/loadedPlugins.js` which converts it to a truthy map
+   - **Used by:** Templates to conditionally render sections/links only when plugins are loaded (e.g., `{% if loadedPlugins.cv %}`)
+
 ### Data Flow: Plugin → JSON → _data → Template
 
 ```
-Indiekit Plugin (backend)
-  → writes JSON to content/.indiekit/*.json
-  → _data/*.js reads JSON file
+Indiekit Plugin (backend, MongoDB-backed)
+  → writes JSON/CSS to /app/data/content/_data/
+  → _data/*.js reads JSON file (or falls back to .example.json)
   → Nunjucks template renders data
+  → Cache invalidated on content change via Eleventy watchTarget
 ```
 
-**Example:** CV plugin flow
+**Example flows:**
 
-1. `@rmdes/indiekit-endpoint-cv` writes `content/.indiekit/cv.json`
-2. `_data/cv.js` reads the JSON file and exports the data
-3. `cv.njk` and `_includes/components/sections/cv-*.njk` render the data
-4. Homepage builder can include CV sections via `homepageConfig.sections`
+**CV plugin → template:**
+1. User edits CV in `/cv` admin UI
+2. `@rmdes/indiekit-endpoint-cv` saves to `/app/data/content/_data/cv.json`
+3. Eleventy detects change (watchTarget), rebuilds
+4. `_data/cv.js` reads the JSON file
+5. `cv.njk` and `_includes/components/sections/cv-*.njk` render the data
+
+**Site-Config plugin → template:**
+1. Operator edits Site-Config (Identity, Branding, Navigation, Features tabs)
+2. Plugin writes `site-config.json`, `theme.css`, `critical.css`, `homepage.json`
+3. Eleventy detects changes, rebuilds
+4. `_data/site.js` reads `site-config.json` and merges with env-var fallbacks
+5. `base.njk` links `theme.css` (runtime colors), inlines `critical.css`
+6. Templates read `site.identity.*`, `site.branding.*`, `site.navigation.*`, `site.features.*`
+
+### Site-Config Plugin Integration
+
+The `@rmdes/indiekit-endpoint-site-config` plugin unifies all per-site configuration into a single MongoDB-backed admin interface. The theme consumes it via these mechanisms:
+
+#### Identity (h-card, author info, site branding)
+
+- **Source:** Site-Config → Identity tab → `site-config.json`
+- **Consumed by:** `_data/site.js` → `site.identity` object
+- **Used in templates:** `hero.njk`, `about.njk`, any template that needs author/site info
+- **Precedence:** Plugin-provided values override env-var fallbacks (e.g., `AUTHOR_NAME` env var)
+- **Purpose:** Centralizes h-card data (name, avatar, bio, title, location, etc.) and social links
+
+#### Branding (colors, fonts, visual direction)
+
+- **Source:** Site-Config → Branding tab → writes `theme.css` and `critical.css`
+- **Consumed by:** `base.njk` via `<link>` for `theme.css` and inline `<style>` for `critical.css`
+- **Pattern:** Tier 2 semantic tokens (e.g., `--c-bg`, `--c-text`, `--c-accent`) replace hardcoded colors
+- **Cache invalidation:** Hash of `theme.css` included in URL query string; updates invalidate browser caches
+- **Fallback:** `css/theme.example.css` and `css/critical.example.css` when files missing (fresh containers)
+
+#### Navigation (header menu items)
+
+- **Source:** Site-Config → Navigation tab → `site-config.json` → `site.navigation.items` array
+- **Pattern:** "Option B" semantics
+  - **Operator-configured nav:** If items exist, render ONLY them (+ always Dashboard)
+  - **Fresh install:** If empty, render theme defaults (Home/About/Now/Blog/Pages/Interactions + Dashboard)
+- **Rendered by:** `base.njk` header nav and mobile nav
+- **Why two modes:** Fresh installs show defaults immediately; operators take explicit control when ready
+
+#### Features (feature flags)
+
+- **Source:** Site-Config → Features tab → `site-config.json` → `site.features` object
+- **Current flags:**
+  - `aiTransparency` (boolean) — show AI disclosure banner on posts and pages
+  - `aiTransparencyUrl` (string) — link to AI policy page (default: `/ai`)
+  - `markdownAgents` (object with `.enabled` flag) — show markdown version link on articles
+- **Used in:** `base.njk`, `post.njk`, `page.njk` for conditional rendering of banners/links
+
+#### Homepage Configuration
+
+- **Source:** Site-Config (if homepage plugin config exists) → `homepage.json`
+- **Consumed by:** `home.njk` layout → `homepage-builder.njk` component
+- **Structure:**
+  ```javascript
+  {
+    layout: "two-column" | "single-column" | "full-width-hero",
+    hero: { enabled: true, showAvatar: true, showSocial: true, ctaUrl: "/about/", ctaText: "Read more" },
+    sections: [...],
+    sidebar: [...],
+    blogListingSidebar: [...],
+    blogPostSidebar: [...]
+  }
+  ```
+- **Fallback:** If no config exists, `home.njk` shows default layout (hero + recent posts + sidebar)
+- **Per-page sidebars:** Operator can configure different sidebar widgets for blog listing pages vs. individual post pages
+
+#### Plugin Loadout (which plugins are loaded)
+
+- **Source:** Built at image time by `indiekit-cloudron/scripts/compose-site.mjs` → baked into image
+- **Loaded by:** Theme via `_data/loadedPlugins.js`
+- **Pattern:** Truthy map `{ cv: true, github: true, podroll: true, ... }` (only loaded plugins present)
+- **Used in templates:** Conditional rendering of links/sections
+  - `base.njk` navigation: `{% if loadedPlugins.cv %}<a href="/cv/">CV</a>{% endif %}`
+  - `footer.njk`: plugin-gated footer links
+  - `homepage-section.njk`: skip unavailable section types
+  - `blog.njk`: conditional widget rendering
+- **Why gating:** Multiple deployments run this theme; gating prevents 404s when optional plugins aren't loaded
 
 ### Key Files by Function
 
@@ -109,22 +209,35 @@ Indiekit Plugin (backend)
 
 #### Data Files (_data/)
 
-All `_data/*.js` files are ESM modules that export functions returning data objects. Most fetch from Indiekit plugin JSON files or external APIs.
+All `_data/*.js` files are ESM modules that export functions returning data objects. Most read from runtime JSON files written by Indiekit plugins (stored in `/app/data/content/_data/`) or fetch from external APIs.
+
+**Critical files (site-config integration):**
 
 | File | Data Source | Purpose |
 |------|-------------|---------|
-| `site.js` | Environment variables | Site config (name, URL, author, social links) |
-| `cv.js` | `content/.indiekit/cv.json` | CV data from `@rmdes/indiekit-endpoint-cv` |
-| `homepageConfig.js` | `content/.indiekit/homepage.json` | Homepage layout from `@rmdes/indiekit-endpoint-homepage` |
-| `enabledPostTypes.js` | `content/.indiekit/post-types.json` or env | List of enabled post types for navigation |
-| `urlAliases.js` | `content/.indiekit/url-aliases.json` | Legacy URL mappings for webmentions |
+| `site.js` | `/app/data/content/_data/site-config.json` (plugin) + env vars | Site config, identity, branding, navigation, features. Plugin takes precedence; env vars are fallback. |
+| `homepageConfig.js` | `/app/data/content/_data/homepage.json` (plugin) | Homepage layout (sections, sidebar, hero config). Returns null if not configured. |
+| `loadedPlugins.js` | `/app/data/content/_data/loaded-plugins.json` (baked at build) | Which plugins are loaded (truthy map for conditional rendering). |
+
+**Plugin-provided data files:**
+
+| File | Data Source | Purpose |
+|------|-------------|---------|
+| `cv.js` | `/app/data/content/_data/cv.json` | CV data from `@rmdes/indiekit-endpoint-cv` |
+| `enabledPostTypes.js` | `/app/data/content/_data/post-types.json` or `POST_TYPES` env | List of post types for navigation |
+| `urlAliases.js` | `/app/data/content/_data/url-aliases.json` | Legacy URL mappings for webmentions |
+| `newsActivity.js` | Indiekit IndieNews plugin API | Submitted IndieNews posts |
+
+**External API data files (with Indiekit proxy or direct):**
+
+| File | Data Source | Purpose |
+|------|-------------|---------|
 | `blogrollStatus.js` | Indiekit `/blogrollapi/api/status` | Checks if blogroll plugin is available |
 | `podrollStatus.js` | Indiekit `/podroll/api/status` | Checks if podroll plugin is available |
 | `githubActivity.js` | Indiekit `/githubapi/api/*` or GitHub API | GitHub commits, stars, featured repos |
 | `githubRepos.js` | GitHub API | Starred repositories for sidebar |
 | `funkwhaleActivity.js` | Indiekit Funkwhale plugin API | Listening activity |
 | `lastfmActivity.js` | Indiekit Last.fm plugin API | Scrobbles, loved tracks |
-| `newsActivity.js` | Indiekit IndieNews plugin API | Submitted IndieNews posts |
 | `youtubeChannel.js` | YouTube Data API v3 | Channel info, latest videos, live status |
 | `blueskyFeed.js` | Bluesky AT Protocol API | Recent Bluesky posts for sidebar |
 | `mastodonFeed.js` | Mastodon API | Recent Mastodon posts for sidebar |
@@ -548,16 +661,17 @@ For diagnosing and fixing Eleventy build performance issues, see the comprehensi
 
 ## Anti-Patterns
 
-1. ❌ **Forgetting to update submodule** after changes
-2. ❌ **Editing files in submodule directory** (`indiekit-cloudron/eleventy-site/`)
-3. ❌ **Using Date objects instead of ISO strings** for dates
-4. ❌ **Not guarding `| date` filters** against null/undefined
-5. ❌ **Using only underscore property names** (support both camelCase and underscore)
-6. ❌ **Using `markdownTemplateEngine: "njk"`** (breaks code samples with `{{`)
-7. ❌ **Hardcoding personal data in templates** (use environment variables)
-8. ❌ **Forgetting to run `make prepare`** before `cloudron build` (deploys stale config)
+1. ❌ **Forgetting to update submodule** after changes (commit here → update parent repos)
+2. ❌ **Editing files in submodule directory** (`indiekit-cloudron/eleventy-site/`) — edit this repo instead
+3. ❌ **Hardcoding personal data in templates** — this theme is neutral and shared; use environment variables or site-config plugin
+4. ❌ **Hardcoding site-specific identity/branding** — read from `site.identity`, `site.branding`, `site.navigation`, `site.features` instead
+5. ❌ **Using Date objects instead of ISO strings** for dates
+6. ❌ **Not guarding `| date` filters** against null/undefined
+7. ❌ **Using only underscore property names** (support both camelCase and underscore)
+8. ❌ **Using `markdownTemplateEngine: "njk"`** (breaks code samples with `{{`)
 9. ❌ **Using unsafe HTML string assignment in client-side JS** (security hooks reject it — use `createElement` + `textContent`)
-10. ❌ **Removing overrides without checking if they shadow submodule files** (causes stale data)
+10. ❌ **Adding conditional rendering without checking `loadedPlugins`** (breaks when optional plugins are disabled)
+11. ❌ **Assuming theme is used for one site only** — it's shared across multiple deployments; keep it neutral
 
 ## Troubleshooting
 
