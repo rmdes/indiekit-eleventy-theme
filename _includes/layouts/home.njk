@@ -9,7 +9,10 @@ withSidebar: true
 {# 2. Default — show recent posts with default hero #}
 
 {# --- Tier 0: v4 composition tree (site builder Phase 1) --- #}
-{% if composition and composition.schemaVersion == 4 %}
+{# Strict === to match the shortcode's own `!== 4` gate — loose == lets string
+   "4" pass here, the shortcode then rejects it, and the homepage renders EMPTY
+   instead of falling back to Tier 1. #}
+{% if composition and composition.schemaVersion === 4 %}
   {# Direct shortcode call — deliberately NOT {% include "components/render-block.njk" %}.
      Verified on Eleventy 3.1.2: async shortcode output inside {% include %} is
      silently dropped (same Nunjucks limitation noted for unfurl in

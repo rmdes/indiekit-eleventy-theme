@@ -22,7 +22,14 @@ export default function () {
     const artifactPath = resolve(__dirname, "..", "content", "_data", "compositions", "homepage.json");
     const raw = readFileSync(artifactPath, "utf8");
     const artifact = JSON.parse(raw);
-    console.log("[composition] Loaded v4 artifact from _data/compositions/homepage.json");
+    if (artifact?.schemaVersion !== 4) {
+      // Return the artifact anyway — home.njk's strict Tier-0 gate falls back
+      // to the homepage builder/default tiers; this warn is the loud signal
+      // explaining WHY the composition didn't render.
+      console.warn(`[composition] artifact schemaVersion ${artifact?.schemaVersion} unsupported (expected 4) — falling back to homepage builder/default`);
+    } else {
+      console.log("[composition] Loaded v4 artifact from _data/compositions/homepage.json");
+    }
     return artifact;
   } catch (error) {
     if (error.code !== "ENOENT") {

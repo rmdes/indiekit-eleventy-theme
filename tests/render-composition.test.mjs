@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderNode, resolveBlockTemplate } from "../lib/render-composition.mjs";
+import { readdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { renderNode, resolveBlockTemplate, KNOWN_WIDGET_TYPES } from "../lib/render-composition.mjs";
 
 const mockRender = async (templatePath, data) => {
   if (templatePath.includes("crash")) throw new Error("boom");
@@ -75,4 +77,26 @@ test("WIDGET ROUTING: a widget-type section node renders via the widget partial 
   assert.equal(captured.data.widget, node);
   assert.equal(captured.data.section, node);
   assert.deepEqual(captured.data.config, { compact: true });
+});
+
+test("WIDGET ROUTING: KNOWN_WIDGET_TYPES matches the widgets directory minus section collisions (drift guard)", () => {
+  const njkTypes = (relativeDir) =>
+    readdirSync(fileURLToPath(new URL(relativeDir, import.meta.url)))
+      .filter((file) => file.endsWith(".njk"))
+      .map((file) => file.replace(/\.njk$/, ""));
+
+  const widgetTypes = njkTypes("../_includes/components/widgets/");
+  const sectionTypes = new Set(njkTypes("../_includes/components/sections/"));
+  // The collision rule: types that exist as BOTH a section and a widget route
+  // to sections/, so they must NOT be in KNOWN_WIDGET_TYPES.
+  const expected = widgetTypes.filter((type) => !sectionTypes.has(type)).sort();
+
+  assert.deepEqual(
+    [...KNOWN_WIDGET_TYPES].sort(),
+    expected,
+    "KNOWN_WIDGET_TYPES is out of sync with _includes/components/widgets/ " +
+      "(minus types that also exist in sections/). Update the set in " +
+      "lib/render-composition.mjs — or, if you've moved to the Phase-2 block " +
+      "catalog, delete KNOWN_WIDGET_TYPES and this test.",
+  );
 });
