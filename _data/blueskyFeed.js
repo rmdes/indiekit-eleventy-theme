@@ -9,6 +9,11 @@ import { BskyAgent } from "@atproto/api";
 export default async function () {
   const handle = process.env.BLUESKY_HANDLE || "";
 
+  if (!handle) {
+    console.log("[blueskyFeed] BLUESKY_HANDLE unset — skipping");
+    return [];
+  }
+
   try {
     // Create agent and resolve handle to DID
     const agent = new BskyAgent({ service: "https://bsky.social" });

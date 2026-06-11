@@ -215,6 +215,17 @@ async function fetchCommitsFromRepos(username, limit = 10) {
 }
 
 export default async function () {
+  if (!GITHUB_USERNAME) {
+    console.log("[githubActivity] GITHUB_USERNAME unset — skipping");
+    return {
+      stars: [],
+      commits: [],
+      contributions: [],
+      featured: [],
+      source: "unconfigured",
+    };
+  }
+
   try {
     console.log("[githubActivity] Fetching GitHub data...");
 
