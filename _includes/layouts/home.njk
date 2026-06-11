@@ -3,9 +3,25 @@ layout: layouts/base.njk
 withSidebar: true
 ---
 
-{# Homepage content — two-tier fallback: #}
+{# Homepage content — three-tier fallback: #}
+{# 0. v4 composition artifact (composition) — recursive renderer controls everything #}
 {# 1. Plugin config (homepageConfig) — homepage builder controls everything #}
 {# 2. Default — show recent posts with default hero #}
+
+{# --- Tier 0: v4 composition tree (site builder Phase 1) --- #}
+{# Strict === to match the shortcode's own `!== 4` gate — loose == lets string
+   "4" pass here, the shortcode then rejects it, and the homepage renders EMPTY
+   instead of falling back to Tier 1. The tree check covers the other blank
+   path: a v4 artifact with a missing/invalid tree would render only a stripped
+   HTML comment. MUST stay in sync with the base.njk homepage passthrough. #}
+{% if composition and composition.schemaVersion === 4 and composition.tree %}
+  {# Direct shortcode call — deliberately NOT {% include "components/render-block.njk" %}.
+     Verified on Eleventy 3.1.2: async shortcode output inside {% include %} is
+     silently dropped (same Nunjucks limitation noted for unfurl in
+     eleventy.config.js), and {% renderFile %} loses the global data cascade
+     inside blocks. See components/render-block.njk for the canonical entry. #}
+  {% renderCompositionTree composition %}
+{% else %}
 
 {# Default hero — only shown for Tier 2 (plugin controls its own hero) #}
 {% if not (homepageConfig and homepageConfig.sections) %}
@@ -166,3 +182,5 @@ withSidebar: true
 {% endif %}
 
 {% endif %} {# end two-tier fallback #}
+
+{% endif %} {# end Tier 0 composition guard #}
