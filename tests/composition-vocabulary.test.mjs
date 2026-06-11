@@ -74,7 +74,10 @@ test("ARTIFACT CORNER: every token the committed homepage artifact emits is styl
   // artifact would emit a comp-* class with no CSS rule and render silently
   // unstyled — this walks the real committed artifact through
   // containerClasses() and catches it.
-  const artifact = JSON.parse(read("../content/_data/compositions/homepage.json"));
+  // The fixture lives in tests/fixtures/ (NOT content/) so Tier-0 stays
+  // dormant in every clone until a runtime artifact is deliberately written
+  // to content/_data/compositions/homepage.json (Phase 3+ site-config plugin).
+  const artifact = JSON.parse(read("./fixtures/composition-homepage.json"));
   const styled = new Set(tokens);
 
   const collectContainers = (node, out = []) => {
