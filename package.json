@@ -7,7 +7,8 @@
     "prebuild": "node -e \"const fs=require('node:fs'); if (!fs.existsSync('_data/site-config.json')) fs.copyFileSync('_data/site.example.json', '_data/site-config.json');\"",
     "build": "eleventy",
     "dev": "eleventy --serve --watch",
-    "build:css": "postcss css/tailwind.css -o css/style.css"
+    "build:css": "postcss css/tailwind.css -o css/style.css",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@11ty/eleventy": "^3.0.0",
