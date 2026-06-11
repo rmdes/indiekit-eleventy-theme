@@ -1,9 +1,15 @@
 import { cachedFetch } from "../lib/data-fetch.js";
 
+const INDIEKIT_URL = process.env.INDIEKIT_URL || process.env.SITE_URL || "";
+
 export default async function () {
+  if (!INDIEKIT_URL) {
+    console.log("[conversationMentions] SITE_URL/INDIEKIT_URL unset — skipping");
+    return [];
+  }
   try {
     const data = await cachedFetch(
-      "http://127.0.0.1:8080/conversations/api/mentions?per-page=10000",
+      `${INDIEKIT_URL}/conversations/api/mentions?per-page=500`,
       { duration: "15m", type: "json" }
     );
     return data.children || [];

@@ -667,171 +667,102 @@
 }
 
 /* Pagefind UI theme overrides — outside @layer for higher specificity over Pagefind's :root defaults */
+/* Colors use the theme's semantic palette tokens (rgb(var(--c-*))) which flip
+   automatically in dark mode, so no separate .dark overrides are required. */
 #search .pagefind-ui {
   --pagefind-ui-scale: 1;
-  --pagefind-ui-primary: #b45309;
-  --pagefind-ui-text: #1c1b19;
-  --pagefind-ui-background: #faf8f5;
-  --pagefind-ui-border: #e8e5df;
-  --pagefind-ui-tag: #f4f2ee;
+  --pagefind-ui-primary: rgb(var(--c-link));
+  --pagefind-ui-text: rgb(var(--c-fg));
+  --pagefind-ui-background: rgb(var(--c-bg));
+  --pagefind-ui-border: rgb(var(--c-border));
+  --pagefind-ui-tag: rgb(var(--c-surface));
   --pagefind-ui-border-width: 1px;
   --pagefind-ui-border-radius: 8px;
   --pagefind-ui-image-border-radius: 8px;
-  --pagefind-ui-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
-.dark #search .pagefind-ui {
-  --pagefind-ui-primary: #fbbf24;
-  --pagefind-ui-text: #faf8f5;
-  --pagefind-ui-background: #0f0e0d;
-  --pagefind-ui-border: #5c5750;
-  --pagefind-ui-tag: #2a2722;
+  --pagefind-ui-font: var(--font-sans, system-ui, -apple-system, sans-serif);
 }
 
 /* Search input */
 #search .pagefind-ui__search-input {
-  background-color: #faf8f5;
-  color: #1c1b19;
-  border-color: #e8e5df;
+  background-color: rgb(var(--c-bg));
+  color: rgb(var(--c-fg));
+  border-color: rgb(var(--c-border));
   font-weight: 400;
 }
 
-.dark #search .pagefind-ui__search-input {
-  background-color: #1c1b19;
-  color: #faf8f5;
-  border-color: #5c5750;
-}
-
 #search .pagefind-ui__search-input:focus {
-  outline: 2px solid #d97706;
+  outline: 2px solid rgb(var(--c-focus));
   outline-offset: 2px;
-  border-color: #d97706;
-}
-
-.dark #search .pagefind-ui__search-input:focus {
-  outline-color: #fbbf24;
-  border-color: #fbbf24;
+  border-color: rgb(var(--c-focus));
 }
 
 /* Search clear button */
 #search .pagefind-ui__search-clear {
-  color: #5c5750;
-  background-color: #faf8f5;
-}
-
-.dark #search .pagefind-ui__search-clear {
-  color: #a09a90;
-  background-color: #1c1b19;
+  color: rgb(var(--c-fg-muted));
+  background-color: rgb(var(--c-bg));
 }
 
 #search .pagefind-ui__search-clear:hover {
-  color: #1c1b19;
-}
-
-.dark #search .pagefind-ui__search-clear:hover {
-  color: #faf8f5;
+  color: rgb(var(--c-fg));
 }
 
 /* Result links */
 #search .pagefind-ui__result-link {
-  color: #b45309;
+  color: rgb(var(--c-link));
 }
 
 #search .pagefind-ui__result-link:hover {
   text-decoration: underline;
 }
 
-.dark #search .pagefind-ui__result-link {
-  color: #fbbf24;
-}
-
 /* Result excerpts */
 #search .pagefind-ui__result-excerpt {
-  color: #5c5750;
-}
-
-.dark #search .pagefind-ui__result-excerpt {
-  color: #a09a90;
+  color: rgb(var(--c-fg-muted));
 }
 
 /* Highlighted search terms in results */
 #search .pagefind-ui__result-excerpt mark,
 #search mark {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: rgb(var(--c-action));
+  color: rgb(var(--c-action-fg));
   padding: 0.1em 0.2em;
   border-radius: 2px;
 }
 
-.dark #search .pagefind-ui__result-excerpt mark,
-.dark #search mark {
-  background-color: #78350f;
-  color: #fde68a;
-}
-
 /* Message (result count) */
 #search .pagefind-ui__message {
-  color: #5c5750;
-}
-
-.dark #search .pagefind-ui__message {
-  color: #a09a90;
+  color: rgb(var(--c-fg-muted));
 }
 
 /* "Load more" button */
 #search .pagefind-ui__button {
-  color: #b45309;
-  background-color: #faf8f5;
-  border-color: #e8e5df;
+  color: rgb(var(--c-link));
+  background-color: rgb(var(--c-bg));
+  border-color: rgb(var(--c-border));
   cursor: pointer;
 }
 
 #search .pagefind-ui__button:hover {
-  background-color: #fffbeb;
-  border-color: #b45309;
-}
-
-.dark #search .pagefind-ui__button {
-  color: #fbbf24;
-  background-color: #0f0e0d;
-  border-color: #3f3b35;
-}
-
-.dark #search .pagefind-ui__button:hover {
-  background-color: #1c1b19;
-  border-color: #fbbf24;
+  background-color: rgb(var(--c-surface));
+  border-color: rgb(var(--c-link));
 }
 
 /* Filter panel labels */
 #search .pagefind-ui__filter-name,
 #search .pagefind-ui__filter-label {
-  color: #18181b;
-}
-
-.dark #search .pagefind-ui__filter-name,
-.dark #search .pagefind-ui__filter-label {
-  color: #f4f4f5;
+  color: rgb(var(--c-fg));
 }
 
 /* Result tags */
 #search .pagefind-ui__result-tag {
-  background-color: #f4f4f5;
-  color: #52525b;
-}
-
-.dark #search .pagefind-ui__result-tag {
-  background-color: #27272a;
-  color: #a1a1aa;
+  background-color: rgb(var(--c-surface));
+  color: rgb(var(--c-fg-muted));
 }
 
 /* Sub-result nested links */
 #search .pagefind-ui__result-nested .pagefind-ui__result-link {
-  color: #2563eb;
+  color: rgb(var(--c-link));
   font-weight: 400;
-}
-
-.dark #search .pagefind-ui__result-nested .pagefind-ui__result-link {
-  color: #60a5fa;
 }
 
 /* Mobile-specific improvements */
