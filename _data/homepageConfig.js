@@ -24,8 +24,11 @@ export default function () {
     const config = JSON.parse(raw);
     console.log("[homepageConfig] Loaded plugin config from _data/homepage.json");
     return config;
-  } catch {
-    // No site-config plugin homepage.json yet — first boot or theme-only dev
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      console.warn(`[homepageConfig] could not load homepage.json: ${error.message}`);
+    }
+    // Missing file (first boot / theme-only dev) is normal — fall through to null.
     return null;
   }
 }
