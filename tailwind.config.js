@@ -39,6 +39,25 @@ export default {
     "./content/**/*.md",
     "./lib/**/*.js",
   ],
+  // Composition container tokens (site builder Phase 1) are constructed
+  // dynamically in lib/render-composition.mjs (`comp-${node.as}` etc.), so the
+  // content scanner never sees the full class names. Safelist the closed
+  // vocabulary so the @layer components rules in css/tailwind.css survive
+  // tree-shaking. Keep in sync with containerClasses().
+  safelist: [
+    "comp-stack",
+    "comp-columns",
+    "comp-cols-2-1",
+    "comp-gap-tight",
+    "comp-gap-normal",
+    "comp-gap-loose",
+    "comp-w-narrow",
+    "comp-w-default",
+    "comp-w-wide",
+    "comp-sticky",
+    "comp-main",
+    "comp-complementary",
+  ],
   darkMode: "class",
   theme: {
     extend: {

@@ -312,6 +312,78 @@
   main.container {
     @apply py-6 md:py-8;
   }
+
+  /* Composition containers — closed token vocabulary (site builder Phase 1, spec §2.3).
+     Class tokens are emitted by lib/render-composition.mjs containerClasses().
+     Values mirror the existing homepage rules above (.layout-with-sidebar,
+     .main-content, .sidebar, .container) so a v4 composition renders
+     visually identical to the current homepage layout. */
+  .comp-stack {
+    @apply block;
+  }
+
+  /* Section templates carry their own mb-8 sm:mb-12; adjacent block margins
+     collapse, so this matches the current section rhythm without doubling. */
+  .comp-stack > * + * {
+    @apply mt-8 sm:mt-12;
+  }
+
+  /* Default columns gap mirrors .layout-with-sidebar (gap-6 md:gap-8) */
+  .comp-columns {
+    @apply grid grid-cols-1 gap-6 md:gap-8;
+  }
+
+  /* 2/3 + 1/3 split — same breakpoint/ratio as .layout-with-sidebar */
+  .comp-cols-2-1.comp-columns {
+    @apply lg:grid-cols-3;
+  }
+
+  /* Main column (role="main" child) — mirrors .main-content.
+     min-w-0 + overflow-x-hidden prevents layout breaking. */
+  .comp-cols-2-1 > .comp-main {
+    @apply lg:col-span-2 min-w-0 overflow-x-hidden;
+  }
+
+  /* Sidebar column (role="complementary" child) — mirrors .sidebar
+     (space-y-6 + overflow-hidden) */
+  .comp-cols-2-1 > .comp-complementary {
+    @apply overflow-hidden;
+  }
+
+  .comp-stack.comp-complementary > * + * {
+    @apply mt-6;
+  }
+
+  /* Gap tokens — defined after .comp-columns so they win the cascade */
+  .comp-gap-tight {
+    @apply gap-4;
+  }
+
+  .comp-gap-normal {
+    @apply gap-6 md:gap-8;
+  }
+
+  .comp-gap-loose {
+    @apply gap-8 md:gap-12;
+  }
+
+  /* Width tokens — default mirrors .container (max-w-5xl mx-auto) */
+  .comp-w-narrow {
+    @apply max-w-2xl mx-auto;
+  }
+
+  .comp-w-default {
+    @apply max-w-5xl mx-auto;
+  }
+
+  .comp-w-wide {
+    @apply max-w-7xl mx-auto;
+  }
+
+  /* Sticky sidebar — mirrors .sidebar (lg:sticky lg:top-24 lg:self-start) */
+  .comp-sticky {
+    @apply lg:sticky lg:top-24 lg:self-start;
+  }
 }
 
 /* Custom component styles */
