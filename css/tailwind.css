@@ -350,11 +350,16 @@
     @apply overflow-hidden;
   }
 
-  .comp-stack.comp-complementary > * + * {
+  /* :not([hidden]) ~ :not([hidden]) matches legacy space-y-6 exactly —
+     unlike > * + *, it skips hidden children (a pattern this theme uses,
+     e.g. hidden Bridgy syndication content). */
+  .comp-stack.comp-complementary > :not([hidden]) ~ :not([hidden]) {
     @apply mt-6;
   }
 
-  /* Gap tokens — defined after .comp-columns so they win the cascade */
+  /* Gap tokens — defined after .comp-columns so they win the cascade.
+     gap only affects grid containers (comp-columns); it is inert on
+     display:block stacks, whose rhythm is fixed by the margin rules above. */
   .comp-gap-tight {
     @apply gap-4;
   }
@@ -367,7 +372,8 @@
     @apply gap-8 md:gap-12;
   }
 
-  /* Width tokens — default mirrors .container (max-w-5xl mx-auto) */
+  /* Width tokens — default mirrors .container width (max-w-5xl mx-auto;
+     px-4 intentionally omitted — the page shell provides horizontal padding) */
   .comp-w-narrow {
     @apply max-w-2xl mx-auto;
   }
