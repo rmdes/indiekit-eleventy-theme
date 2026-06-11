@@ -1,0 +1,13 @@
+{# Entry point: render a v4 composition tree (the whole artifact JSON).
+   `composition` is the global from _data/composition.mjs; the shortcode
+   accepts the object directly (or a JSON string), gates on
+   schemaVersion === 4 / missing tree, and logs loud [composition] signals.
+
+   WARNING (verified on Eleventy 3.1.2): do NOT pull this partial in via
+   {% include %} — async shortcode output inside {% include %} is silently
+   dropped (the same Nunjucks limitation documented for unfurl in
+   eleventy.config.js), and {% renderFile %} of this partial loses the
+   global data cascade inside blocks (site, collections, homepageConfig…).
+   Layouts must place this shortcode call directly in the layout template,
+   as layouts/home.njk does. This file is the canonical, copyable entry. #}
+{% renderCompositionTree composition %}

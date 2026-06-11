@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 4,
+  "kind": "homepage",
+  "tree": {
+    "block": "container",
+    "as": "stack",
+    "role": "root",
+    "children": [
+      { "block": "section", "id": "s_hero", "type": "hero", "config": {} },
+      {
+        "block": "container",
+        "as": "columns",
+        "variant": { "columns": "2-1" },
+        "children": [
+          {
+            "block": "container",
+            "as": "stack",
+            "role": "main",
+            "children": [
+              { "block": "section", "id": "s_recent", "type": "recent-posts", "config": { "maxItems": 10 } },
+              { "block": "section", "id": "s_activity", "type": "posting-activity", "config": {} }
+            ]
+          },
+          {
+            "block": "container",
+            "as": "stack",
+            "role": "complementary",
+            "variant": { "sticky": true },
+            "children": [
+              { "block": "section", "id": "w_author", "type": "author-card", "config": {} },
+              { "block": "section", "id": "w_search", "type": "search", "config": {} }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
