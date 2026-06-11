@@ -58,3 +58,44 @@ test("every vocabulary token has a rule in css/tailwind.css", () => {
     );
   }
 });
+
+// Role-marker tokens deliberately WITHOUT a CSS rule — pure semantic anchors,
+// not layout: do not "fix" them by adding styles or safelist entries.
+const UNSTYLED_ROLE_TOKENS = new Set([
+  "comp-root",
+  "comp-region",
+  "comp-banner",
+  "comp-contentinfo",
+]);
+
+test("ARTIFACT CORNER: every token the committed homepage artifact emits is styled or an exempt role marker", () => {
+  // Closes the third corner of the triangulation (renderer ↔ CSS ↔ artifact):
+  // a typo'd `as`/`variant`/`role` value in a (future machine-written)
+  // artifact would emit a comp-* class with no CSS rule and render silently
+  // unstyled — this walks the real committed artifact through
+  // containerClasses() and catches it.
+  const artifact = JSON.parse(read("../content/_data/compositions/homepage.json"));
+  const styled = new Set(tokens);
+
+  const collectContainers = (node, out = []) => {
+    if (!node || typeof node !== "object") return out;
+    if (node.block === "container") out.push(node);
+    for (const child of Array.isArray(node.children) ? node.children : []) {
+      collectContainers(child, out);
+    }
+    return out;
+  };
+
+  const containers = collectContainers(artifact.tree);
+  assert.ok(containers.length > 0, "artifact tree has no containers — walk is vacuous, check the artifact/walker");
+
+  for (const container of containers) {
+    for (const token of containerClasses(container).split(" ")) {
+      assert.ok(
+        styled.has(token) || UNSTYLED_ROLE_TOKENS.has(token),
+        `artifact emits "${token}" which has no CSS rule and is not an exempt role marker — ` +
+          `typo'd as/variant/role value? (styled: ${[...styled].join(", ")}; exempt: ${[...UNSTYLED_ROLE_TOKENS].join(", ")})`,
+      );
+    }
+  }
+});

@@ -11,8 +11,10 @@ withSidebar: true
 {# --- Tier 0: v4 composition tree (site builder Phase 1) --- #}
 {# Strict === to match the shortcode's own `!== 4` gate — loose == lets string
    "4" pass here, the shortcode then rejects it, and the homepage renders EMPTY
-   instead of falling back to Tier 1. #}
-{% if composition and composition.schemaVersion === 4 %}
+   instead of falling back to Tier 1. The tree check covers the other blank
+   path: a v4 artifact with a missing/invalid tree would render only a stripped
+   HTML comment. MUST stay in sync with the base.njk homepage passthrough. #}
+{% if composition and composition.schemaVersion === 4 and composition.tree %}
   {# Direct shortcode call — deliberately NOT {% include "components/render-block.njk" %}.
      Verified on Eleventy 3.1.2: async shortcode output inside {% include %} is
      silently dropped (same Nunjucks limitation noted for unfurl in

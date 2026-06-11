@@ -336,8 +336,8 @@
   </header>
 
   <main class="container py-8" id="main-content" data-pagefind-body>
-    {% if withSidebar and page.url == "/" and homepageConfig and homepageConfig.sections %}
-    {# Homepage: builder controls its own layout and sidebar #}
+    {% if withSidebar and page.url == "/" and ((homepageConfig and homepageConfig.sections) or (composition and composition.schemaVersion === 4 and composition.tree)) %}
+    {# Homepage: builder or Tier-0 v4 composition controls its own layout and sidebar — without this passthrough a composition-only homepage would be wrapped in .layout-with-sidebar plus a second legacy sidebar below #}
     {{ content | safe }}
     {% elif withSidebar and homepageConfig and homepageConfig.blogListingSidebar and homepageConfig.blogListingSidebar.length %}
     <div class="layout-with-sidebar">
