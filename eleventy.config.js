@@ -1,3 +1,4 @@
+import { EleventyRenderPlugin } from "@11ty/eleventy";
 import pluginWebmentions from "@chrisburnell/eleventy-cache-webmentions";
 import pluginRss from "@11ty/eleventy-plugin-rss";
 import embedEverything from "eleventy-plugin-embed-everything";
@@ -9,6 +10,7 @@ import syntaxHighlight from "@11ty/eleventy-plugin-syntaxhighlight";
 import { minify } from "html-minifier-terser";
 import { minify as minifyJS } from "terser";
 import registerUnfurlShortcode, { getCachedCard, prefetchUrl } from "./lib/unfurl-shortcode.js";
+import { renderNode } from "./lib/render-composition.mjs";
 import matter from "gray-matter";
 import { createHash, createHmac } from "crypto";
 import { createRequire } from "module";
@@ -171,6 +173,43 @@ export default function (eleventyConfig) {
   // RSS plugin for feed filters (dateToRfc822, absoluteUrl, etc.)
   // Custom feed templates in feed.njk and feed-json.njk use these filters
   eleventyConfig.addPlugin(pluginRss);
+
+  // Render plugin — provides the `renderFile` universal shortcode so the
+  // composition renderer can run block partials through the same Nunjucks
+  // engine (all filters/globals available).
+  eleventyConfig.addPlugin(EleventyRenderPlugin, { accessGlobalData: true });
+
+  // Per-build block-data memo (cleared each build like the other caches).
+  const _blockDataCache = new Map();
+  eleventyConfig.on("eleventy.before", () => { _blockDataCache.clear(); });
+
+  // Recursive composition renderer. Runs each block's Nunjucks partial through
+  // RenderPlugin's `renderFile` in the same engine with all filters/globals.
+  eleventyConfig.addAsyncShortcode("renderCompositionTree", async function (treeJson) {
+    let tree;
+    try { tree = typeof treeJson === "string" ? JSON.parse(treeJson) : treeJson; }
+    catch { return "<!-- composition: invalid tree JSON -->"; }
+    if (!tree || tree.schemaVersion !== 4) return "<!-- composition: unsupported schemaVersion -->";
+
+    // RenderPlugin registers `renderFile` as a universal shortcode only — it is
+    // NOT reachable as `this.renderFile` inside a Nunjucks shortcode (Nunjucks
+    // builds shortcode `this` purely from template context). Grab the registered
+    // function reference instead; it closes over templateConfig/extensionMap and
+    // uses `this` only as a data carrier. NOTE: `universal.shortcodes` is
+    // Eleventy-internal storage (UserConfig.js) — version-pinned bridge,
+    // verified against Eleventy 3.1.2; re-verify on upgrade. Looked up lazily
+    // so plugin registration order doesn't matter; the guard degrades to an
+    // HTML comment instead of a crash.
+    const renderFile = eleventyConfig.universal?.shortcodes?.renderFile;
+    if (typeof renderFile !== "function") return "<!-- composition: renderFile unavailable -->";
+
+    // Expose the full template context as `data` so renderShortcodeFn's
+    // accessGlobalData fallback (ProxyWrap) gives partials the global cascade
+    // (site, collections, …) underneath each block's own data.
+    const boundContext = { ctx: this.ctx, page: this.page, eleventy: this.eleventy, data: this.ctx };
+    const renderFn = (templatePath, data) => renderFile.call(boundContext, templatePath, data, "njk");
+    return renderNode(tree.tree, renderFn, {});
+  });
 
   // Post graph — GitHub-style contribution grid for posting frequency
   eleventyConfig.addPlugin(postGraph, {
@@ -582,6 +621,7 @@ export default function (eleventyConfig) {
   eleventyConfig.addWatchTarget("./content/_data/critical.css");
   eleventyConfig.addWatchTarget("./content/_data/site-config.json");
   eleventyConfig.addWatchTarget("./content/_data/homepage.json");
+  eleventyConfig.addWatchTarget("./content/_data/compositions/");
 
   // Webmentions plugin configuration
   const wmDomain = siteUrl.replace("https://", "").replace("http://", "");
