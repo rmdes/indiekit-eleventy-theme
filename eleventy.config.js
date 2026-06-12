@@ -12,6 +12,7 @@ import { minify as minifyJS } from "terser";
 import registerUnfurlShortcode, { getCachedCard, prefetchUrl } from "./lib/unfurl-shortcode.js";
 import { renderNode } from "./lib/render-composition.mjs";
 import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
+import { prunePreviewOrphans, readCurrentPreviewToken } from "./lib/prune-preview.mjs";
 import matter from "gray-matter";
 import { createHash, createHmac, randomUUID } from "crypto";
 import { createRequire } from "module";
@@ -1785,6 +1786,22 @@ export default function (eleventyConfig) {
         // Omitted when unknown so the writer carries the previous value forward
         ...(durationSeconds === undefined ? {} : { lastOkDurationSeconds: durationSeconds }),
       });
+    }
+
+    // Preview orphan pruning (site-builder Phase 5 follow-up). Preview tokens
+    // rotate on every publish, but the in-place incremental build never
+    // deletes the old /preview/<token>/ output — without pruning, the stale
+    // token's page keeps serving 200 forever. Remove every preview directory
+    // that isn't the CURRENT draft token (no artifact → no preview should
+    // exist → remove all). Must run BEFORE the incremental early-return —
+    // every publish is an incremental rebuild. Never throws.
+    {
+      const artifactPath = resolve(__dirname, "content", "_data", "compositions", "preview-draft.json");
+      const currentToken = readCurrentPreviewToken(artifactPath);
+      const pruned = await prunePreviewOrphans(directories?.output || dir.output, currentToken);
+      if (pruned.length > 0) {
+        console.log(`[preview] Pruned ${pruned.length} stale preview dir(s): ${pruned.join(", ")}`);
+      }
     }
 
     // WebSub hub notification — skip on incremental rebuilds
