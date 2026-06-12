@@ -12,8 +12,9 @@
         matching `id="widget-panel-<blockId>"` on the panel.
 
    Receives (all strings; renderer passes RAW catalog values, this partial
-   owns the fallback chain): blockId, widgetType, title, iconName, iconClass,
-   borderClass, defaultOpen ("true"/"false"), innerHtml (pre-rendered, safe).
+   owns the fallback chain): blockId, widgetType, title, iconName, iconClass
+   and borderClass (both reserved, not currently passed by the renderer),
+   defaultOpen ("true"/"false"), innerHtml (pre-rendered, safe).
 
    Fallback chain — presentation belongs in the template layer: the catalog's
    `label`/`icon` take precedence when set; the legacy v3 per-type titles and

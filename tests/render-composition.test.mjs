@@ -285,6 +285,21 @@ test("CHROME DATA: custom-html per-instance config.title takes v3 precedence ove
   assert.equal(noEntry.chromeCalls[0].data.title, "");
 });
 
+test("CHROME: missing or charset-unsafe block ids fall back to positional blockIds", async () => {
+  // blockId reaches inline Alpine JS expressions (x-data localStorage key,
+  // @click): the browser entity-decodes attributes BEFORE Alpine evaluates,
+  // so quotes/braces in an id would break the toggle client-side. Only
+  // [\w-]+ ids pass through; missing AND unsafe ids both go positional.
+  const { renderFn, chromeCalls } = makeChromeSpyRender();
+  const tree = { block: "container", as: "stack", role: "complementary", children: [
+    { block: "section", id: "w0", type: "author-card", config: {} },
+    { block: "section", type: "search", config: {} },                    // no id
+    { block: "section", id: "bad'id}", type: "categories", config: {} }, // unsafe charset
+  ]};
+  await renderNode(tree, renderFn, {});
+  assert.deepEqual(chromeCalls.map((c) => c.data.blockId), ["w0", "pos1", "pos2"]);
+});
+
 test("CHROME: non-complementary containers (main/root/contentinfo) do not wrap children", async () => {
   for (const role of ["main", "root", "contentinfo"]) {
     const { renderFn, chromeCalls } = makeChromeSpyRender();

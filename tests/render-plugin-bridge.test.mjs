@@ -1,8 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import Eleventy, { EleventyRenderPlugin } from "@11ty/eleventy";
 
 /**
@@ -48,6 +49,65 @@ test("RenderPlugin bridge: universal.shortcodes.renderFile resolves and renders 
     assert.ok(page, "page template must render");
     assert.match(page.content, /PARTIAL\[b1\]/, "partial must receive the block's own data");
     assert.match(page.content, /site=GLOBALDATA-OK/, "partial must receive the global cascade (accessGlobalData)");
+  } finally {
+    rmSync(dir, { recursive: true });
+  }
+});
+
+/**
+ * Smoke test for the REAL composition-widget-chrome.njk partial through REAL
+ * renderFile. Every chrome test in render-composition.test.mjs spies the
+ * partial away — without this, a Nunjucks syntax error in the partial would
+ * only surface at site build. Renders the actual repo file (absolute path);
+ * its `{% from "components/icon.njk" import icon %}` resolves against the
+ * tmp project's _includes, so the real icon.njk is copied in.
+ */
+test("CHROME SMOKE: composition-widget-chrome.njk renders via renderFile — collapse chrome, aria pair, fallback title", async () => {
+  const repoRoot = fileURLToPath(new URL("..", import.meta.url));
+  const chromePartial = join(repoRoot, "_includes", "components", "composition-widget-chrome.njk");
+  const dir = mkdtempSync(join(tmpdir(), "chrome-smoke-"));
+  try {
+    mkdirSync(join(dir, "_includes", "components"), { recursive: true });
+    copyFileSync(
+      join(repoRoot, "_includes", "components", "icon.njk"),
+      join(dir, "_includes", "components", "icon.njk"),
+    );
+    writeFileSync(join(dir, "page.njk"), "{% chromesmoke %}");
+
+    const elev = new Eleventy(dir, join(dir, "_site"), {
+      configPath: false,
+      quietMode: true,
+      config(eleventyConfig) {
+        eleventyConfig.addPlugin(EleventyRenderPlugin, { accessGlobalData: true });
+        eleventyConfig.addAsyncShortcode("chromesmoke", async function () {
+          const renderFile = eleventyConfig.universal?.shortcodes?.renderFile;
+          if (typeof renderFile !== "function") return "BRIDGE-MISSING";
+          const boundContext = { ctx: this.ctx, page: this.page, eleventy: this.eleventy, data: this.ctx };
+          // Same data shape wrapWidgetChrome passes; empty title/iconName
+          // exercise the partial's internal fallback maps ("blogroll" →
+          // "Blogroll" + book-open accent).
+          return renderFile.call(boundContext, chromePartial, {
+            blockId: "smoke1",
+            widgetType: "blogroll",
+            title: "",
+            iconName: "",
+            defaultOpen: "true",
+            innerHtml: '<div class="widget">SMOKE-INNER</div>',
+          }, "njk");
+        });
+      },
+    });
+
+    const results = await elev.toJSON();
+    const page = results.find((entry) => entry.inputPath.includes("page"));
+
+    assert.ok(page, "page template must render");
+    assert.match(page.content, /widget-collapsible/, "collapse wrapper must render");
+    assert.match(page.content, /aria-controls="widget-panel-smoke1"/, "button must reference the panel (WCAG pair)");
+    assert.match(page.content, /id="widget-panel-smoke1"/, "panel id must match aria-controls");
+    assert.match(page.content, /localStorage\.getItem\('widget-smoke1'\)/, "localStorage key must use the stable block id");
+    assert.match(page.content, /Blogroll/, "type-title fallback map must resolve when no catalog title is passed");
+    assert.match(page.content, /SMOKE-INNER/, "innerHtml must pass through");
   } finally {
     rmSync(dir, { recursive: true });
   }
