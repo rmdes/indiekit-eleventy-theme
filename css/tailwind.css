@@ -995,3 +995,220 @@ body[data-indiekit-auth="true"] .share-post-btn:hover {
   background: #374151;
   color: #34d399;
 }
+
+/* feedland widget styles (moved from inline <style>, site-builder Phase 3) */
+.fl-wrap {
+  border: 1px solid gainsboro;
+  padding: 5px 10px;
+  font-family: Ubuntu, sans-serif;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+.fl-wrap:focus {
+  border-color: rgba(82, 168, 236, 0.8);
+  outline: 0;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+  background-color: white;
+}
+.fl-title {
+  font-family: "Rancho", cursive;
+  font-size: 36px;
+  font-weight: bold;
+  letter-spacing: -1px;
+  text-align: center;
+  margin: 5px 0;
+  line-height: 1.1;
+}
+.fl-title a {
+  color: inherit;
+  text-decoration: none;
+}
+.fl-title a:hover {
+  text-decoration: underline;
+}
+.fl-sort {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  line-height: 14px;
+  padding: 3px 0;
+}
+.fl-sort span {
+  cursor: pointer;
+}
+.fl-sort .selected {
+  font-weight: bold;
+}
+.fl-row {
+  display: flex;
+  align-items: baseline;
+  padding: 4px 0;
+  line-height: normal;
+  cursor: pointer;
+}
+.fl-row:hover {
+  background-color: whitesmoke;
+}
+.fl-row.fl-selected {
+  background-color: #e8f0fe;
+}
+.fl-caret {
+  width: 14px;
+  flex-shrink: 0;
+  padding-right: 4px;
+}
+.fl-caret-dark { opacity: .9; }
+.fl-caret-light { opacity: .2; }
+.fl-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fl-name a {
+  color: inherit;
+  text-decoration: none;
+}
+.fl-name a:hover {
+  text-decoration: underline;
+}
+.fl-when {
+  flex-shrink: 0;
+  font-size: 12px;
+  padding-left: 6px;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+/* Expanded items */
+.fl-items {
+  padding: 2px 0 4px 18px;
+}
+.fl-items ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fl-items li {
+  padding: 2px 0;
+  font-size: 13px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fl-items li a {
+  color: #1a73e8;
+  text-decoration: none;
+}
+.fl-items li a:hover {
+  text-decoration: underline;
+}
+.fl-items .fl-item-when {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-left: 4px;
+}
+.fl-items .fl-loading {
+  font-size: 12px;
+  opacity: 0.5;
+  padding: 4px 0;
+}
+.fl-footer {
+  text-align: center;
+  font-size: 13px;
+  border-top: 1px solid gainsboro;
+  margin-top: 13px;
+  padding-top: 4px;
+  opacity: 0.5;
+}
+.fl-footer a {
+  color: inherit;
+  text-decoration: none;
+}
+.fl-footer a:hover {
+  text-decoration: underline;
+}
+/* 3-dot menu */
+.fl-header {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+}
+.fl-header .fl-title {
+  flex: 1;
+}
+.fl-menu-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 2px;
+  opacity: 0.5;
+  color: inherit;
+}
+.fl-menu-btn:hover {
+  opacity: 1;
+}
+.fl-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border: 1px solid gainsboro;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 10;
+  min-width: 180px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+.fl-menu a {
+  display: block;
+  padding: 5px 12px;
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.fl-menu a:hover {
+  background-color: whitesmoke;
+}
+.fl-menu hr {
+  margin: 4px 0;
+  border: none;
+  border-top: 1px solid gainsboro;
+}
+.dark .fl-menu {
+  background: #2a2a2a;
+  border-color: #444;
+}
+.dark .fl-menu a:hover {
+  background-color: #333;
+}
+.dark .fl-menu hr {
+  border-top-color: #444;
+}
+@media screen and (max-width: 576px) {
+  .fl-title { display: none; }
+  .fl-name { font-size: 14px; }
+}
+/* Dark mode */
+.dark .fl-wrap {
+  border-color: #444;
+  color: #e0e0e0;
+}
+.dark .fl-wrap:focus {
+  background-color: #1a1a1a;
+}
+.dark .fl-row:hover {
+  background-color: #2a2a2a;
+}
+.dark .fl-row.fl-selected {
+  background-color: #1e3a5f;
+}
+.dark .fl-items li a {
+  color: #8ab4f8;
+}
+.dark .fl-footer {
+  border-top-color: #444;
+}

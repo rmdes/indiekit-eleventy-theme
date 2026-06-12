@@ -230,7 +230,14 @@ export default function (eleventyConfig) {
     // (site, collections, …) underneath each block's own data.
     const boundContext = { ctx: this.ctx, page: this.page, eleventy: this.eleventy, data: this.ctx };
     const renderFn = (templatePath, data) => renderFile.call(boundContext, templatePath, data, "njk");
-    return renderNode(tree.tree, renderFn, {});
+    // Phase 3: thread the catalog + plugin loadout globals (from the data
+    // cascade) into the renderer for existence checks and requiresPlugin
+    // gating. Absent catalog (theme-only dev) degrades to convention-based
+    // resolution inside renderSection.
+    return renderNode(tree.tree, renderFn, {
+      blockCatalog: this.ctx?.blockCatalog,
+      loadedPlugins: this.ctx?.loadedPlugins,
+    });
   });
 
   // Post graph — GitHub-style contribution grid for posting frequency
@@ -644,6 +651,7 @@ export default function (eleventyConfig) {
   eleventyConfig.addWatchTarget("./content/_data/site-config.json");
   eleventyConfig.addWatchTarget("./content/_data/homepage.json");
   eleventyConfig.addWatchTarget("./content/_data/compositions/");
+  eleventyConfig.addWatchTarget("./content/_data/block-catalog.json");
 
   // Webmentions plugin configuration
   const wmDomain = siteUrl.replace("https://", "").replace("http://", "");
