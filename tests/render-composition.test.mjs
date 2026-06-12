@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { renderNode, resolveBlockTemplate, KNOWN_WIDGET_TYPES } from "../lib/render-composition.mjs";
+import { renderNode, resolveBlockTemplate, KNOWN_WIDGET_TYPES, ENDPOINT_SLUGS } from "../lib/render-composition.mjs";
 
 const mockRender = async (templatePath, data) => {
   if (templatePath.includes("crash")) throw new Error("boom");
@@ -77,6 +77,74 @@ test("WIDGET ROUTING: a widget-type section node renders via the widget partial 
   assert.equal(captured.data.widget, node);
   assert.equal(captured.data.section, node);
   assert.deepEqual(captured.data.config, { compact: true });
+});
+
+// ── Phase-3 catalog-driven dispatch ──────────────────────────────────────────
+// When ctx.blockCatalog.available, the catalog owns block EXISTENCE (unknown
+// types → placeholder comment) and PLUGIN GATING (requiresPlugin display name
+// → loadout slug via ENDPOINT_SLUGS → ctx.loadedPlugins). Template PATH
+// resolution stays convention-based (resolveBlockTemplate) until Phase 7.
+// Display names below are the VERIFIED plugin `name` values — see the
+// ENDPOINT_SLUGS provenance comment in lib/render-composition.mjs.
+
+const CATALOG = { available: true, byId: {
+  "recent-posts": { id: "recent-posts", label: "Recent Posts", icon: "newspaper", requiresPlugin: null },
+  "github-repos": { id: "github-repos", label: "GitHub Projects", icon: "github", requiresPlugin: "GitHub activity endpoint", legacy: false },
+  "cv-experience": { id: "cv-experience", label: "Experience", requiresPlugin: "CV editor endpoint", legacy: true },
+  "donation-box": { id: "donation-box", label: "Donate", requiresPlugin: "Some unmapped endpoint" },
+}};
+
+test("catalog-driven: known type renders; requiresPlugin gates on loadedPlugins via ENDPOINT_SLUGS", async () => {
+  const node = { block: "section", id: "b1", type: "github-repos", config: {} };
+  const ctxLoaded = { blockCatalog: CATALOG, loadedPlugins: { github: true } };
+  assert.match(await renderNode(node, mockRender, ctxLoaded), /widgets\/github-repos/);
+  const ctxUnloaded = { blockCatalog: CATALOG, loadedPlugins: {} };
+  const html = await renderNode(node, mockRender, ctxUnloaded);
+  assert.match(html, /<!-- block-skipped: github-repos \(requires github\) -->/);
+});
+
+test("catalog-driven: unknown type yields a logged placeholder comment, not silence", async () => {
+  const node = { block: "section", id: "bx", type: "no-such-block", config: {} };
+  const html = await renderNode(node, mockRender, { blockCatalog: CATALOG, loadedPlugins: {} });
+  assert.match(html, /<!-- block-unknown: no-such-block -->/);
+});
+
+test("catalog absent: falls back to convention-based resolution (Phase 1 behavior)", async () => {
+  const node = { block: "section", id: "b2", type: "recent-posts", config: {} };
+  const html = await renderNode(node, mockRender, { blockCatalog: { byId: {}, available: false }, loadedPlugins: {} });
+  assert.match(html, /sections\/recent-posts/);
+});
+
+test("built-ins (requiresPlugin null) are never gated", async () => {
+  const node = { block: "section", id: "b3", type: "recent-posts", config: {} };
+  const html = await renderNode(node, mockRender, { blockCatalog: CATALOG, loadedPlugins: {} });
+  assert.match(html, /id=b3/);
+});
+
+test("FAIL-OPEN: an UNMAPPED requiresPlugin display name renders UNGATED (with a warn)", async () => {
+  // "Some unmapped endpoint" has no ENDPOINT_SLUGS entry — the renderer must
+  // not guess a slug; it warns and renders the block ungated (runtime safety
+  // net for catalog entries registered by plugins newer than this theme).
+  const node = { block: "section", id: "b4", type: "donation-box", config: {} };
+  const html = await renderNode(node, mockRender, { blockCatalog: CATALOG, loadedPlugins: {} });
+  assert.match(html, /sections\/donation-box/);
+  assert.match(html, /id=b4/);
+});
+
+test("ENDPOINT_SLUGS drift guard: display-name keys map to well-formed loadout slugs", () => {
+  // Source of truth for the KEYS is the production block catalog
+  // (requiresPlugin = registering endpoint's display name); the VALUES are
+  // loadout keys from loaded-plugins.json. A fully mechanical theme-side
+  // drift guard isn't possible (the catalog lives in production) — the
+  // fail-open behavior above is the runtime safety net for drift.
+  assert.ok(Object.keys(ENDPOINT_SLUGS).length > 0, "ENDPOINT_SLUGS must not be empty");
+  for (const [name, slug] of Object.entries(ENDPOINT_SLUGS)) {
+    assert.equal(typeof name, "string");
+    assert.ok(name.length > 0, "display-name key must be non-empty");
+    assert.match(slug, /^[a-z][a-z0-9-]*$/, `slug "${slug}" for "${name}" is not a valid loadout key`);
+  }
+  // The one mapping the production catalog requires today:
+  assert.equal(ENDPOINT_SLUGS["CV editor endpoint"], "cv");
 });
 
 test("WIDGET ROUTING: KNOWN_WIDGET_TYPES matches the widgets directory minus section collisions (drift guard)", () => {
