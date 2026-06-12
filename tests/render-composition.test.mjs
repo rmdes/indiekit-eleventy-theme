@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { renderNode, resolveBlockTemplate, KNOWN_WIDGET_TYPES, ENDPOINT_SLUGS } from "../lib/render-composition.mjs";
+import { renderNode, resolveBlockTemplate, KNOWN_WIDGET_TYPES, COLLISION_TYPES, ENDPOINT_SLUGS } from "../lib/render-composition.mjs";
 
 const mockRender = async (templatePath, data) => {
   if (templatePath.includes("crash")) throw new Error("boom");
@@ -44,6 +44,20 @@ test("unknown/empty node yields an empty string, not a throw", async () => {
   assert.equal(await renderNode({ block: "section" }, mockRender, {}), "");
 });
 
+test("CONTAINER TAGS: main-role containers render a div — base.njk owns the <main> landmark", async () => {
+  // The composition renders INSIDE base.njk's <main id="main-content">:
+  // emitting <main> (or role="main") would nest/duplicate the landmark.
+  // Styling is class-based (.comp-main), so the tag change is style-safe.
+  const tree = { block: "container", as: "stack", role: "main", children: [
+    { block: "section", id: "m1", type: "hero", config: {} },
+  ]};
+  const html = await renderNode(tree, mockRender, {});
+  assert.match(html, /^<div class="comp-stack comp-main">/);
+  assert.match(html, /<\/div>$/);
+  assert.doesNotMatch(html, /<main/);
+  assert.doesNotMatch(html, /role=/);
+});
+
 // ── Phase-1 widget routing bridge ────────────────────────────────────────────
 // Sidebar widget partials live in _includes/components/widgets/, not sections/.
 // KNOWN_WIDGET_TYPES routes those types to widgets/<type>.njk. Phase 2's block
@@ -58,9 +72,24 @@ test("WIDGET ROUTING: known widget types resolve to components/widgets/<type>.nj
 test("WIDGET ROUTING: section types (and section/widget collisions) resolve to components/sections/<type>.njk", () => {
   assert.equal(resolveBlockTemplate("hero"), "_includes/components/sections/hero.njk");
   // "recent-posts" and "ai-usage" exist as BOTH a section and a widget — in
-  // the Phase-1 flat type vocabulary the section wins (deterministic rule).
+  // the Phase-1 flat type vocabulary the section wins (deterministic rule),
+  // EXCEPT inside complementary regions (see REGION ROUTING below).
   assert.equal(resolveBlockTemplate("recent-posts"), "_includes/components/sections/recent-posts.njk");
   assert.equal(resolveBlockTemplate("ai-usage"), "_includes/components/sections/ai-usage.njk");
+});
+
+test("REGION ROUTING: collision types resolve to the widget template inside complementary regions only", () => {
+  // T4 parity regression: the "section wins" rule made a SIDEBAR recent-posts
+  // render the full section (10 cards) instead of the compact widget (5).
+  // Inside a complementary region the widget variant is the correct render.
+  for (const type of COLLISION_TYPES) {
+    assert.equal(resolveBlockTemplate(type, "complementary"), `_includes/components/widgets/${type}.njk`);
+    assert.equal(resolveBlockTemplate(type, "main"), `_includes/components/sections/${type}.njk`);
+    assert.equal(resolveBlockTemplate(type), `_includes/components/sections/${type}.njk`);
+  }
+  // Non-collision types are unaffected by the region hint.
+  assert.equal(resolveBlockTemplate("author-card", "main"), "_includes/components/widgets/author-card.njk");
+  assert.equal(resolveBlockTemplate("hero", "complementary"), "_includes/components/sections/hero.njk");
 });
 
 test("WIDGET ROUTING: a widget-type section node renders via the widget partial and receives `widget` data", async () => {
@@ -377,6 +406,27 @@ test("CHROME CONTAINMENT: a throwing chrome render emits the bare widget — nev
   assert.doesNotMatch(html, /chrome boom/);
 });
 
+test("REGION ROUTING: renderContainer threads the region hint — sidebar recent-posts renders the widget, main renders the section", async () => {
+  const { renderFn, chromeCalls } = makeChromeSpyRender();
+  const tree = { block: "container", as: "columns", children: [
+    { block: "container", as: "stack", role: "main", children: [
+      { block: "section", id: "m1", type: "recent-posts", config: {} },
+    ]},
+    { block: "container", as: "stack", role: "complementary", children: [
+      { block: "section", id: "c1", type: "recent-posts", config: {} },
+      // Role-less nested container INHERITS the complementary region.
+      { block: "container", as: "stack", children: [
+        { block: "section", id: "n1", type: "recent-posts", config: {} },
+      ]},
+    ]},
+  ]};
+  const html = await renderNode(tree, renderFn, {});
+  assert.match(html, /sections\/recent-posts\.njk id=m1/);
+  assert.equal(chromeCalls.length, 1); // only the direct section child gets chrome
+  assert.match(chromeCalls[0].data.innerHtml, /widgets\/recent-posts\.njk id=c1/);
+  assert.match(html, /widgets\/recent-posts\.njk id=n1/); // inherited region, bare (nested container)
+});
+
 test("WIDGET ROUTING: KNOWN_WIDGET_TYPES matches the widgets directory minus section collisions (drift guard)", () => {
   const njkTypes = (relativeDir) =>
     readdirSync(fileURLToPath(new URL(relativeDir, import.meta.url)))
@@ -396,5 +446,15 @@ test("WIDGET ROUTING: KNOWN_WIDGET_TYPES matches the widgets directory minus sec
       "(minus types that also exist in sections/). Update the set in " +
       "lib/render-composition.mjs — or, if you've moved to the Phase-2 block " +
       "catalog, delete KNOWN_WIDGET_TYPES and this test.",
+  );
+
+  // COLLISION_TYPES must be exactly the widgets∩sections intersection — the
+  // region-aware routing override only makes sense for types with BOTH
+  // templates on disk.
+  assert.deepEqual(
+    [...COLLISION_TYPES].sort(),
+    widgetTypes.filter((type) => sectionTypes.has(type)).sort(),
+    "COLLISION_TYPES is out of sync with the widgets/sections template intersection. " +
+      "Update the set in lib/render-composition.mjs.",
   );
 });

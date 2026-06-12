@@ -86,7 +86,7 @@ test("CHROME SMOKE: composition-widget-chrome.njk renders via renderFile — col
           // Same data shape wrapWidgetChrome passes; empty title/iconName
           // exercise the partial's internal fallback maps ("blogroll" →
           // "Blogroll" + book-open accent).
-          return renderFile.call(boundContext, chromePartial, {
+          const fallback = await renderFile.call(boundContext, chromePartial, {
             blockId: "smoke1",
             widgetType: "blogroll",
             title: "",
@@ -94,6 +94,18 @@ test("CHROME SMOKE: composition-widget-chrome.njk renders via renderFile — col
             defaultOpen: "true",
             innerHtml: '<div class="widget">SMOKE-INNER</div>',
           }, "njk");
+          // Catalog-icon path: "file-text" (recent-posts) is a CATALOG icon
+          // name with no v3 type-map equivalent — it must resolve in the
+          // icon macro (T4 found it missing → icon-less chrome titles).
+          const catalogIcon = await renderFile.call(boundContext, chromePartial, {
+            blockId: "smoke2",
+            widgetType: "recent-posts",
+            title: "",
+            iconName: "file-text",
+            defaultOpen: "true",
+            innerHtml: '<div class="widget">SMOKE-INNER-2</div>',
+          }, "njk");
+          return fallback + catalogIcon;
         });
       },
     });
@@ -108,6 +120,10 @@ test("CHROME SMOKE: composition-widget-chrome.njk renders via renderFile — col
     assert.match(page.content, /localStorage\.getItem\('widget-smoke1'\)/, "localStorage key must use the stable block id");
     assert.match(page.content, /Blogroll/, "type-title fallback map must resolve when no catalog title is passed");
     assert.match(page.content, /SMOKE-INNER/, "innerHtml must pass through");
+    // file-text is feather's document-with-lines icon — the "M14 2H6" path
+    // start is its signature; an unknown name renders an HTML comment.
+    assert.match(page.content, /M14 2H6/, "catalog icon name file-text must resolve to an svg in the icon macro");
+    assert.doesNotMatch(page.content, /Unknown icon: file-text/);
   } finally {
     rmSync(dir, { recursive: true });
   }
