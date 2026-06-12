@@ -121,10 +121,47 @@ test("built-ins (requiresPlugin null) are never gated", async () => {
   assert.match(html, /id=b3/);
 });
 
+// ── Phase-3 interim legacy-map gate (dies in Phase 7) ────────────────────────
+// The catalog marks api-source widgets (github-repos, blogroll, webmentions, …)
+// requiresPlugin: null because site-config registers them on behalf of their
+// data plugins. Until Phase 7, whenever the catalog produced no slug, the v3
+// legacy maps (widgetPluginRequirements / sectionPluginRequirements) provide a
+// secondary gate so a plugin-less site skips cleanly instead of rendering
+// broken widget chrome.
+
+test("LEGACY GATE: catalog-built-in api-source widget (requiresPlugin null) keeps v3 gating via legacy map", async () => {
+  // Models PRODUCTION reality: github-repos is in the live catalog with
+  // requiresPlugin null — the legacy widget map still requires "github".
+  const catalogProd = { available: true, byId: {
+    "github-repos": { id: "github-repos", label: "GitHub Projects", requiresPlugin: null },
+  }};
+  const node = { block: "section", id: "g1", type: "github-repos", config: {} };
+  const skipped = await renderNode(node, mockRender, { blockCatalog: catalogProd, loadedPlugins: {} });
+  assert.match(skipped, /<!-- block-skipped: github-repos \(requires github\) -->/);
+  const rendered = await renderNode(node, mockRender, { blockCatalog: catalogProd, loadedPlugins: { github: true } });
+  assert.match(rendered, /widgets\/github-repos/);
+  assert.match(rendered, /id=g1/);
+});
+
+test("LEGACY GATE: requiresPlugin-null type absent from both legacy maps still renders ungated", async () => {
+  // "author-card" is in KNOWN_WIDGET_TYPES but NOT in widgetPluginRequirements
+  // (plugin-independent theme widget) — the secondary gate must not block it.
+  const catalogProd = { available: true, byId: {
+    "author-card": { id: "author-card", label: "Author Card", requiresPlugin: null },
+  }};
+  const node = { block: "section", id: "a1", type: "author-card", config: {} };
+  const html = await renderNode(node, mockRender, { blockCatalog: catalogProd, loadedPlugins: {} });
+  assert.match(html, /widgets\/author-card/);
+  assert.match(html, /id=a1/);
+});
+
 test("FAIL-OPEN: an UNMAPPED requiresPlugin display name renders UNGATED (with a warn)", async () => {
   // "Some unmapped endpoint" has no ENDPOINT_SLUGS entry — the renderer must
   // not guess a slug; it warns and renders the block ungated (runtime safety
   // net for catalog entries registered by plugins newer than this theme).
+  // NOTE: the fail-open path now also runs the legacy-map secondary gate —
+  // "donation-box" is verified absent from BOTH legacy maps, so it stays a
+  // pure fail-open probe.
   const node = { block: "section", id: "b4", type: "donation-box", config: {} };
   const html = await renderNode(node, mockRender, { blockCatalog: CATALOG, loadedPlugins: {} });
   assert.match(html, /sections\/donation-box/);
