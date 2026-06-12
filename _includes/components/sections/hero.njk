@@ -1,6 +1,7 @@
 {#
   Hero Section - author intro with avatar, name, title, bio
-  Rendered by homepage-builder when hero is enabled
+  Rendered by the composition renderer (lib/render-composition.mjs resolves
+  sections/hero.njk for the hero block type)
 #}
 
 {% set heroConfig = homepageConfig.hero or {} %}

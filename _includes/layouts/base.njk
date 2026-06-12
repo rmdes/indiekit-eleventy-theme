@@ -341,9 +341,9 @@
 
   <main class="container py-8" id="main-content" data-pagefind-body>
     {% if withSidebar and page.url == "/" and composition and composition.schemaVersion === 4 and composition.tree %}
-    {# Homepage: the Tier-0 v4 composition controls its own layout and sidebar — without this passthrough a composition homepage would be wrapped in .layout-with-sidebar plus a second legacy sidebar below. Guard MUST stay in sync with home.njk's Tier-0 check. Tier-2 homepages (no artifact) never matched this branch (no composition, and no homepageConfig.sections back when that clause existed) — they fall through to the branches below, same as before the Tier-1 dispatcher deletion (Phase 3, R3). #}
+    {# Homepage: the Tier-0 v4 composition controls its own layout and sidebar — without this passthrough a composition homepage would be wrapped in .layout-with-sidebar plus a second legacy sidebar below. Guard MUST stay in sync with home.njk's Tier-0 check. A homepage with NO usable composition (Tier-2 default) is excluded from the blogListingSidebar branch below (`page.url != "/"`, Phase 3 R3) and lands in the final full-width else branch — the layout Tier-2 homepages got pre-R3 in the homepageConfig-null case, and the only sane one in the degraded composition-null + blogListingSidebar-truthy state (e.g. indiekit-deploy with an old site-config), which would otherwise wrap the homepage in a blog-listing sidebar layout that never existed pre-R3. #}
     {{ content | safe }}
-    {% elif withSidebar and homepageConfig and homepageConfig.blogListingSidebar and homepageConfig.blogListingSidebar.length %}
+    {% elif withSidebar and page.url != "/" and homepageConfig and homepageConfig.blogListingSidebar and homepageConfig.blogListingSidebar.length %}
     <div class="layout-with-sidebar">
       <div class="main-content">
         {{ content | safe }}

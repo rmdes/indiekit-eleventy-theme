@@ -1,8 +1,9 @@
 /**
  * sectionPluginRequirements — map of section.type → required plugin key
  *
- * NOTE: The homepage path no longer consumes this (Phase 3 cutover, R3);
- * survives for the cv-* dispatchers (+ homepage-section.njk) until Phase 6.
+ * NOTE: Consumed by homepage-section.njk (cv-builder/cv-footer path, dies
+ * Phase 6) AND lib/render-composition.mjs's legacy-map gate (dies Phase 7).
+ * The deleted homepage dispatchers no longer consume it (Phase 3 cutover, R3).
  *
  * Parallel to widgetPluginRequirements but for homepage SECTIONS (the main
  * content blocks of the homepage builder, not the sidebar widgets).
