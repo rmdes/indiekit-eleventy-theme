@@ -193,6 +193,148 @@ test("ENDPOINT_SLUGS drift guard: display-name keys map to well-formed loadout s
   assert.equal(ENDPOINT_SLUGS["CV editor endpoint"], "cv");
 });
 
+// ── Phase-3 container-owned collapse chrome ──────────────────────────────────
+// Complementary containers wrap each SECTION child's non-empty, non-comment
+// output in the collapse chrome partial (spec §4): keyed on the STABLE block
+// id (fixes the v3 loop-index localStorage bug; the partial adds the
+// aria-controls/panel-id pair — the WCAG 4.1.2 fix), first-3-open position
+// heuristic. The renderer passes RAW catalog values (title/iconName may be
+// "") — the PARTIAL owns the fallback chain (type-title/type-meta maps ported
+// from homepage-sidebar.njk).
+
+const makeChromeSpyRender = () => {
+  const chromeCalls = [];
+  const renderFn = async (templatePath, data) => {
+    if (templatePath.includes("composition-widget-chrome")) {
+      chromeCalls.push({ templatePath, data });
+      return `<chrome id=${data.blockId} open=${data.defaultOpen}>${data.innerHtml}</chrome>`;
+    }
+    if (templatePath.includes("crash")) throw new Error("boom");
+    return `[${templatePath} id=${data.block?.id || ""}]`;
+  };
+  return { renderFn, chromeCalls };
+};
+
+test("CHROME: complementary container wraps each section child; first 3 default open, stable block-id keys", async () => {
+  const { renderFn, chromeCalls } = makeChromeSpyRender();
+  const tree = { block: "container", as: "stack", role: "complementary", children: [
+    { block: "section", id: "w0", type: "author-card", config: {} },
+    { block: "section", id: "w1", type: "search", config: {} },
+    { block: "section", id: "w2", type: "categories", config: {} },
+    { block: "section", id: "w3", type: "webmentions", config: {} },
+  ]};
+  const html = await renderNode(tree, renderFn, {});
+  assert.equal(chromeCalls.length, 4);
+  assert.deepEqual(chromeCalls.map((c) => c.data.blockId), ["w0", "w1", "w2", "w3"]);
+  assert.deepEqual(chromeCalls.map((c) => c.data.defaultOpen), ["true", "true", "true", "false"]);
+  for (const call of chromeCalls) {
+    assert.match(call.templatePath, /composition-widget-chrome/);
+    // Chrome wraps the child's OWN rendered output.
+    assert.match(call.data.innerHtml, new RegExp(`id=${call.data.blockId}`));
+  }
+  assert.match(html, /<chrome id=w0 open=true>/);
+  assert.match(html, /<chrome id=w3 open=false>/);
+});
+
+test("CHROME DATA: raw catalog label/icon are passed through; empty strings when the catalog has no entry (partial owns fallbacks)", async () => {
+  // Catalog present with label+icon → passed verbatim, plus the widgetType
+  // the partial needs for its fallback maps.
+  const withCatalog = makeChromeSpyRender();
+  const child = { block: "section", id: "k1", type: "recent-posts", config: {} };
+  const tree = { block: "container", as: "stack", role: "complementary", children: [child] };
+  await renderNode(tree, withCatalog.renderFn, { blockCatalog: CATALOG, loadedPlugins: {} });
+  assert.equal(withCatalog.chromeCalls.length, 1);
+  assert.equal(withCatalog.chromeCalls[0].data.title, "Recent Posts");
+  assert.equal(withCatalog.chromeCalls[0].data.iconName, "newspaper");
+  assert.equal(withCatalog.chromeCalls[0].data.widgetType, "recent-posts");
+
+  // Catalog absent (no entry to read) → empty title/iconName, widgetType
+  // still passed so the partial's type maps can resolve presentation.
+  const noCatalog = makeChromeSpyRender();
+  await renderNode(tree, noCatalog.renderFn, {});
+  assert.equal(noCatalog.chromeCalls.length, 1);
+  assert.equal(noCatalog.chromeCalls[0].data.title, "");
+  assert.equal(noCatalog.chromeCalls[0].data.iconName, "");
+  assert.equal(noCatalog.chromeCalls[0].data.widgetType, "recent-posts");
+});
+
+test("CHROME: non-complementary containers (main/root/contentinfo) do not wrap children", async () => {
+  for (const role of ["main", "root", "contentinfo"]) {
+    const { renderFn, chromeCalls } = makeChromeSpyRender();
+    const tree = { block: "container", as: "stack", role, children: [
+      { block: "section", id: "s1", type: "hero", config: {} },
+      { block: "section", id: "s2", type: "recent-posts", config: {} },
+    ]};
+    const html = await renderNode(tree, renderFn, {});
+    assert.equal(chromeCalls.length, 0, `role=${role} must not wrap children in chrome`);
+    assert.doesNotMatch(html, /<chrome/);
+    assert.match(html, /id=s1/);
+    assert.match(html, /id=s2/);
+  }
+});
+
+test("CHROME: nested CONTAINER children inside a complementary container stay bare; sibling sections get chrome", async () => {
+  const { renderFn, chromeCalls } = makeChromeSpyRender();
+  const tree = { block: "container", as: "stack", role: "complementary", children: [
+    { block: "section", id: "w0", type: "author-card", config: {} },
+    { block: "container", as: "stack", children: [
+      { block: "section", id: "inner", type: "search", config: {} },
+    ]},
+  ]};
+  const html = await renderNode(tree, renderFn, {});
+  assert.deepEqual(chromeCalls.map((c) => c.data.blockId), ["w0"]);
+  assert.match(html, /<chrome id=w0 open=true>/);
+  // The nested container's child rendered, but NOT inside chrome (its parent
+  // container has no complementary role).
+  assert.match(html, /id=inner/);
+  assert.doesNotMatch(html, /<chrome id=inner/);
+});
+
+test("CHROME: skipped/unknown/errored placeholder children are emitted bare — no empty collapsible", async () => {
+  // Catalog gating produces comment placeholders — chrome must not wrap them
+  // (an empty collapsible with a title for a block that isn't there is wrong).
+  const gated = makeChromeSpyRender();
+  const tree = { block: "container", as: "stack", role: "complementary", children: [
+    { block: "section", id: "g1", type: "github-repos", config: {} },  // requiresPlugin, not loaded → block-skipped
+    { block: "section", id: "u1", type: "no-such-block", config: {} }, // → block-unknown
+    { block: "section", id: "r1", type: "recent-posts", config: {} },  // renders
+  ]};
+  const html = await renderNode(tree, gated.renderFn, { blockCatalog: CATALOG, loadedPlugins: {} });
+  assert.deepEqual(gated.chromeCalls.map((c) => c.data.blockId), ["r1"]);
+  assert.match(html, /<!-- block-skipped: github-repos \(requires github\) -->/);
+  assert.match(html, /<!-- block-unknown: no-such-block -->/);
+  assert.doesNotMatch(html, /<chrome id=g1|<chrome id=u1/);
+  assert.match(html, /<chrome id=r1 open=true>/); // position heuristic: index 2 of the container
+
+  // Same rule for crash placeholders (block-error comments).
+  const crashed = makeChromeSpyRender();
+  const crashTree = { block: "container", as: "stack", role: "complementary", children: [
+    { block: "section", id: "c1", type: "crash", config: {} },
+    { block: "section", id: "w1", type: "author-card", config: {} },
+  ]};
+  const crashHtml = await renderNode(crashTree, crashed.renderFn, {});
+  assert.deepEqual(crashed.chromeCalls.map((c) => c.data.blockId), ["w1"]);
+  assert.match(crashHtml, /<!-- block-error: crash/);
+  assert.doesNotMatch(crashHtml, /<chrome id=c1/);
+});
+
+test("CHROME CONTAINMENT: a throwing chrome render emits the bare widget — never loses it, never block-errors it", async () => {
+  const chromeThrowRender = async (templatePath, data) => {
+    if (templatePath.includes("composition-widget-chrome")) throw new Error("chrome boom");
+    return `[${templatePath} id=${data.block?.id || ""}]`;
+  };
+  const tree = { block: "container", as: "stack", role: "complementary", children: [
+    { block: "section", id: "w0", type: "author-card", config: {} },
+    { block: "section", id: "w1", type: "search", config: {} },
+  ]};
+  const html = await renderNode(tree, chromeThrowRender, {});
+  assert.match(html, /id=w0/);
+  assert.match(html, /id=w1/);
+  assert.doesNotMatch(html, /<chrome/);
+  assert.doesNotMatch(html, /block-error/);
+  assert.doesNotMatch(html, /chrome boom/);
+});
+
 test("WIDGET ROUTING: KNOWN_WIDGET_TYPES matches the widgets directory minus section collisions (drift guard)", () => {
   const njkTypes = (relativeDir) =>
     readdirSync(fileURLToPath(new URL(relativeDir, import.meta.url)))

@@ -1,0 +1,113 @@
+{# Container-owned collapsible widget chrome (site-builder Phase 3, spec §4).
+
+   TRANSCRIBED from components/homepage-sidebar.njk (the v3 dispatcher chrome,
+   lines 63-100) for cutover parity: classes, transition attrs, chevron svg,
+   x-cloak and the bg/border/shadow wrapper are byte-faithful. Deliberate
+   differences from the v3 chrome — nothing else changed:
+     1. Keys derive from the STABLE block id: localStorage `widget-<blockId>`.
+        v3 keyed `widget-<type>-<loop.index0>`, which shifts on reorder (a
+        recorded bug). Saved open/closed states reset ONCE at cutover.
+     2. ARIA additions (WCAG 4.1.2 fix — the v3 chrome lacked them):
+        `aria-controls="widget-panel-<blockId>"` on the toggle button and the
+        matching `id="widget-panel-<blockId>"` on the panel.
+
+   Receives (all strings; renderer passes RAW catalog values, this partial
+   owns the fallback chain): blockId, widgetType, title, iconName, iconClass,
+   borderClass, defaultOpen ("true"/"false"), innerHtml (pre-rendered, safe).
+
+   Fallback chain — presentation belongs in the template layer: the catalog's
+   `label`/`icon` take precedence when set; the legacy v3 per-type titles and
+   accents survive the cutover as fallbacks:
+     title:  title (catalog label) → type-title map → raw widgetType
+     icon:   iconName (catalog) → type-meta map icon → none
+     accents: iconClass/borderClass params → type-meta map → neutral defaults
+#}
+{% from "components/icon.njk" import icon %}
+
+{# Title map ported VERBATIM from homepage-sidebar.njk:13-28. v3's custom-html
+   special case read widget.config.title — in v4 a per-instance title is the
+   catalog label's job (renderer passes it as `title`), so the map keeps only
+   the static "Custom" fallback. #}
+{% set typeTitles = {
+  "search": "Search",
+  "social-activity": "Social Activity",
+  "github-repos": "GitHub",
+  "funkwhale": "Listening",
+  "recent-posts": "Recent Posts",
+  "blogroll": "Blogroll",
+  "feedland": "FeedLand",
+  "categories": "Categories",
+  "webmentions": "Webmentions",
+  "recent-comments": "Recent Comments",
+  "fediverse-follow": "Fediverse",
+  "author-card": "Author",
+  "ai-usage": "AI Transparency",
+  "custom-html": "Custom"
+} %}
+
+{# Icon + accent-border map ported VERBATIM from homepage-sidebar.njk:31-61. #}
+{% set typeMeta = {
+  "social-activity":  { icon: "globe",      iconClass: "w-5 h-5 text-[#0085ff]",   border: "border-l-[3px] border-l-[#0085ff]" },
+  "github-repos":     { icon: "github",     iconClass: "w-5 h-5 text-fg",          border: "border-l-[3px] border-l-surface-400 dark:border-l-surface-500" },
+  "funkwhale":        { icon: "headphones", iconClass: "w-5 h-5 text-purple-500",  border: "border-l-[3px] border-l-purple-400 dark:border-l-purple-500" },
+  "blogroll":         { icon: "book-open",  iconClass: "w-5 h-5 text-amber-500",   border: "border-l-[3px] border-l-amber-400 dark:border-l-amber-500" },
+  "feedland":         { icon: "rss",        iconClass: "w-5 h-5 text-amber-500",   border: "border-l-[3px] border-l-amber-400 dark:border-l-amber-500" },
+  "subscribe":        { icon: "rss",        iconClass: "w-5 h-5 text-orange-500",  border: "border-l-[3px] border-l-orange-400 dark:border-l-orange-500" },
+  "fediverse-follow": { icon: "user-plus",  iconClass: "w-5 h-5 text-[#a730b8]",   border: "border-l-[3px] border-l-[#a730b8]" },
+  "author-card":      { icon: "user",       iconClass: "w-5 h-5 text-fg-muted",    border: "" },
+  "recent-posts":     { icon: "list",       iconClass: "w-5 h-5 text-fg-muted",    border: "" },
+  "categories":       { icon: "tag",        iconClass: "w-5 h-5 text-fg-muted",    border: "" },
+  "recent-comments":  { icon: "chat",       iconClass: "w-5 h-5 text-fg-muted",    border: "" },
+  "search":           { icon: "search",     iconClass: "w-5 h-5 text-fg-muted",    border: "" },
+  "webmentions":      { icon: "share",      iconClass: "w-5 h-5 text-fg-muted",    border: "" },
+  "ai-usage":         { icon: "zap",        iconClass: "w-5 h-5 text-amber-500",   border: "border-l-[3px] border-l-amber-400 dark:border-l-amber-500" }
+} %}
+
+{% set meta = typeMeta[widgetType] or {} %}
+{% set widgetTitle = title or typeTitles[widgetType] or widgetType %}
+{% set widgetIcon = iconName or meta.icon or "" %}
+{% set widgetIconClass = iconClass or meta.iconClass or "w-5 h-5 text-fg-muted" %}
+{% set widgetBorder = borderClass or meta.border or "" %}
+
+{# Collapsible wrapper — Alpine.js handles toggle, localStorage persists state #}
+<div
+  class="widget-collapsible mb-4"
+  x-data="{ open: localStorage.getItem('widget-{{ blockId }}') !== null ? localStorage.getItem('widget-{{ blockId }}') === 'true' : {{ defaultOpen }} }"
+>
+  <div class="bg-surface-50 dark:bg-surface-800 rounded-lg border border-border shadow-sm overflow-hidden {{ widgetBorder }}">
+    <button
+      class="widget-header w-full p-4"
+      @click="open = !open; localStorage.setItem('widget-{{ blockId }}', open)"
+      :aria-expanded="open ? 'true' : 'false'"
+      aria-controls="widget-panel-{{ blockId }}"
+    >
+      <h3 class="widget-title font-bold text-lg flex items-center gap-2">
+        {% if widgetIcon %}{{ icon(widgetIcon, widgetIconClass) }}{% endif %}
+        {{ widgetTitle }}
+      </h3>
+      <svg
+        class="widget-chevron"
+        :class="open && 'rotate-180'"
+        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </button>
+
+    <div
+      id="widget-panel-{{ blockId }}"
+      x-show="open"
+      x-transition:enter="transition ease-out duration-150"
+      x-transition:enter-start="opacity-0"
+      x-transition:enter-end="opacity-100"
+      x-transition:leave="transition ease-in duration-100"
+      x-transition:leave-start="opacity-100"
+      x-transition:leave-end="opacity-0"
+      x-cloak
+    >
+      {# Widget content — inner .widget provides padding, inner title hidden by CSS #}
+      {{ innerHtml | safe }}
+    </div>
+  </div>
+</div>
