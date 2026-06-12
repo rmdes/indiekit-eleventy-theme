@@ -19,6 +19,7 @@ import {
   BUILD_STATUS_PATH,
   renderBuildStatus,
   writeBuildStatus,
+  writeBuildStatusSync,
 } from "../lib/build-status.mjs";
 
 const statusPath = () => join(mkdtempSync(join(tmpdir(), "build-status-")), "build-status.json");
@@ -108,6 +109,30 @@ test("writeBuildStatus never throws on an unwritable path", async () => {
   let result;
   await assert.doesNotReject(async () => {
     result = await writeBuildStatus({ state: "building", buildId: "b1" }, bogus);
+  });
+  assert.equal(result, false);
+});
+
+test("writeBuildStatusSync carries lastOkDurationSeconds forward and is atomic", () => {
+  const path = statusPath();
+  assert.equal(
+    writeBuildStatusSync({ state: "ok", buildId: "b1", lastOkDurationSeconds: 55 }, path),
+    true,
+  );
+  assert.equal(writeBuildStatusSync({ state: "building", buildId: "b2" }, path), true);
+
+  const status = readStatus(path);
+  assert.equal(status.state, "building");
+  assert.equal(status.buildId, "b2");
+  assert.equal(status.lastOkDurationSeconds, 55);
+  assert.deepEqual(readdirSync(join(path, "..")), ["build-status.json"]);
+});
+
+test("writeBuildStatusSync never throws on an unwritable path", () => {
+  const bogus = "/nonexistent-dir-for-build-status-test/build-status.json";
+  let result;
+  assert.doesNotThrow(() => {
+    result = writeBuildStatusSync({ state: "building", buildId: "b1" }, bogus);
   });
   assert.equal(result, false);
 });

@@ -11,7 +11,7 @@ import { minify } from "html-minifier-terser";
 import { minify as minifyJS } from "terser";
 import registerUnfurlShortcode, { getCachedCard, prefetchUrl } from "./lib/unfurl-shortcode.js";
 import { renderNode } from "./lib/render-composition.mjs";
-import { writeBuildStatus } from "./lib/build-status.mjs";
+import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
 import matter from "gray-matter";
 import { createHash, createHmac, randomUUID } from "crypto";
 import { createRequire } from "module";
@@ -1384,16 +1384,19 @@ export default function (eleventyConfig) {
   // Build-status: mark the build as "building" (site-builder Phase 5, spec §2.4).
   // buildId/buildStart are reassigned per build cycle — the config lives in a
   // long-lived --watch --incremental process where builds are serialized.
-  // Registered BEFORE the OG-generation hook so the status flips before the
-  // slow batch work. Skipped silently outside the container (no /app/data);
-  // writeBuildStatus itself never throws, so a status failure can't fail a build.
+  // MUST write synchronously: Eleventy's AsyncEventEmitter runs eleventy.before
+  // listeners in PARALLEL (Promise.all), so an async write would suspend at its
+  // first await while the fully-synchronous OG hook (execFileSync batch loop)
+  // blocks the event loop — the file would show the stale previous state for
+  // the whole OG phase. Skipped silently outside the container (no /app/data);
+  // writeBuildStatusSync never throws, so a status failure can't fail a build.
   let buildId = null;
   let buildStart = null;
-  eleventyConfig.on("eleventy.before", async () => {
+  eleventyConfig.on("eleventy.before", () => {
     if (!existsSync("/app/data")) return;
     buildId = randomUUID();
     buildStart = Date.now();
-    await writeBuildStatus({
+    writeBuildStatusSync({
       state: "building",
       buildId,
       startedAt: new Date(buildStart).toISOString(),
@@ -1774,7 +1777,7 @@ export default function (eleventyConfig) {
         buildStart === null ? undefined : Number(((finishedAt - buildStart) / 1000).toFixed(1));
       await writeBuildStatus({
         state: "ok",
-        buildId,
+        ...(buildId ? { buildId } : {}),
         finishedAt: new Date(finishedAt).toISOString(),
         durationSeconds,
         incremental: Boolean(incremental),
