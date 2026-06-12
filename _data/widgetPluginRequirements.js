@@ -1,6 +1,9 @@
 /**
  * widgetPluginRequirements — map of widget.type → required plugin key
  *
+ * NOTE: The homepage path no longer consumes this (Phase 3 cutover, R3);
+ * survives for the cv-* dispatchers (+ homepage-section.njk) until Phase 6.
+ *
  * Used by sidebar/widget-render templates to hide widgets whose backing
  * plugin isn't loaded for this site (Plan B multi-site loadouts).
  *

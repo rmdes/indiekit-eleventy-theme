@@ -340,8 +340,8 @@
   </header>
 
   <main class="container py-8" id="main-content" data-pagefind-body>
-    {% if withSidebar and page.url == "/" and ((homepageConfig and homepageConfig.sections) or (composition and composition.schemaVersion === 4 and composition.tree)) %}
-    {# Homepage: builder or Tier-0 v4 composition controls its own layout and sidebar — without this passthrough a composition-only homepage would be wrapped in .layout-with-sidebar plus a second legacy sidebar below #}
+    {% if withSidebar and page.url == "/" and composition and composition.schemaVersion === 4 and composition.tree %}
+    {# Homepage: the Tier-0 v4 composition controls its own layout and sidebar — without this passthrough a composition homepage would be wrapped in .layout-with-sidebar plus a second legacy sidebar below. Guard MUST stay in sync with home.njk's Tier-0 check. Tier-2 homepages (no artifact) never matched this branch (no composition, and no homepageConfig.sections back when that clause existed) — they fall through to the branches below, same as before the Tier-1 dispatcher deletion (Phase 3, R3). #}
     {{ content | safe }}
     {% elif withSidebar and homepageConfig and homepageConfig.blogListingSidebar and homepageConfig.blogListingSidebar.length %}
     <div class="layout-with-sidebar">

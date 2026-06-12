@@ -60,7 +60,7 @@ test("CONTAINER TAGS: main-role containers render a div — base.njk owns the <m
 
 // ── Phase-1 widget routing bridge ────────────────────────────────────────────
 // Sidebar widget partials live in _includes/components/widgets/, not sections/.
-// KNOWN_WIDGET_TYPES routes those types to widgets/<type>.njk. Phase 2's block
+// KNOWN_WIDGET_TYPES routes those types to widgets/<type>.njk. Phase 7's block
 // catalog replaces this set with per-block template metadata.
 
 test("WIDGET ROUTING: known widget types resolve to components/widgets/<type>.njk", () => {
@@ -444,7 +444,7 @@ test("WIDGET ROUTING: KNOWN_WIDGET_TYPES matches the widgets directory minus sec
     expected,
     "KNOWN_WIDGET_TYPES is out of sync with _includes/components/widgets/ " +
       "(minus types that also exist in sections/). Update the set in " +
-      "lib/render-composition.mjs — or, if you've moved to the Phase-2 block " +
+      "lib/render-composition.mjs — or, if you've moved to the Phase-7 block " +
       "catalog, delete KNOWN_WIDGET_TYPES and this test.",
   );
 

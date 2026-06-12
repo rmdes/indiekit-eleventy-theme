@@ -1,6 +1,9 @@
 /**
  * sectionPluginRequirements — map of section.type → required plugin key
  *
+ * NOTE: The homepage path no longer consumes this (Phase 3 cutover, R3);
+ * survives for the cv-* dispatchers (+ homepage-section.njk) until Phase 6.
+ *
  * Parallel to widgetPluginRequirements but for homepage SECTIONS (the main
  * content blocks of the homepage builder, not the sidebar widgets).
  *
