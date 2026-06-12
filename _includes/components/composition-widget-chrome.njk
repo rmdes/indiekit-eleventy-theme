@@ -18,16 +18,18 @@
    Fallback chain — presentation belongs in the template layer: the catalog's
    `label`/`icon` take precedence when set; the legacy v3 per-type titles and
    accents survive the cutover as fallbacks:
-     title:  title (catalog label) → type-title map → raw widgetType
+     title:  title (custom-html instance config.title, else catalog label)
+             → type-title map → raw widgetType
      icon:   iconName (catalog) → type-meta map icon → none
      accents: iconClass/borderClass params → type-meta map → neutral defaults
 #}
 {% from "components/icon.njk" import icon %}
 
 {# Title map ported VERBATIM from homepage-sidebar.njk:13-28. v3's custom-html
-   special case read widget.config.title — in v4 a per-instance title is the
-   catalog label's job (renderer passes it as `title`), so the map keeps only
-   the static "Custom" fallback. #}
+   special case read widget.config.title (per-INSTANCE — catalog labels are
+   per-TYPE and cannot carry it): the RENDERER preserves that precedence by
+   passing config.title as `title` for custom-html children; the map keeps
+   only the static "Custom" fallback. #}
 {% set typeTitles = {
   "search": "Search",
   "social-activity": "Social Activity",

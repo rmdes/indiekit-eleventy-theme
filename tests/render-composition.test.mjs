@@ -258,6 +258,33 @@ test("CHROME DATA: raw catalog label/icon are passed through; empty strings when
   assert.equal(noCatalog.chromeCalls[0].data.widgetType, "recent-posts");
 });
 
+test("CHROME DATA: custom-html per-instance config.title takes v3 precedence over catalog label", async () => {
+  // v3's title map read widget.config.title for custom-html (per-INSTANCE);
+  // catalog labels are per-TYPE and can't carry it — the renderer passes the
+  // instance title through for custom-html only.
+  const catalogWithCustom = { available: true, byId: {
+    "custom-html": { id: "custom-html", label: "Custom Content", icon: "code", requiresPlugin: null },
+  }};
+  const titled = makeChromeSpyRender();
+  const titledTree = { block: "container", as: "stack", role: "complementary", children: [
+    { block: "section", id: "ch1", type: "custom-html", config: { title: "My Notes" } },
+  ]};
+  await renderNode(titledTree, titled.renderFn, { blockCatalog: catalogWithCustom, loadedPlugins: {} });
+  assert.equal(titled.chromeCalls.length, 1);
+  assert.equal(titled.chromeCalls[0].data.title, "My Notes");
+
+  // Without config.title: catalog label (or "" when no entry — partial falls back).
+  const untitledTree = { block: "container", as: "stack", role: "complementary", children: [
+    { block: "section", id: "ch2", type: "custom-html", config: {} },
+  ]};
+  const untitled = makeChromeSpyRender();
+  await renderNode(untitledTree, untitled.renderFn, { blockCatalog: catalogWithCustom, loadedPlugins: {} });
+  assert.equal(untitled.chromeCalls[0].data.title, "Custom Content");
+  const noEntry = makeChromeSpyRender();
+  await renderNode(untitledTree, noEntry.renderFn, {});
+  assert.equal(noEntry.chromeCalls[0].data.title, "");
+});
+
 test("CHROME: non-complementary containers (main/root/contentinfo) do not wrap children", async () => {
   for (const role of ["main", "root", "contentinfo"]) {
     const { renderFn, chromeCalls } = makeChromeSpyRender();
