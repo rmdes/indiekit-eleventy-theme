@@ -37,6 +37,15 @@ export default function () {
       }
       byId[block.id] = block;
     }
+    if (Object.keys(byId).length === 0) {
+      // Blank-homepage protection: an empty-but-valid catalog (blocks: [],
+      // or every entry skipped by the id guard above) must NOT enable
+      // catalog-driven dispatch — with available:true and zero entries,
+      // renderSection would turn EVERY block into block-unknown and blank
+      // the Tier-0 homepage. Degrade to exact Phase-1 convention behavior.
+      console.warn("[composition] block-catalog.json has no usable entries — catalog-driven dispatch disabled");
+      return { byId: {}, available: false };
+    }
     console.log(`[composition] Loaded block catalog (${artifact.blocks.length} blocks)`);
     return { byId, available: true };
   } catch (error) {
