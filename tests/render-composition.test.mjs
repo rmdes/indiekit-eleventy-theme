@@ -109,6 +109,15 @@ test("catalog-driven: unknown type yields a logged placeholder comment, not sile
   assert.match(html, /<!-- block-unknown: no-such-block -->/);
 });
 
+test("catalog-driven: inherited object names cannot bypass the existence gate", async () => {
+  // byId built as an object literal inherits "constructor"/"toString" — the
+  // hasOwn lookup must treat them as unknown types (placeholder), not let
+  // them through to renderFile as phantom catalog entries.
+  const node = { block: "section", id: "bp", type: "constructor", config: {} };
+  const html = await renderNode(node, mockRender, { blockCatalog: CATALOG, loadedPlugins: {} });
+  assert.match(html, /<!-- block-unknown: constructor -->/);
+});
+
 test("catalog absent: falls back to convention-based resolution (Phase 1 behavior)", async () => {
   const node = { block: "section", id: "b2", type: "recent-posts", config: {} };
   const html = await renderNode(node, mockRender, { blockCatalog: { byId: {}, available: false }, loadedPlugins: {} });

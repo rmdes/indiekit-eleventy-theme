@@ -26,8 +26,17 @@ export default function () {
       console.warn(`[composition] block-catalog.json has unexpected shape (catalogVersion ${artifact?.catalogVersion}) — catalog-driven dispatch disabled`);
       return { byId: {}, available: false };
     }
-    const byId = {};
-    for (const block of artifact.blocks) byId[block.id] = block;
+    // Null prototype: block ids come from an external artifact — a malicious
+    // or buggy "__proto__"/"constructor" id must become a plain own property,
+    // never a prototype mutation or inherited-name collision.
+    const byId = Object.create(null);
+    for (const block of artifact.blocks) {
+      if (!block || typeof block.id !== "string" || !block.id) {
+        console.warn("[composition] block-catalog.json entry without a string id — skipped");
+        continue;
+      }
+      byId[block.id] = block;
+    }
     console.log(`[composition] Loaded block catalog (${artifact.blocks.length} blocks)`);
     return { byId, available: true };
   } catch (error) {
