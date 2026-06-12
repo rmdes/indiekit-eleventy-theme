@@ -8,6 +8,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="generator" content="Eleventy">
+  {# Per-page robots control — first use of this pattern: the site-builder
+     preview page (preview.njk) sets `noindex: true` in front matter.
+     Defense-in-depth alongside the sitemap exclusion (eleventy.config.js)
+     and the nginx X-Robots-Tag header (deployment repo). #}
+  {% if noindex %}<meta name="robots" content="noindex">{% endif %}
   <title>{% if title %}{{ title }} - {% endif %}{{ site.name }}</title>
 
   {# OpenGraph meta tags #}

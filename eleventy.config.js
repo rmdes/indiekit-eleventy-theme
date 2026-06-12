@@ -11,8 +11,9 @@ import { minify } from "html-minifier-terser";
 import { minify as minifyJS } from "terser";
 import registerUnfurlShortcode, { getCachedCard, prefetchUrl } from "./lib/unfurl-shortcode.js";
 import { renderNode } from "./lib/render-composition.mjs";
+import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
 import matter from "gray-matter";
-import { createHash, createHmac } from "crypto";
+import { createHash, createHmac, randomUUID } from "crypto";
 import { createRequire } from "module";
 import { execFileSync } from "child_process";
 import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync, copyFileSync, appendFileSync } from "fs";
@@ -1380,6 +1381,28 @@ export default function (eleventyConfig) {
     return digests;
   });
 
+  // Build-status: mark the build as "building" (site-builder Phase 5, spec §2.4).
+  // buildId/buildStart are reassigned per build cycle — the config lives in a
+  // long-lived --watch --incremental process where builds are serialized.
+  // MUST write synchronously: Eleventy's AsyncEventEmitter runs eleventy.before
+  // listeners in PARALLEL (Promise.all), so an async write would suspend at its
+  // first await while the fully-synchronous OG hook (execFileSync batch loop)
+  // blocks the event loop — the file would show the stale previous state for
+  // the whole OG phase. Skipped silently outside the container (no /app/data);
+  // writeBuildStatusSync never throws, so a status failure can't fail a build.
+  let buildId = null;
+  let buildStart = null;
+  eleventyConfig.on("eleventy.before", () => {
+    if (!existsSync("/app/data")) return;
+    buildId = randomUUID();
+    buildStart = Date.now();
+    writeBuildStatusSync({
+      state: "building",
+      buildId,
+      startedAt: new Date(buildStart).toISOString(),
+    });
+  });
+
   // Generate OpenGraph images for posts without photos.
   // Uses batch spawning: each invocation generates up to BATCH_SIZE images then exits,
   // fully releasing WASM native memory (Satori Yoga + Resvg Rust) between batches.
@@ -1578,6 +1601,7 @@ export default function (eleventyConfig) {
         /^\/graph\//,
         /^\/sitemap\.xml$/,
         /^\/\.interface-design\//,
+        /^\/preview\//,
       ];
       try {
         const walkHtml = (base, prefix = "") => {
@@ -1741,6 +1765,26 @@ export default function (eleventyConfig) {
       } catch (e) {
         console.log(`[gc] Heap stats unavailable: ${e.message}`);
       }
+    }
+
+    // Build-status: mark the build "ok" (site-builder Phase 5, spec §2.4).
+    // Must run BEFORE the incremental early-return below — every publish is an
+    // incremental rebuild and must be observable. lastOkDurationSeconds is the
+    // per-site self-calibrating number the admin UI quotes and stuck detection
+    // multiplies. writeBuildStatus never throws (warns + returns false).
+    if (existsSync("/app/data")) {
+      const finishedAt = Date.now();
+      const durationSeconds =
+        buildStart === null ? undefined : Number(((finishedAt - buildStart) / 1000).toFixed(1));
+      await writeBuildStatus({
+        state: "ok",
+        ...(buildId ? { buildId } : {}),
+        finishedAt: new Date(finishedAt).toISOString(),
+        durationSeconds,
+        incremental: Boolean(incremental),
+        // Omitted when unknown so the writer carries the previous value forward
+        ...(durationSeconds === undefined ? {} : { lastOkDurationSeconds: durationSeconds }),
+      });
     }
 
     // WebSub hub notification — skip on incremental rebuilds
