@@ -19,6 +19,13 @@
   },
 }
 ---
+{# Null guard ONLY — Eleventy renders this template on every build even when
+   the computed permalink is false (it just doesn't write the output), so
+   without it the shortcode runs with null and logs a false
+   "[composition] unsupported schemaVersion: undefined" warn once per build,
+   polluting the loud-signal convention home.njk relies on. schemaVersion
+   gating stays in the shortcode per the documented split. #}
+{% if previewDraft %}
 <div data-preview-revision="{{ previewDraft.revision }}">
   {# Direct shortcode call — NEVER via {% include %} or renderFile (Eleventy
      3.1.2 silently drops async shortcode output inside {% include %}; see
@@ -27,3 +34,4 @@
      HTML comment on invalid artifacts. #}
   {% renderCompositionTree previewDraft %}
 </div>
+{% endif %}
