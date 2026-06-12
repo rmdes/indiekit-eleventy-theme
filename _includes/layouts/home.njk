@@ -3,17 +3,24 @@ layout: layouts/base.njk
 withSidebar: true
 ---
 
-{# Homepage content — three-tier fallback: #}
-{# 0. v4 composition artifact (composition) — recursive renderer controls everything #}
-{# 1. Plugin config (homepageConfig) — homepage builder controls everything #}
-{# 2. Default — show recent posts with default hero #}
+{# Homepage content — two-tier fallback: #}
+{# 0. v4 composition artifact (composition) — recursive renderer controls everything.
+      The artifact always exists when site-config runs with MongoDB: it is written
+      at every boot and on every v3 homepage save (site-config beta.12+), so this
+      is THE homepage path on any working deployment. #}
+{# 2. Default — hero + recent posts. Covers installs WITHOUT MongoDB (no artifact
+      → composition is null). #}
+{# The old Tier-1 dispatcher path (homepage-builder.njk, driven by
+   homepageConfig.sections) was deleted after the Tier-0 cutover was verified on
+   both production sites (site builder Phase 3, R3). #}
 
 {# --- Tier 0: v4 composition tree (site builder Phase 1) --- #}
 {# Strict === to match the shortcode's own `!== 4` gate — loose == lets string
    "4" pass here, the shortcode then rejects it, and the homepage renders EMPTY
-   instead of falling back to Tier 1. The tree check covers the other blank
-   path: a v4 artifact with a missing/invalid tree would render only a stripped
-   HTML comment. MUST stay in sync with the base.njk homepage passthrough. #}
+   instead of falling back to the Tier-2 default. The tree check covers the
+   other blank path: a v4 artifact with a missing/invalid tree would render only
+   a stripped HTML comment. MUST stay in sync with the base.njk homepage
+   passthrough. #}
 {% if composition and composition.schemaVersion === 4 and composition.tree %}
   {# Direct shortcode call — deliberately NOT {% include "components/render-block.njk" %}.
      Verified on Eleventy 3.1.2: async shortcode output inside {% include %} is
@@ -23,8 +30,7 @@ withSidebar: true
   {% renderCompositionTree composition %}
 {% else %}
 
-{# Default hero — only shown for Tier 2 (plugin controls its own hero) #}
-{% if not (homepageConfig and homepageConfig.sections) %}
+{# --- Tier 2: Default — hero, recent posts and explore links --- #}
 {# v3 identity migration: site.identity canonical; site.author.* env-var fallback retained #}
 {% set id = site.identity if site.identity else {} %}
 {% set authorName = id.name or site.author.name %}
@@ -89,14 +95,6 @@ withSidebar: true
     </div>
   </div>
 </section>
-{% endif %}
-
-{# --- Tier 1: Plugin-driven layout --- #}
-{% if homepageConfig and homepageConfig.sections %}
-  {% include "components/homepage-builder.njk" %}
-
-{# --- Tier 2: Default — recent posts and explore links --- #}
-{% else %}
 
 {# Recent Posts #}
 {% if collections.posts and collections.posts.length %}
@@ -180,7 +178,5 @@ withSidebar: true
   </a>
 </section>
 {% endif %}
-
-{% endif %} {# end two-tier fallback #}
 
 {% endif %} {# end Tier 0 composition guard #}

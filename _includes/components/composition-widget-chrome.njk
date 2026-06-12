@@ -6,7 +6,8 @@
    differences from the v3 chrome — nothing else changed:
      1. Keys derive from the STABLE block id: localStorage `widget-<blockId>`.
         v3 keyed `widget-<type>-<loop.index0>`, which shifts on reorder (a
-        recorded bug). Saved open/closed states reset ONCE at cutover.
+        recorded bug). Saved open/closed states reset at cutover and on each
+        v3 homepage save until Phase 4 (fresh block ids per refresh).
      2. ARIA additions (WCAG 4.1.2 fix — the v3 chrome lacked them):
         `aria-controls="widget-panel-<blockId>"` on the toggle button and the
         matching `id="widget-panel-<blockId>"` on the panel.

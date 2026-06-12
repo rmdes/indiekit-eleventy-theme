@@ -2,7 +2,7 @@
  * Composition Artifact Data (Site Builder Phase 1)
  * Reads the v4 homepage composition artifact written by the site-builder
  * (future phases) — or the hand-written Phase-1 fixture. Falls back to null;
- * home.njk then uses the homepage-builder / default layout paths unchanged.
+ * home.njk falls back to the Tier-2 default layout.
  *
  * Runtime path: /app/data/content/_data/compositions/homepage.json (resolves
  * via the content/ symlink, same mechanism as _data/homepageConfig.js).

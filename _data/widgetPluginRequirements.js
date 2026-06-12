@@ -1,6 +1,11 @@
 /**
  * widgetPluginRequirements — map of widget.type → required plugin key
  *
+ * NOTE: Consumed by sidebar.njk / blog-sidebar.njk / cv-sidebar.njk (v3
+ * sidebars, die Phase 6) AND lib/render-composition.mjs's legacy-map gate
+ * (dies Phase 7). The deleted homepage dispatchers no longer consume it
+ * (Phase 3 cutover, R3).
+ *
  * Used by sidebar/widget-render templates to hide widgets whose backing
  * plugin isn't loaded for this site (Plan B multi-site loadouts).
  *
