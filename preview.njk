@@ -1,0 +1,29 @@
+---js
+{
+  layout: "layouts/base.njk",
+  eleventyExcludeFromCollections: true,
+  pagefindIgnore: true,
+  noindex: true,
+  eleventyComputed: {
+    // Token shape guard: the plugin-side preview-draft writer generates
+    // URL-safe random tokens; anything else (path separators, dots, …) must
+    // never reach the output path. Missing draft or malformed token →
+    // permalink false → no page emitted at all.
+    permalink: (data) => {
+      const token = data.previewDraft?.token;
+      return typeof token === "string" && /^[A-Za-z0-9_-]+$/.test(token)
+        ? `/preview/${token}/index.html`
+        : false;
+    },
+    title: () => "Preview",
+  },
+}
+---
+<div data-preview-revision="{{ previewDraft.revision }}">
+  {# Direct shortcode call — NEVER via {% include %} or renderFile (Eleventy
+     3.1.2 silently drops async shortcode output inside {% include %}; see
+     home.njk Tier-0 and components/render-block.njk for the canonical notes).
+     The shortcode owns the schemaVersion 4 + tree gates and degrades to an
+     HTML comment on invalid artifacts. #}
+  {% renderCompositionTree previewDraft %}
+</div>

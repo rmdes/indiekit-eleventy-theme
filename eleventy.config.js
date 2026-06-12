@@ -1601,6 +1601,7 @@ export default function (eleventyConfig) {
         /^\/graph\//,
         /^\/sitemap\.xml$/,
         /^\/\.interface-design\//,
+        /^\/preview\//,
       ];
       try {
         const walkHtml = (base, prefix = "") => {
