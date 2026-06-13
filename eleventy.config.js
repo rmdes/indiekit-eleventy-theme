@@ -463,6 +463,16 @@ export default function (eleventyConfig) {
   // transform name that re-breaks on upgrades. Per-page parse reduction is handled
   // idiomatically at call-sites (see debt-paydown item 1b), not by overriding internals.
 
+  // Per-post image flag — gates the content-image transform (debt-paydown 1b).
+  // Explicit frontmatter `hasImages` is authoritative (set by the Micropub endpoint
+  // on new image posts + a one-time backfill on existing posts). Photo posts always
+  // carry a `photo` property, so they're covered even before the backfill runs.
+  // Default false → chrome-only pages (notes/articles with no content image) are
+  // never parsed for <img> optimization.
+  eleventyConfig.addGlobalData("eleventyComputed.hasImages", () => (data) => {
+    if (typeof data.hasImages === "boolean") return data.hasImages;
+    return Boolean(data.photo);
+  });
 
   // Wrap <table> elements in <table-saw> for responsive tables
   eleventyConfig.addTransform("table-saw-wrap", function (content, outputPath) {

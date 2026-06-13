@@ -79,6 +79,20 @@ export default async function () {
 {% endif %}
 ```
 
+## CRITICAL: hasImages Frontmatter Contract (image optimization gate)
+
+`hasImages` is a per-post frontmatter boolean that gates the content-image PostHTML transform added in debt-paydown 1b. When `false` (or absent), the transform is skipped — chrome-only pages (notes, articles without content images) never incur the PostHTML parse cost. Absence is equivalent to `false`.
+
+### Who sets it
+
+1. **`@rmdes/indiekit-endpoint-micropub`** — sets `hasImages: true` on new posts that carry a `photo` property or a content image.
+2. **A one-time backfill script** — sets it retroactively on existing posts (run once after deploy).
+3. **`eleventyComputed.hasImages` fallback** (`eleventy.config.js`) — defaults to `Boolean(data.photo)` so photo posts are always covered even before the backfill runs. Explicit frontmatter takes precedence over the computed fallback.
+
+### Rule for new post-creation paths
+
+If a post can contain a content image (markdown `![](...)` or inline `<img>`) that is **not** expressed as a `photo` frontmatter property, it **MUST** set `hasImages: true` in frontmatter. Without it, that page's content images ship unoptimized (false-negative). When in doubt, set it.
+
 ## Architecture
 
 ### Multi-Site / Site-Config Architecture
