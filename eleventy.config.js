@@ -470,6 +470,9 @@ export default function (eleventyConfig) {
   // Default false → chrome-only pages (notes/articles with no content image) are
   // never parsed for <img> optimization.
   eleventyConfig.addGlobalData("eleventyComputed.hasImages", () => (data) => {
+    // `data.hasImages` here is the raw frontmatter value — a computed key is not in
+    // its own scope during resolution — so this reads the frontmatter override, not
+    // the computed result. (Documented Eleventy "default with override" pattern.)
     if (typeof data.hasImages === "boolean") return data.hasImages;
     return Boolean(data.photo);
   });

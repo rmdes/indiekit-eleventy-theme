@@ -85,7 +85,7 @@ export default async function () {
 
 ### Who sets it
 
-1. **`@rmdes/indiekit-endpoint-micropub`** — sets `hasImages: true` on new posts that carry a `photo` property or a content image.
+1. **`@rmdes/indiekit-endpoint-micropub`** — sets `hasImages: true` on new posts that carry a content image in body markdown. (Photo-only posts are already covered by the computed fallback below, so the endpoint setting it for them is redundant but harmless.)
 2. **A one-time backfill script** — sets it retroactively on existing posts (run once after deploy).
 3. **`eleventyComputed.hasImages` fallback** (`eleventy.config.js`) — defaults to `Boolean(data.photo)` so photo posts are always covered even before the backfill runs. Explicit frontmatter takes precedence over the computed fallback.
 
