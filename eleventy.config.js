@@ -448,21 +448,13 @@ export default function (eleventyConfig) {
     },
   });
 
-  // Performance: skip PostHTML parsing for pages without <img> tags.
-  // Both registered PostHTML plugins (remote-image-marker, eleventy-img) only
-  // target <img> elements — no point parsing+serializing HTML without them.
-  // Overrides the default @11ty/eleventy/html-transformer transform (same name
-  // overwrites via addTransform) with a pre-check that avoids the full PostHTML
-  // parse/serialize cycle (~3ms/page) for image-free pages.
-  eleventyConfig.addTransform("@11ty/eleventy/html-transformer", async function(content) {
-    if (typeof this.outputPath === "string" && this.outputPath.endsWith(".html") && !content.includes("<img")) {
-      // Safety: if URL transform callbacks exist (they modify <a>, <link>, etc.)
-      // we must still run the full pipeline even without images.
-      const hasUrlCallbacks = eleventyConfig.htmlTransformer.getCallbacks("html", this).length > 0;
-      if (!hasUrlCallbacks) return content;
-    }
-    return eleventyConfig.htmlTransformer.transformContent(this.outputPath, content, this);
-  });
+  // Image optimization runs via Eleventy's built-in @11ty/eleventy/html-transformer,
+  // which executes the registered PostHTML plugins above (remote-image-marker +
+  // eleventy-img). The previous custom override of that internal transform — a
+  // `!content.includes("<img")` fast-path — was retired: it fired for only ~0.7% of
+  // pages (chrome <img> defeats the check) while coupling to an Eleventy internal
+  // transform name that re-breaks on upgrades. Per-page parse reduction is handled
+  // idiomatically at call-sites (see debt-paydown item 1b), not by overriding internals.
 
 
   // Wrap <table> elements in <table-saw> for responsive tables
