@@ -12,6 +12,7 @@ import { minify as minifyJS } from "terser";
 import registerUnfurlShortcode, { getCachedCard, prefetchUrl } from "./lib/unfurl-shortcode.js";
 import { renderNode } from "./lib/render-composition.mjs";
 import { renderAvatar } from "./lib/image-shortcode.mjs";
+import { makeContentImageTransform } from "./lib/content-image-transform.mjs";
 import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
 import { prunePreviewOrphans, readCurrentPreviewToken } from "./lib/prune-preview.mjs";
 import matter from "gray-matter";
@@ -455,13 +456,18 @@ export default function (eleventyConfig) {
     },
   });
 
-  // Image optimization runs via Eleventy's built-in @11ty/eleventy/html-transformer,
-  // which executes the registered PostHTML plugins above (remote-image-marker +
-  // eleventy-img). The previous custom override of that internal transform — a
-  // `!content.includes("<img")` fast-path — was retired: it fired for only ~0.7% of
-  // pages (chrome <img> defeats the check) while coupling to an Eleventy internal
-  // transform name that re-breaks on upgrades. Per-page parse reduction is handled
-  // idiomatically at call-sites (see debt-paydown item 1b), not by overriding internals.
+  // Image optimization gate (debt-paydown 1b). Eleventy's built-in
+  // "@11ty/eleventy/html-transformer" runs the registered PostHTML plugins above
+  // (remote-image-marker + eleventy-img) — but it parses EVERY page to find <img>.
+  // We override that transform (registering under the same name) with a gated wrapper:
+  // only pages flagged `hasImages` run the full pipeline; chrome-only pages (~95%) skip
+  // the PostHTML parse entirely. The gate is the per-post `hasImages` data flag, NOT a
+  // content substring (chrome <img> from partials would defeat that; avatars are now
+  // optimized at call-sites via {% avatar %}). The plugin + remote-image-marker stay
+  // registered above — the override calls into them via htmlTransformer.transformContent.
+  // (Re-touches an Eleventy internal transform name — gated on real data, not a substring;
+  // to be centralized per debt item 2.)
+  eleventyConfig.addTransform("@11ty/eleventy/html-transformer", makeContentImageTransform(eleventyConfig));
 
   // Per-post image flag — gates the content-image transform (debt-paydown 1b).
   // Explicit frontmatter `hasImages` is authoritative (set by the Micropub endpoint
