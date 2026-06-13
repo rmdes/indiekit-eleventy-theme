@@ -28,15 +28,7 @@
 
   <div class="flex items-center gap-4">
     <a href="{{ authorUrl }}" class="u-url u-uid" rel="me" itemprop="url">
-      <img
-        src="{{ authorAvatar }}"
-        alt="{{ authorName }}"
-        width="64"
-        height="64"
-        class="w-16 h-16 rounded-full object-cover shadow-lg"
-        loading="lazy"
-        itemprop="image"
-      >
+      {% avatar authorAvatar, authorName, { width: 64, height: 64, class: "w-16 h-16 rounded-full object-cover shadow-lg", loading: "lazy", itemprop: "image" } %}
     </a>
     <div>
       <a href="{{ authorUrl }}" class="u-url p-name font-bold text-lg block hover:text-link" itemprop="name">

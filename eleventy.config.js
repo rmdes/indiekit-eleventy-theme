@@ -11,6 +11,7 @@ import { minify } from "html-minifier-terser";
 import { minify as minifyJS } from "terser";
 import registerUnfurlShortcode, { getCachedCard, prefetchUrl } from "./lib/unfurl-shortcode.js";
 import { renderNode } from "./lib/render-composition.mjs";
+import { renderAvatar } from "./lib/image-shortcode.mjs";
 import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
 import { prunePreviewOrphans, readCurrentPreviewToken } from "./lib/prune-preview.mjs";
 import matter from "gray-matter";
@@ -240,6 +241,12 @@ export default function (eleventyConfig) {
       blockCatalog: this.ctx?.blockCatalog,
       loadedPlugins: this.ctx?.loadedPlugins,
     });
+  });
+
+  // {% avatar src, alt, opts %} — optimize local chrome avatars at the call-site
+  // (remote avatars pass through with eleventy:ignore). See lib/image-shortcode.mjs.
+  eleventyConfig.addAsyncShortcode("avatar", async function (src, alt, opts = {}) {
+    return renderAvatar(src, { alt, ...opts });
   });
 
   // Post graph — GitHub-style contribution grid for posting frequency
