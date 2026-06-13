@@ -23,6 +23,7 @@ test("renderAvatar: remote src → passthrough <img> with eleventy:ignore, no op
 test("renderAvatar: falsy src → empty-src passthrough <img> with eleventy:ignore, no optimization", async () => {
   const html = await renderAvatar(null, { alt: "", width: 48, height: 48, class: "avatar" });
   assert.match(html, /<img[^>]*src=""/);
+  assert.match(html, /alt=""/);
   assert.match(html, /eleventy:ignore/);
   assert.doesNotMatch(html, /\/img\//);
 });
