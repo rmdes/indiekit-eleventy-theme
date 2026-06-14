@@ -12,7 +12,7 @@ import { minify as minifyJS } from "terser";
 import registerUnfurlShortcode, { getCachedCard, prefetchUrl } from "./lib/unfurl-shortcode.js";
 import { renderNode } from "./lib/render-composition.mjs";
 import { renderAvatar } from "./lib/image-shortcode.mjs";
-import { makeContentImageTransform } from "./lib/content-image-transform.mjs";
+import { makeContentImageTransform, registerImageGate } from "./lib/content-image-transform.mjs";
 import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
 import { prunePreviewOrphans, readCurrentPreviewToken } from "./lib/prune-preview.mjs";
 import matter from "gray-matter";
@@ -465,8 +465,11 @@ export default function (eleventyConfig) {
   // content substring (chrome <img> from partials would defeat that; avatars are now
   // optimized at call-sites via {% avatar %}). The plugin + remote-image-marker stay
   // registered above — the override calls into them via htmlTransformer.transformContent.
+  // A collection populates a per-page outputPath→hasImages map (transforms don't get the
+  // data cascade); the override reads it.
   // (Re-touches an Eleventy internal transform name — gated on real data, not a substring;
   // to be centralized per debt item 2.)
+  registerImageGate(eleventyConfig);
   eleventyConfig.addTransform("@11ty/eleventy/html-transformer", makeContentImageTransform(eleventyConfig));
 
   // Per-post image flag — gates the content-image transform (debt-paydown 1b).
