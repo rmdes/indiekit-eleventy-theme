@@ -86,6 +86,23 @@ test("insertHasImages: handles CRLF line endings", () => {
   assert.ok(text.includes("title: Test\r\n"), "existing CRLF lines unchanged");
 });
 
+test("insertHasImages: idempotency check is frontmatter-scoped, not body-scoped", () => {
+  // The body contains a line that looks like the key, but the frontmatter does
+  // NOT have it. The post has an image. The body occurrence must not trigger a
+  // false skip — the flag must still be inserted into the frontmatter.
+  const raw =
+    "---\ntitle: Test\nphoto:\n  - https://x/y.jpg\n---\nSome body.\nhasImages: not really\nmore body.\n";
+  const { changed, text } = insertHasImages(raw);
+  assert.equal(changed, true, "body occurrence must not cause a false skip");
+  const lines = text.split("\n");
+  assert.equal(lines[0], "---", "first line is opening ---");
+  assert.equal(lines[1], "hasImages: true", "flag inserted into frontmatter");
+  assert.ok(
+    text.includes("hasImages: not really"),
+    "body occurrence is left untouched"
+  );
+});
+
 test("insertHasImages: new line inserted right after opening ---", () => {
   const raw = "---\ntitle: Post\ntags:\n  - one\n---\ncontent here\n";
   const { changed, text } = insertHasImages(raw);

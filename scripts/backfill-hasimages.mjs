@@ -38,7 +38,11 @@ export function hasImage(data, content = "") {
     return true;
   }
 
-  // Markdown image syntax or HTML <img tag (same regex as micropub endpoint)
+  // Markdown image syntax or HTML <img tag (same regex as micropub endpoint).
+  // The micropub endpoint normalizes a JF2 content object {text,html,value} to
+  // a string before testing, whereas gray-matter always returns a plain string
+  // body — so no shape normalization is needed here and the regex input is
+  // equivalent for Indiekit-generated posts.
   return /!\[[^\]]*\]\(|<img[\s>/]/i.test(content ?? "");
 }
 
@@ -132,48 +136,54 @@ function main() {
   let skippedNoImage = 0;
   let skippedAlreadyFlagged = 0;
   let skippedNoFrontmatter = 0;
+  let skippedError = 0;
 
   for (const filePath of mdFiles) {
     total++;
-    const raw = fs.readFileSync(filePath, "utf8");
 
-    // Parse for detection only — we never write via gray-matter
-    let parsed;
+    // Isolate per-file work: a permission error / broken symlink / unparseable
+    // frontmatter on any single file must NOT abort the whole run (important
+    // when processing thousands of files). Log + count + continue.
     try {
-      parsed = matter(raw);
-    } catch {
-      // Unparseable frontmatter — treat as no image, skip
-      skippedNoImage++;
-      continue;
-    }
+      const raw = fs.readFileSync(filePath, "utf8");
 
-    const { data, content } = parsed;
+      // Parse for detection only — we never write via gray-matter
+      const { data, content } = matter(raw);
 
-    if (!hasImage(data, content)) {
-      skippedNoImage++;
-      continue;
-    }
-
-    const { changed, text } = insertHasImages(raw);
-
-    if (!changed) {
-      // insertHasImages returns changed:false for no-frontmatter or already-flagged
-      // Distinguish by checking data.hasImages
-      if (data.hasImages !== undefined) {
-        skippedAlreadyFlagged++;
-      } else {
-        skippedNoFrontmatter++;
+      if (!hasImage(data, content)) {
+        skippedNoImage++;
+        continue;
       }
-      continue;
-    }
 
-    flagged++;
+      const { changed, text } = insertHasImages(raw);
 
-    if (!dryRun) {
-      fs.writeFileSync(filePath, text, "utf8");
-      console.log(`  flagged: ${path.relative(absDir, filePath)}`);
-    } else {
-      console.log(`  would flag: ${path.relative(absDir, filePath)}`);
+      if (!changed) {
+        // insertHasImages returns changed:false for no-frontmatter or already-flagged
+        // Distinguish by checking data.hasImages
+        if (data.hasImages !== undefined) {
+          skippedAlreadyFlagged++;
+        } else {
+          skippedNoFrontmatter++;
+        }
+        continue;
+      }
+
+      flagged++;
+
+      if (!dryRun) {
+        fs.writeFileSync(filePath, text, "utf8");
+        console.log(`  flagged: ${path.relative(absDir, filePath)}`);
+      } else {
+        console.log(`  would flag: ${path.relative(absDir, filePath)}`);
+      }
+    } catch (error) {
+      // Covers read/write failures AND gray-matter parse errors. Kept distinct
+      // from skipped-no-image so "couldn't process" is not conflated with
+      // "processed, no image found".
+      skippedError++;
+      console.error(
+        `  error: ${path.relative(absDir, filePath)} — ${error.message}`,
+      );
     }
   }
 
@@ -184,4 +194,5 @@ function main() {
   console.log(`  skipped-no-image:     ${skippedNoImage}`);
   console.log(`  skipped-already-set:  ${skippedAlreadyFlagged}`);
   console.log(`  skipped-no-fm:        ${skippedNoFrontmatter}`);
+  console.log(`  skipped-error:        ${skippedError}`);
 }
