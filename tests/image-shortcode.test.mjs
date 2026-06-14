@@ -42,3 +42,15 @@ test("isSvg: detects .svg with optional query/hash", () => {
   assert.equal(isSvg("https://x/y.svg#i"), true);
   assert.equal(isSvg("/a/b.png"), false);
 });
+
+test("renderAvatar: missing local file falls back to passthrough (never throws)", async () => {
+  // Regression: site.author.avatar = /images/rick.jpg (root-relative, not a real
+  // build file) crashed the whole build via eleventy-img ENOENT. Must passthrough.
+  const html = await renderAvatar("/images/does-not-exist-xyz.jpg", {
+    alt: "Rick", width: 128, height: 128, class: "avatar",
+  });
+  assert.match(html, /<img[^>]*src="\/images\/does-not-exist-xyz\.jpg"/);
+  assert.match(html, /alt="Rick"/);
+  assert.doesNotMatch(html, /<picture>/);
+  assert.doesNotMatch(html, /\/img\//);
+});
