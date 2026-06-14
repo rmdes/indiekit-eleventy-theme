@@ -41,14 +41,7 @@ withSidebar: true
 <section class="mb-8 sm:mb-12">
   <div class="flex flex-col sm:flex-row gap-6 sm:gap-8 items-start">
     {# Avatar #}
-    <img
-      src="{{ authorAvatar }}"
-      alt="{{ authorName }}"
-      width="128"
-      height="128"
-      class="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover shadow-lg flex-shrink-0"
-      loading="eager"
-    >
+    {% avatar authorAvatar, authorName, { width: 128, height: 128, class: "w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover shadow-lg flex-shrink-0", loading: "eager" } %}
 
     {# Introduction #}
     <div class="flex-1 min-w-0">

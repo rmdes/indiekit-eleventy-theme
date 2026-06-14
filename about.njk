@@ -6,12 +6,7 @@ eleventyExcludeFromCollections: true
 ---
 <article class="h-card">
   <header class="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-6 sm:gap-8 items-start">
-    <img
-      src="{{ site.author.avatar }}"
-      alt="{{ site.author.name }}"
-      class="u-photo w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover shadow-lg flex-shrink-0"
-      loading="eager"
-    >
+    {% avatar site.author.avatar, site.author.name, { class: "u-photo w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover shadow-lg flex-shrink-0", loading: "eager" } %}
     <div class="min-w-0">
       <h1 class="p-name text-2xl sm:text-3xl font-bold text-heading mb-2">
         {{ site.author.name }}

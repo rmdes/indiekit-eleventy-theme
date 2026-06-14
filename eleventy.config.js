@@ -483,7 +483,7 @@ export default function (eleventyConfig) {
     // its own scope during resolution — so this reads the frontmatter override, not
     // the computed result. (Documented Eleventy "default with override" pattern.)
     if (typeof data.hasImages === "boolean") return data.hasImages;
-    return Boolean(data.photo);
+    return Array.isArray(data.photo) ? data.photo.length > 0 : Boolean(data.photo);
   });
 
   // Wrap <table> elements in <table-saw> for responsive tables
