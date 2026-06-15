@@ -12,7 +12,6 @@ import { minify as minifyJS } from "terser";
 import registerUnfurlShortcode, { getCachedCard, prefetchUrl } from "./lib/unfurl-shortcode.js";
 import { renderNode } from "./lib/render-composition.mjs";
 import { renderAvatar } from "./lib/image-shortcode.mjs";
-import { makeContentImageTransform, registerImageGate } from "./lib/content-image-transform.mjs";
 import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
 import { prunePreviewOrphans, readCurrentPreviewToken } from "./lib/prune-preview.mjs";
 import matter from "gray-matter";
@@ -424,6 +423,26 @@ export default function (eleventyConfig) {
   // PROCESS_REMOTE_IMAGES: set to "true" to let Sharp download and re-encode remote images.
   // Default "false" — skips remote URLs (adds eleventy:ignore) to avoid OOM from Sharp's
   // native memory usage when processing hundreds of external images (bookmarks, webmentions).
+  // Phase B (image refactor): rewrite same-origin absolute media URLs to root-relative
+  // so eleventy-img resolves + optimizes them (it ignores absolute URLs). Multi-site safe
+  // via SITE_URL. Runs BEFORE the remote-image-marker (priority 2 > 1) so the rewritten
+  // /media/... is no longer treated as remote. Storage is untouched (feeds re-absolutize).
+  const __siteOrigin = (process.env.SITE_URL || "").replace(/\/+$/, "");
+  if (__siteOrigin) {
+    eleventyConfig.htmlTransformer.addPosthtmlPlugin("html", () => {
+      const prefix = `${__siteOrigin}/media/`;
+      return (tree) => {
+        tree.match({ tag: "img" }, (node) => {
+          if (node.attrs?.src && node.attrs.src.startsWith(prefix)) {
+            node.attrs.src = node.attrs.src.slice(__siteOrigin.length); // -> /media/...
+          }
+          return node;
+        });
+        return tree;
+      };
+    }, { priority: 2 });
+  }
+
   const processRemoteImages = process.env.PROCESS_REMOTE_IMAGES === "true";
   if (!processRemoteImages) {
     eleventyConfig.htmlTransformer.addPosthtmlPlugin("html", () => {
@@ -439,6 +458,16 @@ export default function (eleventyConfig) {
     }, { priority: 1 }); // priority > 0 runs before image plugin (priority -1)
   }
 
+  // Content-image optimization (image-pipeline refactor, 2026-06-15). The
+  // eleventyImageTransformPlugin runs on every HTML page and rewrites resolvable
+  // <img> into responsive <picture> (webp/jpeg). Content images authored as
+  // same-origin absolute /media URLs are made resolvable by the rewrite above
+  // (origin stripped → /media/...) plus the `/media -> content/media` symlink
+  // created in the Dockerfile. Remote (third-party) images stay eleventy:ignore'd.
+  // (This replaces the debt-1b hasImages gate / collection / override, which was
+  // removed: it skipped the parse on most pages but never optimized content images
+  // because their URLs weren't build-resolvable. See
+  // documentation-central/plans/2026-06-14-image-pipeline-refactor-plan.md.)
   eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
     extensions: "html",
     formats: ["webp", "jpeg"],
@@ -454,36 +483,6 @@ export default function (eleventyConfig) {
       sizes: "auto",
       alt: "",
     },
-  });
-
-  // Image optimization gate (debt-paydown 1b). Eleventy's built-in
-  // "@11ty/eleventy/html-transformer" runs the registered PostHTML plugins above
-  // (remote-image-marker + eleventy-img) — but it parses EVERY page to find <img>.
-  // We override that transform (registering under the same name) with a gated wrapper:
-  // only pages flagged `hasImages` run the full pipeline; chrome-only pages (~95%) skip
-  // the PostHTML parse entirely. The gate is the per-post `hasImages` data flag, NOT a
-  // content substring (chrome <img> from partials would defeat that; avatars are now
-  // optimized at call-sites via {% avatar %}). The plugin + remote-image-marker stay
-  // registered above — the override calls into them via htmlTransformer.transformContent.
-  // A collection populates a per-page outputPath→hasImages map (transforms don't get the
-  // data cascade); the override reads it.
-  // (Re-touches an Eleventy internal transform name — gated on real data, not a substring;
-  // to be centralized per debt item 2.)
-  registerImageGate(eleventyConfig);
-  eleventyConfig.addTransform("@11ty/eleventy/html-transformer", makeContentImageTransform(eleventyConfig));
-
-  // Per-post image flag — gates the content-image transform (debt-paydown 1b).
-  // Explicit frontmatter `hasImages` is authoritative (set by the Micropub endpoint
-  // on new image posts + a one-time backfill on existing posts). Photo posts always
-  // carry a `photo` property, so they're covered even before the backfill runs.
-  // Default false → chrome-only pages (notes/articles with no content image) are
-  // never parsed for <img> optimization.
-  eleventyConfig.addGlobalData("eleventyComputed.hasImages", () => (data) => {
-    // `data.hasImages` here is the raw frontmatter value — a computed key is not in
-    // its own scope during resolution — so this reads the frontmatter override, not
-    // the computed result. (Documented Eleventy "default with override" pattern.)
-    if (typeof data.hasImages === "boolean") return data.hasImages;
-    return Array.isArray(data.photo) ? data.photo.length > 0 : Boolean(data.photo);
   });
 
   // Wrap <table> elements in <table-saw> for responsive tables

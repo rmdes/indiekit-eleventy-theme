@@ -79,19 +79,19 @@ export default async function () {
 {% endif %}
 ```
 
-## CRITICAL: hasImages Frontmatter Contract (image optimization gate)
+## Content-image optimization
 
-`hasImages` is a per-post frontmatter boolean that gates the content-image PostHTML transform added in debt-paydown 1b. When `false` (or absent), the transform is skipped — chrome-only pages (notes, articles without content images) never incur the PostHTML parse cost. Absence is equivalent to `false`.
-
-### Who sets it
-
-1. **`@rmdes/indiekit-endpoint-micropub`** — sets `hasImages: true` on new posts that carry a content image in body markdown. (Photo-only posts are already covered by the computed fallback below, so the endpoint setting it for them is redundant but harmless.)
-2. **A one-time backfill script** — sets it retroactively on existing posts (run once after deploy).
-3. **`eleventyComputed.hasImages` fallback** (`eleventy.config.js`) — defaults to `Boolean(data.photo)` so photo posts are always covered even before the backfill runs. Explicit frontmatter takes precedence over the computed fallback.
-
-### Rule for new post-creation paths
-
-If a post can contain a content image (markdown `![](...)` or inline `<img>`) that is **not** expressed as a `photo` frontmatter property, it **MUST** set `hasImages: true` in frontmatter. Without it, that page's content images ship unoptimized (false-negative). When in doubt, set it.
+Content images are optimized at build by the `eleventyImageTransformPlugin` (the recommended
+Eleventy approach), which rewrites resolvable `<img>` into responsive `<picture>` (webp/jpeg).
+Posts author images as same-origin absolute `https://<site>/media/...` URLs (or root-relative
+`/media/...`); a PostHTML rewrite in `eleventy.config.js` strips the same-origin prefix
+(`SITE_URL`) → `/media/...`, and a `/media -> content/media` symlink (created in the
+`indiekit-cloudron` Dockerfile, and locally for dev) makes that path resolve so eleventy-img
+optimizes it. Remote/third-party images are left `eleventy:ignore`'d (Sharp OOM guard). Feeds
+re-absolutize via the RSS plugin's `htmlToAbsoluteUrls`/`absoluteUrl`, so relativizing at the
+build layer doesn't affect feed output. The earlier debt-1b `hasImages` gate (which skipped the
+parse but never optimized content images, because their URLs weren't build-resolvable) was
+removed; see `documentation-central/plans/2026-06-14-image-pipeline-refactor-plan.md`.
 
 ## Architecture
 
