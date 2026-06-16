@@ -391,14 +391,14 @@
     @apply lg:sticky lg:top-24 lg:self-start;
   }
 
-  /* Per-post layout-intent width modifiers (see post.njk / base.njk).
-     Default posts get neither class and keep the theme's standard width. */
+  /* Per-post layout-intent width (see post.njk / base.njk).
+     minimal = narrow reading column; fullwidth = no sidebar + wider container.
+     Default posts get neither and keep the standard max-w-5xl container. */
   .post--minimal {
-    max-width: 42rem;
-    margin-inline: auto;
+    @apply max-w-2xl mx-auto;
   }
-  .post--fullwidth {
-    max-width: none;
+  main.container--fullwidth {
+    @apply max-w-7xl;
   }
 }
 

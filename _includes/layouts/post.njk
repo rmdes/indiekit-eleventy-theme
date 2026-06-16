@@ -2,7 +2,7 @@
 layout: layouts/base.njk
 withBlogSidebar: true
 ---
-<article class="h-entry post{% if layoutIntent === 'fullwidth' %} post--fullwidth{% elif layoutIntent === 'minimal' %} post--minimal{% endif %}" x-data="lightbox" @keydown.window="onKeydown($event)">
+<article class="h-entry post{% if layoutIntent === 'minimal' %} post--minimal{% endif %}" x-data="lightbox" @keydown.window="onKeydown($event)">
   {# Support both camelCase (Indiekit Eleventy preset) and underscore (legacy) property names #}
   {% set bookmarkedUrl = bookmarkOf or bookmark_of %}
   {% set likedUrl = likeOf or like_of %}
