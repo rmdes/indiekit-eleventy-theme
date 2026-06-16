@@ -390,6 +390,16 @@
   .comp-sticky {
     @apply lg:sticky lg:top-24 lg:self-start;
   }
+
+  /* Per-post layout-intent width modifiers (see post.njk / base.njk).
+     Default posts get neither class and keep the theme's standard width. */
+  .post--minimal {
+    max-width: 42rem;
+    margin-inline: auto;
+  }
+  .post--fullwidth {
+    max-width: none;
+  }
 }
 
 /* Custom component styles */

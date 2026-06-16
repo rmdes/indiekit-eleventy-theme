@@ -357,7 +357,7 @@
         {% include "components/sidebar.njk" %}
       </aside>
     </div>
-    {% elif withBlogSidebar and homepageConfig and homepageConfig.blogPostSidebar and homepageConfig.blogPostSidebar.length %}
+    {% elif withBlogSidebar and layoutIntent !== "fullwidth" and layoutIntent !== "minimal" and homepageConfig and homepageConfig.blogPostSidebar and homepageConfig.blogPostSidebar.length %}
     <div class="layout-with-sidebar">
       <div class="main-content">
         {{ content | safe }}
