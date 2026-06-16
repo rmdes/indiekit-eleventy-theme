@@ -485,6 +485,30 @@ export default function (eleventyConfig) {
     },
   });
 
+  // Image-optimization GATE (build-perf). The plugin above registers a PostHTML
+  // pass on Eleventy's built-in "@11ty/eleventy/html-transformer", which otherwise
+  // parses EVERY page (~87% of which carry no content image — chrome <img> is remote
+  // and never optimized anyway). We override that transform by name to skip the parse
+  // on pages with no content image, detected by a /media/ or /uploads/ path (content
+  // images use those; chrome/avatar/widget images are remote other-origin). Validated:
+  // 0 false-positives on chrome-only pages, matches all 455 content-image pages.
+  // Pages WITH a content image run the full pipeline (Phase-B rewrite + remote-marker
+  // + eleventy-img) and optimize correctly. The URL-callback guard preserves any future
+  // addUrlTransform. (Re-touches an Eleventy internal transform name — accurate
+  // content-data gate, not the over-matching <img> check the retired 1a fast-path used;
+  // to be centralized per debt item 2.)
+  eleventyConfig.addTransform("@11ty/eleventy/html-transformer", async function (content) {
+    if (
+      typeof this.outputPath === "string" &&
+      this.outputPath.endsWith(".html") &&
+      !/\/(media|uploads)\//.test(content)
+    ) {
+      const hasUrlCallbacks = eleventyConfig.htmlTransformer.getCallbacks("html", this).length > 0;
+      if (!hasUrlCallbacks) return content; // chrome-only page → skip the PostHTML parse
+    }
+    return eleventyConfig.htmlTransformer.transformContent(this.outputPath, content, this);
+  });
+
   // Wrap <table> elements in <table-saw> for responsive tables
   eleventyConfig.addTransform("table-saw-wrap", function (content, outputPath) {
     if (outputPath && outputPath.endsWith(".html")) {
