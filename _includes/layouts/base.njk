@@ -361,9 +361,9 @@
       <div class="main-content">
         {{ content | safe }}
       </div>
-      <aside class="sidebar" data-pagefind-ignore>
+      <div class="sidebar" data-pagefind-ignore>
         {% renderCompositionTree collectionDefault %}
-      </aside>
+      </div>
     </div>
     {% elif withBlogSidebar and layoutIntent !== "fullwidth" and layoutIntent !== "minimal" and homepageConfig and homepageConfig.blogPostSidebar and homepageConfig.blogPostSidebar.length %}
     <div class="layout-with-sidebar">
