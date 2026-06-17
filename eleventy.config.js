@@ -118,6 +118,20 @@ export default function (eleventyConfig) {
   });
   eleventyConfig.setWatchThrottleWaitTime(3000);
 
+  // Fix stale front-matter on incremental edits (e.g. changing a post's layoutIntent).
+  // Eleventy's process-global TemplateContent._inputCache (keyed by path) is invalidated
+  // only at chokidar-event time, NOT at build-execution time. When a post is edited while
+  // a prior ~40-55s incremental fan-out is still building, the edit's cache-clear can be
+  // re-seeded with the OLD bytes by the in-flight build before the edit's own rebuild runs;
+  // the per-file resetCaches() on incremental clears only per-instance caches, not the
+  // static one — so the rebuild renders stale front matter (mtime advances but the value is
+  // old). Only a later touch/restart clears it. Disabling the input cache makes every read
+  // hit disk fresh, eliminating the reseed race. Cost is negligible: a full build reads each
+  // file once regardless, and unchanged templates keep their per-instance cache on
+  // incremental, so no extra reads in the fan-out. (Verified against @11ty/eleventy@3.1.2
+  // TemplateContent.js:328-340 / 729-741, Eleventy.js:946-949.)
+  eleventyConfig.setUseTemplateCache(false);
+
   // Configure markdown-it with linkify enabled (auto-convert URLs to links)
   const md = markdownIt({
     html: true,
