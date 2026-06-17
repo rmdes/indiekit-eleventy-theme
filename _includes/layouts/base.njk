@@ -348,13 +348,21 @@
     {% if withSidebar and page.url == "/" and composition and composition.schemaVersion === 4 and composition.tree %}
     {# Homepage: the Tier-0 v4 composition controls its own layout and sidebar — without this passthrough a composition homepage would be wrapped in .layout-with-sidebar plus a second legacy sidebar below. Guard MUST stay in sync with home.njk's Tier-0 check. A homepage with NO usable composition (Tier-2 default) is excluded from the blogListingSidebar branch below (`page.url != "/"`, Phase 3 R3) and lands in the final full-width else branch — the layout Tier-2 homepages got pre-R3 in the homepageConfig-null case, and the only sane one in the degraded composition-null + blogListingSidebar-truthy state (e.g. indiekit-deploy with an old site-config), which would otherwise wrap the homepage in a blog-listing sidebar layout that never existed pre-R3. #}
     {{ content | safe }}
-    {% elif withSidebar and page.url != "/" and homepageConfig and homepageConfig.blogListingSidebar and homepageConfig.blogListingSidebar.length %}
+    {% elif withSidebar and page.url != "/" and collectionDefault and collectionDefault.schemaVersion === 4 and collectionDefault.tree %}
+    {# Listing pages (blog/articles/notes/photos/bookmarks/likes/replies/reposts): the
+       per-collection sidebar is now a v4 composition (collection-default.json) written by
+       site-config, replacing the legacy homepageConfig.blogListingSidebar data path. The
+       composition root is stack(root,[stack(complementary,…)]); renderCompositionTree emits
+       it from the root down, so the complementary container's containerClasses produce the
+       same correctly-styled sidebar markup the homepage Tier-0 path renders. When the
+       artifact is null/absent the strict gate fails and the page falls through to the
+       full-width else branch (mirroring today's empty-sidebar behaviour — NO empty aside). #}
     <div class="layout-with-sidebar">
       <div class="main-content">
         {{ content | safe }}
       </div>
       <aside class="sidebar" data-pagefind-ignore>
-        {% include "components/sidebar.njk" %}
+        {% renderCompositionTree collectionDefault %}
       </aside>
     </div>
     {% elif withBlogSidebar and layoutIntent !== "fullwidth" and layoutIntent !== "minimal" and homepageConfig and homepageConfig.blogPostSidebar and homepageConfig.blogPostSidebar.length %}
