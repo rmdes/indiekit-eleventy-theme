@@ -1,0 +1,77 @@
+---js
+{
+  layout: "layouts/base.njk",
+  eleventyExcludeFromCollections: true,
+  pagefindIgnore: true,
+  noindex: true,
+  eleventyComputed: {
+    // Token shape guard (per-surface), scoped to the postType surface
+    // (previews.posttype). Malformed/absent token → permalink false → no
+    // posttype preview page emitted. Same guard preview.njk used before #32-T5.
+    permalink: (data) => {
+      const token = data.previews?.posttype?.token;
+      return typeof token === "string" && /^[A-Za-z0-9_-]+$/.test(token)
+        ? `/preview/posttype/${token}/index.html`
+        : false;
+    },
+    title: () => "Preview — Post type",
+  },
+}
+---
+{# Null guard ONLY — see preview-homepage.njk for the rationale. #}
+{% if previews.posttype %}
+<div data-preview-revision="{{ previews.posttype.revision }}">
+  {# Representative POST page: the most-recent real post's rendered body in the
+     main column beside the DRAFT posttype composition rendered as the sidebar.
+     Mirrors the production post structure (base.njk's posttypeDefault branch):
+     <div class="layout-with-sidebar"> > <div class="main-content"> +
+     <div class="sidebar blog-sidebar">. The composition's own complementary
+     container emits the single <aside> landmark, so the sidebar wrapper is a
+     <div> (NOT <aside>) — exactly ONE <aside> total (6.3/6.4 a11y fix).
+
+     The post body is a read-only sample backdrop; only the sidebar reflects the
+     draft. #}
+  <div class="layout-with-sidebar">
+    <div class="main-content">
+      {% set samplePost = collections.posts | head(1) %}
+      {% if samplePost.length > 0 %}
+      {% set post = samplePost[0] %}
+      <article class="h-entry post">
+        {% if post.data.title %}
+        <h1 class="p-name text-2xl sm:text-3xl font-bold text-heading mb-3 sm:mb-4">{{ post.data.title }}</h1>
+        {% endif %}
+        <div class="post-meta mb-4 sm:mb-6">
+          <time class="dt-published font-mono text-sm" datetime="{{ post.date | isoDate }}">
+            {{ post.date | dateDisplay }}
+          </time>
+        </div>
+        <div class="e-content prose prose-surface dark:prose-invert max-w-none">
+          {{ post.templateContent | safe }}
+        </div>
+      </article>
+      {% else %}
+      {# No posts yet — short canned sample article so the backdrop is never
+         empty. #}
+      <article class="h-entry post">
+        <h1 class="p-name text-2xl sm:text-3xl font-bold text-heading mb-3 sm:mb-4">Sample post title</h1>
+        <div class="post-meta mb-4 sm:mb-6">
+          <time class="dt-published font-mono text-sm">January 1, 2025</time>
+        </div>
+        <div class="e-content prose prose-surface dark:prose-invert max-w-none">
+          <p>This is a representative post body. It stands in for a real post so the
+          operator can preview the post-type sidebar beside plausible content. Real
+          posts replace this sample once the site has content.</p>
+        </div>
+      </article>
+      {% endif %}
+    </div>
+    <div class="sidebar blog-sidebar" data-pagefind-ignore>
+      {# DRAFT posttype composition — the surface under edit. Root is
+         stack(root,[stack(complementary,…)]); the complementary container
+         emits the single <aside>. Direct shortcode call (never via include —
+         see preview-homepage.njk). #}
+      {% renderCompositionTree previews.posttype %}
+    </div>
+  </div>
+</div>
+{% endif %}

@@ -5,17 +5,19 @@
   pagefindIgnore: true,
   noindex: true,
   eleventyComputed: {
-    // Token shape guard: the plugin-side preview-draft writer generates
+    // Token shape guard (per-surface): the plugin-side preview writer generates
     // URL-safe random tokens; anything else (path separators, dots, …) must
     // never reach the output path. Missing draft or malformed token →
-    // permalink false → no page emitted at all.
+    // permalink false → no homepage preview page emitted at all. Mirrors the
+    // single-surface guard preview.njk used before #32-T5, scoped to the
+    // homepage surface (previews.homepage).
     permalink: (data) => {
-      const token = data.previewDraft?.token;
+      const token = data.previews?.homepage?.token;
       return typeof token === "string" && /^[A-Za-z0-9_-]+$/.test(token)
-        ? `/preview/${token}/index.html`
+        ? `/preview/homepage/${token}/index.html`
         : false;
     },
-    title: () => "Preview",
+    title: () => "Preview — Homepage",
   },
 }
 ---
@@ -25,13 +27,18 @@
    "[composition] unsupported schemaVersion: undefined" warn once per build,
    polluting the loud-signal convention home.njk relies on. schemaVersion
    gating stays in the shortcode per the documented split. #}
-{% if previewDraft %}
-<div data-preview-revision="{{ previewDraft.revision }}">
-  {# Direct shortcode call — NEVER via {% include %} or renderFile (Eleventy
+{% if previews.homepage %}
+<div data-preview-revision="{{ previews.homepage.revision }}">
+  {# Homepage surface: the draft tree IS the full page (same as the published
+     Tier-0 composition home.njk renders) — byte-for-behavior identical to the
+     pre-T5 preview.njk, just sourced from the per-surface previews.homepage
+     slot instead of the single previewDraft global.
+
+     Direct shortcode call — NEVER via {% include %} or renderFile (Eleventy
      3.1.2 silently drops async shortcode output inside {% include %}; see
      home.njk Tier-0 and components/render-block.njk for the canonical notes).
      The shortcode owns the schemaVersion 4 + tree gates and degrades to an
      HTML comment on invalid artifacts. #}
-  {% renderCompositionTree previewDraft %}
+  {% renderCompositionTree previews.homepage %}
 </div>
 {% endif %}

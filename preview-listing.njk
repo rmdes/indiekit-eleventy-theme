@@ -1,0 +1,114 @@
+---js
+{
+  layout: "layouts/base.njk",
+  eleventyExcludeFromCollections: true,
+  pagefindIgnore: true,
+  noindex: true,
+  eleventyComputed: {
+    // Token shape guard (per-surface), scoped to the listing surface
+    // (previews.listing). Malformed/absent token → permalink false → no listing
+    // preview page emitted. Same guard preview.njk used before #32-T5.
+    permalink: (data) => {
+      const token = data.previews?.listing?.token;
+      return typeof token === "string" && /^[A-Za-z0-9_-]+$/.test(token)
+        ? `/preview/listing/${token}/index.html`
+        : false;
+    },
+    title: () => "Preview — Listing",
+  },
+}
+---
+{# Null guard ONLY — see preview-homepage.njk for the rationale (template
+   renders every build even when permalink is false; without the guard the
+   shortcode warns on null). #}
+{% if previews.listing %}
+<div data-preview-revision="{{ previews.listing.revision }}">
+  {# Representative LISTING page: a real recent-posts feed in the main column
+     beside the DRAFT listing composition rendered as the sidebar. Mirrors the
+     production listing structure (base.njk's collectionDefault branch):
+     <div class="layout-with-sidebar"> > <div class="main-content"> +
+     <div class="sidebar">. The composition's own complementary container emits
+     the single <aside> landmark, so the sidebar wrapper is a <div> (NOT
+     <aside>) — exactly ONE <aside> total, matching the 6.3/6.4 a11y fix.
+
+     The feed is a read-only sample backdrop (representative, not pixel-perfect):
+     it reuses the same .h-feed / .post-list / .post-card classes the real
+     listing pages use, over the most-recent posts, so the operator sees their
+     edited sidebar next to a plausible feed. Only the sidebar reflects the
+     draft. #}
+  <div class="layout-with-sidebar">
+    <div class="main-content">
+      <div class="h-feed">
+        <h1 class="text-2xl sm:text-3xl font-bold text-heading mb-2">Blog</h1>
+        <p class="text-fg-muted mb-6 sm:mb-8">Representative preview feed.</p>
+        {% set recentPosts = collections.posts | head(6) %}
+        {% if recentPosts.length > 0 %}
+        <ul class="post-list">
+          {% for post in recentPosts %}
+          {% if post.data.title %}
+          <li class="h-entry post-card border-l-[3px] border-l-indigo-400 dark:border-l-indigo-500">
+            <div class="post-header">
+              <h2 class="text-xl font-semibold mb-1">
+                <a class="p-name u-url text-heading hover:text-indigo-600 dark:hover:text-indigo-400" href="{{ post.url }}">
+                  {{ post.data.title }}
+                </a>
+              </h2>
+              <div class="post-meta">
+                <time class="dt-published font-mono text-sm" datetime="{{ post.date | isoDate }}">
+                  {{ post.date | dateDisplay }}
+                </time>
+              </div>
+            </div>
+            <p class="p-summary text-fg mt-3">
+              {{ post.templateContent | ogDescription(250) }}
+            </p>
+            <a href="{{ post.url }}" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline mt-3 inline-block">
+              Read more &rarr;
+            </a>
+          </li>
+          {% else %}
+          <li class="h-entry post-card border-l-[3px] border-l-teal-400 dark:border-l-teal-500">
+            <div class="post-header">
+              <a class="u-url" href="{{ post.url }}">
+                <time class="dt-published text-sm text-fg-muted font-medium font-mono" datetime="{{ post.date | isoDate }}">
+                  {{ post.date | dateDisplay }}
+                </time>
+              </a>
+            </div>
+            <div class="e-content prose dark:prose-invert prose-sm mt-3 max-w-none">
+              {{ post.templateContent | safe }}
+            </div>
+          </li>
+          {% endif %}
+          {% endfor %}
+        </ul>
+        {% else %}
+        {# No posts yet — short canned sample so the backdrop is never empty. #}
+        <ul class="post-list">
+          <li class="h-entry post-card border-l-[3px] border-l-indigo-400 dark:border-l-indigo-500">
+            <div class="post-header">
+              <h2 class="text-xl font-semibold mb-1">
+                <a class="p-name text-heading" href="#">Sample article title</a>
+              </h2>
+              <div class="post-meta">
+                <time class="dt-published font-mono text-sm">January 1, 2025</time>
+              </div>
+            </div>
+            <p class="p-summary text-fg mt-3">
+              A representative article summary. Real posts replace this sample once the site has content.
+            </p>
+          </li>
+        </ul>
+        {% endif %}
+      </div>
+    </div>
+    <div class="sidebar" data-pagefind-ignore>
+      {# DRAFT listing composition — the surface under edit. Root is
+         stack(root,[stack(complementary,…)]); the complementary container
+         emits the single <aside>. Direct shortcode call (never via include —
+         see preview-homepage.njk). #}
+      {% renderCompositionTree previews.listing %}
+    </div>
+  </div>
+</div>
+{% endif %}

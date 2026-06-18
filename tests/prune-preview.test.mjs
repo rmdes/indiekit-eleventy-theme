@@ -13,7 +13,7 @@
  *   (defensive: the preview page only ever emits directories).
  * - NEVER throws — a prune failure must not fail a build (warn + continue).
  * - returns the list of removed names so the caller can log them.
- * - readCurrentPreviewToken mirrors _data/previewDraft.mjs tolerance: missing
+ * - readCurrentPreviewToken mirrors _data/previews.mjs tolerance: missing
  *   or corrupt artifact, wrong kind, or malformed token → null.
  */
 import { test } from "node:test";
