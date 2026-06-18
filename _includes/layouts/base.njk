@@ -365,14 +365,24 @@
         {% renderCompositionTree collectionDefault %}
       </div>
     </div>
-    {% elif withBlogSidebar and layoutIntent !== "fullwidth" and layoutIntent !== "minimal" and homepageConfig and homepageConfig.blogPostSidebar and homepageConfig.blogPostSidebar.length %}
+    {% elif withBlogSidebar and layoutIntent !== "fullwidth" and layoutIntent !== "minimal" and posttypeDefault and posttypeDefault.schemaVersion === 4 and posttypeDefault.tree %}
+    {# Post pages (post.njk → withBlogSidebar): the per-post-type sidebar is now a
+       v4 composition (posttype-default.json) written by site-config, replacing the
+       legacy homepageConfig.blogPostSidebar data path. Same mechanism as the listing
+       branch above: the composition root is stack(root,[stack(complementary,…)]); the
+       complementary container emits the single <aside> landmark, so this wrapper is a
+       <div class="sidebar blog-sidebar"> (NOT <aside>) — exactly ONE <aside> in the
+       output, matching the 6.3 a11y fix. When the artifact is null/absent/non-v4 the
+       strict gate fails and the page falls through to the full-width else branch (NO
+       empty aside). The layoutIntent fullwidth/minimal exclusion stays: per-post width
+       from 6.1 still wins over the post-type sidebar. #}
     <div class="layout-with-sidebar">
       <div class="main-content">
         {{ content | safe }}
       </div>
-      <aside class="sidebar blog-sidebar" data-pagefind-ignore>
-        {% include "components/blog-sidebar.njk" %}
-      </aside>
+      <div class="sidebar blog-sidebar" data-pagefind-ignore>
+        {% renderCompositionTree posttypeDefault %}
+      </div>
     </div>
     {% else %}
     {# No sidebar widgets configured in site-config → render full-width, no empty
