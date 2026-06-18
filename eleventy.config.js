@@ -13,7 +13,7 @@ import registerUnfurlShortcode, { getCachedCard, prefetchUrl } from "./lib/unfur
 import { renderNode } from "./lib/render-composition.mjs";
 import { renderAvatar } from "./lib/image-shortcode.mjs";
 import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
-import { prunePreviewOrphans, readCurrentPreviewToken } from "./lib/prune-preview.mjs";
+import { prunePreviewOrphans, readCurrentPreviewTokens } from "./lib/prune-preview.mjs";
 import matter from "gray-matter";
 import { createHash, createHmac, randomUUID } from "crypto";
 import { createRequire } from "module";
@@ -1846,17 +1846,19 @@ export default function (eleventyConfig) {
       });
     }
 
-    // Preview orphan pruning (site-builder Phase 5 follow-up). Preview tokens
-    // rotate on every publish, but the in-place incremental build never
-    // deletes the old /preview/<token>/ output — without pruning, the stale
-    // token's page keeps serving 200 forever. Remove every preview directory
-    // that isn't the CURRENT draft token (no artifact → no preview should
-    // exist → remove all). Must run BEFORE the incremental early-return —
-    // every publish is an incremental rebuild. Never throws.
+    // Per-surface preview orphan pruning (Phase 6.5, #32-T4). Preview tokens
+    // rotate on every publish, but the in-place incremental build never deletes
+    // the old /preview/<routeKey>/<token>/ output — without pruning, the stale
+    // token's page keeps serving 200 forever. For each surface, remove every
+    // token dir that isn't the CURRENT per-surface token (no artifact → no
+    // preview should exist → remove all under that surface); also sweep LEGACY
+    // flat /preview/<token>/ dirs from the old single-slot structure. Must run
+    // BEFORE the incremental early-return — every publish is an incremental
+    // rebuild. Never throws.
     {
-      const artifactPath = resolve(__dirname, "content", "_data", "compositions", "preview-draft.json");
-      const currentToken = readCurrentPreviewToken(artifactPath);
-      const pruned = await prunePreviewOrphans(directories?.output || dir.output, currentToken);
+      const compositionsDir = resolve(__dirname, "content", "_data", "compositions");
+      const tokensByRoute = readCurrentPreviewTokens(compositionsDir);
+      const pruned = await prunePreviewOrphans(directories?.output || dir.output, tokensByRoute);
       if (pruned.length > 0) {
         console.log(`[preview] Pruned ${pruned.length} stale preview dir(s): ${pruned.join(", ")}`);
       }
