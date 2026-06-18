@@ -1,20 +1,24 @@
 /**
- * Preview orphan pruning (site-builder Phase 5 follow-up).
+ * Per-surface preview orphan pruning (#32-T4).
  *
- * Contract under test:
- * - preview tokens ROTATE on every publish, but the in-place incremental
- *   build (--output=/app/data/site, --watch --incremental) never deletes
- *   orphaned output. prunePreviewOrphans removes every <outputDir>/preview/
- *   directory whose name differs from the CURRENT draft token.
- * - no current token (null/undefined: no artifact → no preview page should
- *   exist) → ALL preview directories are removed.
- * - <outputDir>/preview/ absent → silent no-op.
- * - plain FILES inside preview/ are left alone — only directories are removed
- *   (defensive: the preview page only ever emits directories).
+ * Contract under test (the per-surface structure
+ * <outputDir>/preview/<routeKey>/<token>/):
+ * - preview tokens ROTATE on every publish, but the in-place incremental build
+ *   never deletes orphaned output. For EACH surface, prunePreviewOrphans keeps
+ *   only the current token dir under <preview>/<routeKey>/ and removes the rest.
+ * - a surface's null/absent current token → ALL its token dirs are removed.
+ * - TOP-LEVEL sweep: any <preview>/<name> that is NOT a known routeKey dir is a
+ *   LEGACY flat /preview/<token>/ dir from the old single-slot design → removed
+ *   (migration cleanup). The routeKey dirs themselves are never deleted here.
+ * - surfaces are INDEPENDENT — pruning one never touches another's current token.
+ * - <preview>/ absent (or a surface dir absent) → silent no-op.
+ * - plain FILES are left alone — preview output only ever emits directories.
  * - NEVER throws — a prune failure must not fail a build (warn + continue).
- * - returns the list of removed names so the caller can log them.
- * - readCurrentPreviewToken mirrors _data/previews.mjs tolerance: missing
- *   or corrupt artifact, wrong kind, or malformed token → null.
+ * - returns the list of removed paths (legacy = bare name; per-surface =
+ *   "<routeKey>/<token>") so the caller can log them.
+ * - readCurrentPreviewTokens reads each preview-<routeKey>.json with the loader's
+ *   tolerance (kind must be "preview", token must pass the URL-safe regex);
+ *   missing/corrupt/wrong-kind/malformed → null for that surface.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -22,131 +26,195 @@ import { mkdtempSync, mkdirSync, writeFileSync, existsSync, readdirSync } from "
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { prunePreviewOrphans, readCurrentPreviewToken } from "../lib/prune-preview.mjs";
+import {
+  prunePreviewOrphans,
+  readCurrentPreviewTokens,
+  PREVIEW_SURFACES,
+} from "../lib/prune-preview.mjs";
 
 /** Make a fake build output dir with a preview/ subtree. */
 const makeOutputDir = () => mkdtempSync(join(tmpdir(), "prune-preview-"));
 
-/** Create <outputDir>/preview/<name>/index.html like the preview page emits. */
-const addPreviewDir = (outputDir, name) => {
-  const dir = join(outputDir, "preview", name);
+/** Create <outputDir>/preview/<routeKey>/<token>/index.html like a preview page emits. */
+const addPreviewDir = (outputDir, routeKey, token) => {
+  const dir = join(outputDir, "preview", routeKey, token);
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, "index.html"), "<html></html>");
 };
 
+/** Create a LEGACY flat <outputDir>/preview/<token>/ dir (old single-slot output). */
+const addLegacyFlatDir = (outputDir, token) => {
+  const dir = join(outputDir, "preview", token);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, "index.html"), "<html></html>");
+};
+
+const allTokens = (overrides = {}) => ({
+  homepage: null,
+  listing: null,
+  posttype: null,
+  ...overrides,
+});
+
+test("SURFACES: the known routeKeys are homepage/listing/posttype", () => {
+  assert.deepEqual([...PREVIEW_SURFACES].sort(), ["homepage", "listing", "posttype"]);
+});
+
 test("PRUNE: refuses a falsy outputDir (returns [], no throw)", async () => {
-  assert.deepEqual(await prunePreviewOrphans(undefined, "tok"), []);
-  assert.deepEqual(await prunePreviewOrphans(null, "tok"), []);
-  assert.deepEqual(await prunePreviewOrphans("", "tok"), []);
+  assert.deepEqual(await prunePreviewOrphans(undefined, allTokens()), []);
+  assert.deepEqual(await prunePreviewOrphans(null, allTokens()), []);
+  assert.deepEqual(await prunePreviewOrphans("", allTokens()), []);
 });
 
 test("PRUNE: no-op when <outputDir>/preview/ does not exist", async () => {
   const outputDir = makeOutputDir();
-  assert.deepEqual(await prunePreviewOrphans(outputDir, "tok"), []);
+  assert.deepEqual(await prunePreviewOrphans(outputDir, allTokens()), []);
 });
 
-test("PRUNE: current token's directory is the only entry → nothing removed", async () => {
+test("PRUNE: each surface keeps its current token dir → nothing removed", async () => {
   const outputDir = makeOutputDir();
-  addPreviewDir(outputDir, "current-token");
+  addPreviewDir(outputDir, "homepage", "tok-home");
+  addPreviewDir(outputDir, "listing", "tok-list");
+  addPreviewDir(outputDir, "posttype", "tok-post");
 
-  const removed = await prunePreviewOrphans(outputDir, "current-token");
+  const removed = await prunePreviewOrphans(
+    outputDir,
+    allTokens({ homepage: "tok-home", listing: "tok-list", posttype: "tok-post" }),
+  );
 
   assert.deepEqual(removed, []);
-  assert.ok(existsSync(join(outputDir, "preview", "current-token", "index.html")));
+  assert.ok(existsSync(join(outputDir, "preview", "homepage", "tok-home")));
+  assert.ok(existsSync(join(outputDir, "preview", "listing", "tok-list")));
+  assert.ok(existsSync(join(outputDir, "preview", "posttype", "tok-post")));
 });
 
-test("PRUNE: orphans removed, current token's directory kept", async () => {
+test("PRUNE: stale token dirs removed, current kept (per surface)", async () => {
   const outputDir = makeOutputDir();
-  addPreviewDir(outputDir, "current-token");
-  addPreviewDir(outputDir, "old-token-1");
-  addPreviewDir(outputDir, "old-token-2");
+  addPreviewDir(outputDir, "listing", "tok-current");
+  addPreviewDir(outputDir, "listing", "tok-old-1");
+  addPreviewDir(outputDir, "listing", "tok-old-2");
 
-  const removed = await prunePreviewOrphans(outputDir, "current-token");
+  const removed = await prunePreviewOrphans(outputDir, allTokens({ listing: "tok-current" }));
 
-  assert.deepEqual(removed.sort(), ["old-token-1", "old-token-2"]);
-  assert.ok(existsSync(join(outputDir, "preview", "current-token")));
-  assert.ok(!existsSync(join(outputDir, "preview", "old-token-1")));
-  assert.ok(!existsSync(join(outputDir, "preview", "old-token-2")));
+  assert.deepEqual(removed.sort(), [join("listing", "tok-old-1"), join("listing", "tok-old-2")]);
+  assert.ok(existsSync(join(outputDir, "preview", "listing", "tok-current")));
+  assert.ok(!existsSync(join(outputDir, "preview", "listing", "tok-old-1")));
+  assert.ok(!existsSync(join(outputDir, "preview", "listing", "tok-old-2")));
 });
 
-test("PRUNE: null token (no artifact) removes ALL preview directories", async () => {
+test("PRUNE: a surface's null token removes ALL its token dirs", async () => {
   const outputDir = makeOutputDir();
-  addPreviewDir(outputDir, "old-token-1");
-  addPreviewDir(outputDir, "old-token-2");
+  addPreviewDir(outputDir, "posttype", "tok-1");
+  addPreviewDir(outputDir, "posttype", "tok-2");
 
-  const removed = await prunePreviewOrphans(outputDir, null);
+  const removed = await prunePreviewOrphans(outputDir, allTokens({ posttype: null }));
 
-  assert.deepEqual(removed.sort(), ["old-token-1", "old-token-2"]);
-  assert.deepEqual(readdirSync(join(outputDir, "preview")), []);
+  assert.deepEqual(removed.sort(), [join("posttype", "tok-1"), join("posttype", "tok-2")]);
+  assert.deepEqual(readdirSync(join(outputDir, "preview", "posttype")), []);
 });
 
-test("PRUNE: undefined token behaves like null (removes all)", async () => {
+test("PRUNE: surfaces are INDEPENDENT — pruning posttype never touches listing's current", async () => {
   const outputDir = makeOutputDir();
-  addPreviewDir(outputDir, "old-token");
+  addPreviewDir(outputDir, "listing", "keep-listing");
+  addPreviewDir(outputDir, "posttype", "stale-post");
 
-  const removed = await prunePreviewOrphans(outputDir, undefined);
+  const removed = await prunePreviewOrphans(
+    outputDir,
+    allTokens({ listing: "keep-listing", posttype: null }),
+  );
 
-  assert.deepEqual(removed, ["old-token"]);
+  assert.deepEqual(removed, [join("posttype", "stale-post")]);
+  assert.ok(existsSync(join(outputDir, "preview", "listing", "keep-listing")));
 });
 
-test("PRUNE: plain files inside preview/ are left alone", async () => {
+test("PRUNE: legacy flat /preview/<token>/ dirs are swept; routeKey dirs preserved", async () => {
+  const outputDir = makeOutputDir();
+  addLegacyFlatDir(outputDir, "old-flat-token-1");
+  addLegacyFlatDir(outputDir, "old-flat-token-2");
+  addPreviewDir(outputDir, "homepage", "tok-home");
+
+  const removed = await prunePreviewOrphans(outputDir, allTokens({ homepage: "tok-home" }));
+
+  assert.deepEqual(removed.sort(), ["old-flat-token-1", "old-flat-token-2"]);
+  // The routeKey dir + its current token survive; legacy flat dirs are gone.
+  assert.ok(existsSync(join(outputDir, "preview", "homepage", "tok-home")));
+  assert.ok(!existsSync(join(outputDir, "preview", "old-flat-token-1")));
+  assert.ok(!existsSync(join(outputDir, "preview", "old-flat-token-2")));
+});
+
+test("PRUNE: plain files at the top level are left alone", async () => {
   const outputDir = makeOutputDir();
   mkdirSync(join(outputDir, "preview"), { recursive: true });
   writeFileSync(join(outputDir, "preview", "stray.html"), "<html></html>");
-  addPreviewDir(outputDir, "old-token");
+  addLegacyFlatDir(outputDir, "old-flat");
 
-  const removed = await prunePreviewOrphans(outputDir, "current-token");
+  const removed = await prunePreviewOrphans(outputDir, allTokens());
 
-  assert.deepEqual(removed, ["old-token"]);
+  assert.deepEqual(removed, ["old-flat"]);
   assert.ok(existsSync(join(outputDir, "preview", "stray.html")));
 });
 
-test("PRUNE: never throws when preview path is unreadable (e.g. a file, not a dir)", async () => {
+test("PRUNE: never throws when preview path is unreadable (a file, not a dir)", async () => {
   const outputDir = makeOutputDir();
   writeFileSync(join(outputDir, "preview"), "not a directory");
 
   let removed;
   await assert.doesNotReject(async () => {
-    removed = await prunePreviewOrphans(outputDir, "tok");
+    removed = await prunePreviewOrphans(outputDir, allTokens());
   });
   assert.deepEqual(removed, []);
 });
 
-// --- readCurrentPreviewToken (tolerant artifact read, same gates as the loader + preview.njk) ---
+// --- readCurrentPreviewTokens (per-surface tolerant artifact read) ---
 
-const artifactPath = () =>
-  join(mkdtempSync(join(tmpdir(), "prune-preview-artifact-")), "preview-draft.json");
+const makeCompositionsDir = () => mkdtempSync(join(tmpdir(), "prune-preview-comp-"));
+const writeArtifact = (dir, routeKey, body) =>
+  writeFileSync(join(dir, `preview-${routeKey}.json`), JSON.stringify(body));
 
-test("TOKEN: returns the token from a kind 'preview' artifact", () => {
-  const path = artifactPath();
-  writeFileSync(path, JSON.stringify({ kind: "preview", token: "abc_DEF-123" }));
-  assert.equal(readCurrentPreviewToken(path), "abc_DEF-123");
+test("TOKENS: reads a valid token per surface into a routeKey map", () => {
+  const dir = makeCompositionsDir();
+  writeArtifact(dir, "homepage", { kind: "preview", token: "home_TOK-1" });
+  writeArtifact(dir, "listing", { kind: "preview", token: "list_TOK-2" });
+  writeArtifact(dir, "posttype", { kind: "preview", token: "post_TOK-3" });
+
+  assert.deepEqual(readCurrentPreviewTokens(dir), {
+    homepage: "home_TOK-1",
+    listing: "list_TOK-2",
+    posttype: "post_TOK-3",
+  });
 });
 
-test("TOKEN: missing artifact → null (normal steady state)", () => {
-  assert.equal(readCurrentPreviewToken("/nonexistent/preview-draft.json"), null);
+test("TOKENS: missing artifacts → all null (normal steady state)", () => {
+  const dir = makeCompositionsDir();
+  assert.deepEqual(readCurrentPreviewTokens(dir), {
+    homepage: null,
+    listing: null,
+    posttype: null,
+  });
 });
 
-test("TOKEN: corrupt JSON → null", () => {
-  const path = artifactPath();
-  writeFileSync(path, "{ not json");
-  assert.equal(readCurrentPreviewToken(path), null);
+test("TOKENS: mixed — one valid, others absent/invalid → per-surface map", () => {
+  const dir = makeCompositionsDir();
+  writeArtifact(dir, "homepage", { kind: "preview", token: "home_ok" });
+  writeArtifact(dir, "listing", { kind: "homepage", token: "wrong_kind" }); // wrong kind → null
+  writeFileSync(join(dir, "preview-posttype.json"), "{ not json"); // corrupt → null
+
+  assert.deepEqual(readCurrentPreviewTokens(dir), {
+    homepage: "home_ok",
+    listing: null,
+    posttype: null,
+  });
 });
 
-test("TOKEN: wrong kind → null (a misplaced homepage artifact never keeps a preview alive)", () => {
-  const path = artifactPath();
-  writeFileSync(path, JSON.stringify({ kind: "homepage", token: "abc" }));
-  assert.equal(readCurrentPreviewToken(path), null);
-});
+test("TOKENS: malformed token (fails the URL-safe regex) → null for that surface", () => {
+  const dir = makeCompositionsDir();
+  writeArtifact(dir, "homepage", { kind: "preview", token: "../evil" });
+  writeArtifact(dir, "listing", { kind: "preview", token: 42 });
+  writeArtifact(dir, "posttype", { kind: "preview" }); // no token
 
-test("TOKEN: malformed token (fails the preview.njk regex) → null", () => {
-  const path = artifactPath();
-  writeFileSync(path, JSON.stringify({ kind: "preview", token: "../evil" }));
-  assert.equal(readCurrentPreviewToken(path), null);
-
-  writeFileSync(path, JSON.stringify({ kind: "preview", token: 42 }));
-  assert.equal(readCurrentPreviewToken(path), null);
-
-  writeFileSync(path, JSON.stringify({ kind: "preview" }));
-  assert.equal(readCurrentPreviewToken(path), null);
+  assert.deepEqual(readCurrentPreviewTokens(dir), {
+    homepage: null,
+    listing: null,
+    posttype: null,
+  });
 });
