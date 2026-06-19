@@ -1,13 +1,30 @@
----
-layout: layouts/base.njk
-eleventyExcludeFromCollections: true
-pagination:
-  data: composedPages
-  size: 1
-  alias: pageComposition
-permalink: "{{ pageComposition.target.route }}"
-eleventyComputed:
-  title: "{{ pageComposition.target.title }}"
+---js
+{
+  layout: "layouts/base.njk",
+  eleventyExcludeFromCollections: true,
+  pagination: { data: "composedPages", size: 1, alias: "pageComposition" },
+  // Own eleventyComputed.permalink computed PURELY from pageComposition.target.route
+  // (per-pagination-item, race-immune). This OVERRIDES the global
+  // _data/eleventyComputed.js permalink for this template — which is required:
+  // that global reads data.page.inputPath, unreliable under Eleventy 3.x parallel
+  // rendering (see its header), and for a composed-pages page it could return a
+  // falsy permalink → boolean false → "path must be string" write crash that
+  // failed the whole build. Returning false here SKIPS the page cleanly (the
+  // proven preview-pages.njk pattern), so an empty array or any malformed/route-
+  // less entry that slips past composedPages.mjs's filter degrades to no output
+  // instead of a fatal build error.
+  eleventyComputed: {
+    permalink: (data) => {
+      const route = data.pageComposition?.target?.route;
+      return typeof route === "string" && /^\/[a-z0-9]+(?:-[a-z0-9]+)*\/$/.test(route)
+        ? route
+        : false;
+    },
+    // Operator input: reaches <title>/OG via base.njk's autoescaped `{{ title }}`
+    // — NEVER rendered with `| safe` (stored-XSS defense).
+    title: (data) => data.pageComposition?.target?.title || "",
+  },
+}
 ---
 {# Production rendering of published standalone pages (Phase 6.5, #32-T7).
    One page per composedPages entry, paginated size:1, generated at the entry's
@@ -22,10 +39,6 @@ eleventyComputed:
    NEVER via {% include %} (Eleventy 3.1.2 silently drops async shortcode output
    inside {% include %}). The shortcode owns the schemaVersion 4 + tree gates and
    degrades to an HTML comment on invalid artifacts.
-
-   target.title is operator input: it reaches <title>/OG via the autoescaped
-   `title` front-matter binding above — NEVER rendered with `| safe` (stored-XSS
-   defense).
 
    The `data-indiekit-composed-page` marker below identifies this output as a
    composed page so the orphan prune (lib/prune-composed-pages.mjs) can safely
