@@ -1,0 +1,29 @@
+---
+layout: layouts/base.njk
+eleventyExcludeFromCollections: true
+pagination:
+  data: composedPages
+  size: 1
+  alias: pageComposition
+permalink: "{{ pageComposition.target.route }}"
+eleventyComputed:
+  title: "{{ pageComposition.target.title }}"
+---
+{# Production rendering of published standalone pages (Phase 6.5, #32-T7).
+   One page per composedPages entry, paginated size:1, generated at the entry's
+   single-segment root route (e.g. /my-page/) — same root-generation shape as
+   categories.njk. An empty composedPages array (no published pages / ENOENT)
+   yields ZERO pages, which is correct: nothing is emitted and the build does
+   not crash. The build-time slug-guard (composedPages.mjs) has already filtered
+   out any route colliding with an authored content/pages/<slug>.md page.
+
+   Pages are FULL-PAGE compositions (the tree carries its own hero/main/sidebar/
+   footer structure), so this mirrors preview-pages.njk: a direct shortcode call,
+   NEVER via {% include %} (Eleventy 3.1.2 silently drops async shortcode output
+   inside {% include %}). The shortcode owns the schemaVersion 4 + tree gates and
+   degrades to an HTML comment on invalid artifacts.
+
+   target.title is operator input: it reaches <title>/OG via the autoescaped
+   `title` front-matter binding above — NEVER rendered with `| safe` (stored-XSS
+   defense). #}
+{% renderCompositionTree pageComposition %}
