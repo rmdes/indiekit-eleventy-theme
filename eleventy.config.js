@@ -14,6 +14,8 @@ import { renderNode } from "./lib/render-composition.mjs";
 import { renderAvatar } from "./lib/image-shortcode.mjs";
 import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
 import { prunePreviewOrphans, readCurrentPreviewTokens } from "./lib/prune-preview.mjs";
+import { pruneComposedPageOrphans } from "./lib/prune-composed-pages.mjs";
+import { composedPageSlugs } from "./_data/composedPages.mjs";
 import matter from "gray-matter";
 import { createHash, createHmac, randomUUID } from "crypto";
 import { createRequire } from "module";
@@ -1861,6 +1863,25 @@ export default function (eleventyConfig) {
       const pruned = await prunePreviewOrphans(directories?.output || dir.output, tokensByRoute);
       if (pruned.length > 0) {
         console.log(`[preview] Pruned ${pruned.length} stale preview dir(s): ${pruned.join(", ")}`);
+      }
+    }
+
+    // Composed-page orphan prune (6.5 follow-up). Composed standalone pages emit
+    // to the SHARED site root (/<slug>/); when a page:<slug> composition is
+    // deleted or renamed, the in-place incremental build leaves the old /<slug>/
+    // output serving stale. Remove any composed-page output (identified by the
+    // data-indiekit-composed-page marker written by composed-pages.njk) whose
+    // slug is no longer published. The marker keeps this safe in the shared root
+    // namespace — authored pages and collection listings are never touched. Like
+    // the preview prune, this must run BEFORE the incremental early-return (every
+    // publish is an incremental rebuild) and never throws.
+    {
+      const removed = await pruneComposedPageOrphans(
+        directories?.output || dir.output,
+        composedPageSlugs(),
+      );
+      if (removed.length > 0) {
+        console.log(`[composed-pages] Pruned ${removed.length} stale page dir(s): ${removed.join(", ")}`);
       }
     }
 

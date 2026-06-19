@@ -25,5 +25,13 @@ eleventyComputed:
 
    target.title is operator input: it reaches <title>/OG via the autoescaped
    `title` front-matter binding above — NEVER rendered with `| safe` (stored-XSS
-   defense). #}
+   defense).
+
+   The `data-indiekit-composed-page` marker below identifies this output as a
+   composed page so the orphan prune (lib/prune-composed-pages.mjs) can safely
+   remove a deleted/renamed page's stale /<slug>/ output WITHOUT risking authored
+   pages or collection listings in the shared root namespace. It is an attribute
+   (not an HTML comment) so it survives the production htmlmin removeComments
+   pass. #}
+<div data-indiekit-composed-page hidden></div>
 {% renderCompositionTree pageComposition %}

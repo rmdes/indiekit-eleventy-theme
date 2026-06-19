@@ -66,27 +66,22 @@ function authoredPageSlugs() {
   }
 }
 
-export default function () {
-  let artifact;
-  try {
-    // Resolve via the content/ symlink relative to the Eleventy project
-    const artifactPath = resolve(__dirname, "..", "content", "_data", "compositions", "pages.json");
-    const raw = readFileSync(artifactPath, "utf8");
-    artifact = JSON.parse(raw);
-  } catch (error) {
-    if (error.code !== "ENOENT") {
-      console.warn(`[composedPages] could not load compositions/pages.json: ${error.message}`);
-    }
-    // Missing file (no published pages) is the normal steady state → no pages.
-    return [];
-  }
-
+/**
+ * PURE filter: apply the v4/page/route/tree validity gate and the build-time
+ * slug-collision leg to a parsed `pages.json` artifact. No filesystem access —
+ * the I/O (reading the artifact + deriving authored slugs) lives in the default
+ * export, so this gate/collision logic can be unit-tested in isolation.
+ *
+ * @param {unknown} artifact - parsed pages.json (expected: array of v4 page entries)
+ * @param {Set<string>} [authoredSlugs] - authored content/pages/<slug>.md slugs to exclude
+ * @returns {object[]} surviving entries, in input order
+ */
+export function filterComposedPages(artifact, authoredSlugs = new Set()) {
   if (!Array.isArray(artifact)) {
     console.warn(`[composedPages] pages.json is not an array (got ${typeof artifact}) — ignoring (no composed pages will be built)`);
     return [];
   }
 
-  const slashSlugs = authoredPageSlugs();
   const surviving = [];
 
   for (const entry of artifact) {
@@ -107,13 +102,50 @@ export default function () {
     // authored content/pages/<slug>.md output. route is `/<slug>/` → slug is
     // the segment between the slashes.
     const slug = route.slice(1, -1);
-    if (slashSlugs.has(slug)) {
+    if (authoredSlugs.has(slug)) {
       console.log(`[composedPages] route ${route} collides with content/pages/${slug}.md — skipping`);
       continue;
     }
 
     surviving.push(entry);
   }
+
+  return surviving;
+}
+
+/**
+ * Read + parse the pages.json artifact (via the content/ symlink). ENOENT (no
+ * published pages — the normal steady state) and parse errors → [].
+ *
+ * @returns {unknown} parsed artifact (expected array) or [] on missing/error
+ */
+function loadArtifact() {
+  try {
+    const artifactPath = resolve(__dirname, "..", "content", "_data", "compositions", "pages.json");
+    return JSON.parse(readFileSync(artifactPath, "utf8"));
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      console.warn(`[composedPages] could not load compositions/pages.json: ${error.message}`);
+    }
+    return [];
+  }
+}
+
+/**
+ * Slugs of the currently-published composed pages (the segment of each
+ * `/<slug>/` route). Consumed by the orphan prune in eleventy.config.js to know
+ * which composed-page output dirs are still live.
+ *
+ * @returns {string[]} current composed-page slugs
+ */
+export function composedPageSlugs() {
+  return filterComposedPages(loadArtifact(), authoredPageSlugs()).map((entry) =>
+    entry.target.route.slice(1, -1),
+  );
+}
+
+export default function () {
+  const surviving = filterComposedPages(loadArtifact(), authoredPageSlugs());
 
   if (surviving.length > 0) {
     console.log(`[composedPages] Loaded ${surviving.length} published page(s) from _data/compositions/pages.json`);
