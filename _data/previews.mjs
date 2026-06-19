@@ -33,7 +33,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * Load one per-surface preview artifact. Mirrors previewDraft.mjs's gates and
  * log style, per surface.
  *
- * @param {string} routeKey - "homepage" | "listing" | "posttype"
+ * @param {string} routeKey - "homepage" | "listing" | "posttype" | "pages"
  * @returns {object | null} The preview artifact, or null when absent/invalid
  */
 function load(routeKey) {
@@ -62,5 +62,10 @@ export default function () {
     homepage: load("homepage"),
     listing: load("listing"),
     posttype: load("posttype"),
+    // 6.5 (D4): the SINGLE shared standalone-page preview slot. All pages share
+    // routeKey "pages", so this one slot holds the currently-edited page's draft
+    // (previewing page B overwrites page A's artifact — intended for
+    // one-at-a-time editing). Rendered full-page by preview-pages.njk.
+    pages: load("pages"),
   };
 }

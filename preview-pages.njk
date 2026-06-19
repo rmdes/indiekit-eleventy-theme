@@ -1,0 +1,47 @@
+---js
+{
+  layout: "layouts/base.njk",
+  eleventyExcludeFromCollections: true,
+  pagefindIgnore: true,
+  noindex: true,
+  eleventyComputed: {
+    // Token shape guard (shared `pages` slot): the plugin-side preview writer
+    // generates URL-safe random tokens; anything else (path separators, dots,
+    // …) must never reach the output path. Missing draft or malformed token →
+    // permalink false → no page preview emitted at all. Mirrors the homepage
+    // preview guard, scoped to the single shared pages slot (previews.pages).
+    //
+    // D4 SINGLE SHARED SLOT: every standalone page shares routeKey "pages", so
+    // there is exactly ONE preview page (/preview/pages/<token>/) at any time —
+    // previewing page B overwrites page A's artifact (acceptable: one page is
+    // edited at a time). The token rotates on every page publish.
+    permalink: (data) => {
+      const token = data.previews?.pages?.token;
+      return typeof token === "string" && /^[A-Za-z0-9_-]+$/.test(token)
+        ? `/preview/pages/${token}/index.html`
+        : false;
+    },
+    title: () => "Preview — Page",
+  },
+}
+---
+{# Null guard ONLY — Eleventy renders this template on every build even when
+   the computed permalink is false (it just doesn't write the output), so
+   without it the shortcode runs with null and logs a false
+   "[composition] unsupported schemaVersion: undefined" warn once per build.
+   schemaVersion gating stays in the shortcode per the documented split. #}
+{% if previews.pages %}
+<div data-preview-revision="{{ previews.pages.revision }}">
+  {# Pages are FULL-PAGE compositions (hero/main/sidebar/footer, the same
+     homepage-shaped multi-zone model) — the draft tree IS the full page, so
+     this mirrors preview-homepage.njk exactly, just sourced from the shared
+     previews.pages slot.
+
+     Direct shortcode call — NEVER via {% include %} or renderFile (Eleventy
+     3.1.2 silently drops async shortcode output inside {% include %}; see
+     home.njk Tier-0 and components/render-block.njk for the canonical notes).
+     The shortcode owns the schemaVersion 4 + tree gates and degrades to an
+     HTML comment on invalid artifacts. #}
+  {% renderCompositionTree previews.pages %}
+</div>
+{% endif %}

@@ -53,11 +53,12 @@ const allTokens = (overrides = {}) => ({
   homepage: null,
   listing: null,
   posttype: null,
+  pages: null,
   ...overrides,
 });
 
-test("SURFACES: the known routeKeys are homepage/listing/posttype", () => {
-  assert.deepEqual([...PREVIEW_SURFACES].sort(), ["homepage", "listing", "posttype"]);
+test("SURFACES: the known routeKeys are homepage/listing/posttype/pages", () => {
+  assert.deepEqual([...PREVIEW_SURFACES].sort(), ["homepage", "listing", "pages", "posttype"]);
 });
 
 test("PRUNE: refuses a falsy outputDir (returns [], no throw)", async () => {
@@ -176,11 +177,13 @@ test("TOKENS: reads a valid token per surface into a routeKey map", () => {
   writeArtifact(dir, "homepage", { kind: "preview", token: "home_TOK-1" });
   writeArtifact(dir, "listing", { kind: "preview", token: "list_TOK-2" });
   writeArtifact(dir, "posttype", { kind: "preview", token: "post_TOK-3" });
+  writeArtifact(dir, "pages", { kind: "preview", token: "page_TOK-4" });
 
   assert.deepEqual(readCurrentPreviewTokens(dir), {
     homepage: "home_TOK-1",
     listing: "list_TOK-2",
     posttype: "post_TOK-3",
+    pages: "page_TOK-4",
   });
 });
 
@@ -190,6 +193,7 @@ test("TOKENS: missing artifacts → all null (normal steady state)", () => {
     homepage: null,
     listing: null,
     posttype: null,
+    pages: null,
   });
 });
 
@@ -203,6 +207,19 @@ test("TOKENS: mixed — one valid, others absent/invalid → per-surface map", (
     homepage: "home_ok",
     listing: null,
     posttype: null,
+    pages: null,
+  });
+});
+
+test("TOKENS: pages (shared slot) reads its own token like any surface", () => {
+  const dir = makeCompositionsDir();
+  writeArtifact(dir, "pages", { kind: "preview", token: "pages_ok" });
+
+  assert.deepEqual(readCurrentPreviewTokens(dir), {
+    homepage: null,
+    listing: null,
+    posttype: null,
+    pages: "pages_ok",
   });
 });
 
@@ -211,10 +228,12 @@ test("TOKENS: malformed token (fails the URL-safe regex) → null for that surfa
   writeArtifact(dir, "homepage", { kind: "preview", token: "../evil" });
   writeArtifact(dir, "listing", { kind: "preview", token: 42 });
   writeArtifact(dir, "posttype", { kind: "preview" }); // no token
+  writeArtifact(dir, "pages", { kind: "preview", token: "../../escape" });
 
   assert.deepEqual(readCurrentPreviewTokens(dir), {
     homepage: null,
     listing: null,
     posttype: null,
+    pages: null,
   });
 });
