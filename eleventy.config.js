@@ -17,6 +17,7 @@ import { prunePreviewOrphans, readCurrentPreviewTokens } from "./lib/prune-previ
 import { pruneComposedPageOrphans } from "./lib/prune-composed-pages.mjs";
 import { composedPageSlugs } from "./_data/composedPages.mjs";
 import { buildCategoryIndex, gateCategories, readCategoryConfig, slugifyCategory } from "./lib/categories.mjs";
+import { pruneCategoryOrphans } from "./lib/prune-category-pages.mjs";
 import matter from "gray-matter";
 import { createHash, createHmac, randomUUID } from "crypto";
 import { createRequire } from "module";
@@ -1300,14 +1301,25 @@ export default function (eleventyConfig) {
       { feedPostLimit: 50 },
     );
 
+  // Slugs of categories still in use this build (union of the gated listing +
+  // feed sets), populated by the two collections below and consumed by the
+  // orphan prune in eleventy.after. Cleared before each build so a gated/merged
+  // category's slug drops out and its stale /categories/<slug>/ output is removed.
+  const categorySlugsInUse = new Set();
+  eleventyConfig.on("eleventy.before", () => categorySlugsInUse.clear());
+
   eleventyConfig.addCollection("categories", function (collectionApi) {
     const cfg = readCategoryConfig(categoryConfigPath);
-    return gateCategories(categoryIndex(collectionApi), { ...cfg, surface: "listing" });
+    const kept = gateCategories(categoryIndex(collectionApi), { ...cfg, surface: "listing" });
+    for (const c of kept) categorySlugsInUse.add(c.slug);
+    return kept;
   });
 
   eleventyConfig.addCollection("categoryFeeds", function (collectionApi) {
     const cfg = readCategoryConfig(categoryConfigPath);
-    return gateCategories(categoryIndex(collectionApi), { ...cfg, surface: "feed" });
+    const kept = gateCategories(categoryIndex(collectionApi), { ...cfg, surface: "feed" });
+    for (const c of kept) categorySlugsInUse.add(c.slug);
+    return kept;
   });
 
   // Recent posts for sidebar
@@ -1867,6 +1879,22 @@ export default function (eleventyConfig) {
       );
       if (removed.length > 0) {
         console.log(`[composed-pages] Pruned ${removed.length} stale page dir(s): ${removed.join(", ")}`);
+      }
+    }
+
+    // Category-page orphan prune (Category Governance L3). Gated/merged-away
+    // categories stop being written but Eleventy never deletes their old
+    // /categories/<slug>/ output (in-place build), so stale category listing+feed
+    // pages keep serving and the page-count win is hidden. Remove any
+    // /categories/<slug>/ dir whose slug isn't in this build's valid set
+    // (categorySlugsInUse). Safe: /categories/ is a theme-owned namespace; the
+    // index.html FILE is never a candidate. Must run BEFORE the incremental
+    // early-return; never throws.
+    {
+      const categoriesDir = resolve(directories?.output || dir.output, "categories");
+      const removed = await pruneCategoryOrphans(categoriesDir, categorySlugsInUse);
+      if (removed.length > 0) {
+        console.log(`[categories] Pruned ${removed.length} stale category dir(s): ${removed.slice(0, 10).join(", ")}${removed.length > 10 ? " …" : ""}`);
       }
     }
 
