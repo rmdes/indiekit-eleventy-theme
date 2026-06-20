@@ -43,27 +43,41 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROUTE_RE = /^\/[a-z0-9]+(?:-[a-z0-9]+)*\/$/;
 
 /**
- * Derive the set of authored content/pages/<slug>.md slugs (filename without
- * the .md extension). These are the slash pages whose output a composed page
- * must never overwrite. Resolves via the content/ symlink, same as the
- * artifact. A missing directory (fresh container) → empty set.
+ * Slugs owned by a root-level page TEMPLATE (e.g. `about.njk` → `/about/`). The
+ * content/pages slug-guard only covers `content/pages/*.md`, so without this a
+ * composed `page:<slug>` colliding with a root template would silently double-
+ * write its `/<slug>/index.html`. `cv` is INTENTIONALLY ABSENT — it is
+ * composition-owned (page:cv) as of Phase 7. When retiring a root template to a
+ * composition, REMOVE its slug here; when adding a permanent root page, add it.
+ */
+export const RESERVED_ROOT_SLUGS = new Set([
+  "about", "blog", "articles", "notes", "photos", "bookmarks", "likes",
+  "replies", "reposts", "interactions", "slashes", "github", "funkwhale",
+  "listening", "youtube", "blogroll", "podroll", "news", "search",
+  "changelog", "categories",
+]);
+
+/**
+ * Derive the set of slugs a composed page must never overwrite: the reserved
+ * root-template slugs PLUS every authored content/pages/<slug>.md slug (filename
+ * without `.md`). Resolves via the content/ symlink, same as the artifact. A
+ * missing directory (fresh container) → just the reserved set.
  *
- * @returns {Set<string>} authored slash-page slugs
+ * @returns {Set<string>} protected slugs
  */
 function authoredPageSlugs() {
+  const protectedSlugs = new Set(RESERVED_ROOT_SLUGS);
   try {
     const pagesDir = resolve(__dirname, "..", "content", "pages");
-    return new Set(
-      readdirSync(pagesDir)
-        .filter((name) => name.endsWith(".md"))
-        .map((name) => name.slice(0, -".md".length)),
-    );
+    for (const name of readdirSync(pagesDir)) {
+      if (name.endsWith(".md")) protectedSlugs.add(name.slice(0, -".md".length));
+    }
   } catch (error) {
     if (error.code !== "ENOENT") {
       console.warn(`[composedPages] could not read content/pages/: ${error.message}`);
     }
-    return new Set();
   }
+  return protectedSlugs;
 }
 
 /**

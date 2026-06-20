@@ -1,9 +1,22 @@
----
-layout: layouts/base.njk
-withSidebar: false
-title: CV
-permalink: /cv/
-pagefindIgnore: true
+---js
+{
+  layout: "layouts/base.njk",
+  withSidebar: false,
+  title: "CV",
+  pagefindIgnore: true,
+  // Phase 7 cutover (collision-proof). `composedPages` contains ONLY published
+  // page compositions, so while a page:cv is a draft (or absent) this renders /cv
+  // as before; once page:cv is PUBLISHED the composition owns /cv and this
+  // template SKIPS (permalink:false) — no duplicate-permalink build collision,
+  // independent of deploy ordering. Reads the global composedPages array (stable),
+  // NOT page.inputPath, so it is race-immune (cf. composed-pages.njk). cv.njk and
+  // the CV chrome partials (cv-builder/sidebar/footer, _data/cvPageConfig.js)
+  // become removable cleanup once /cv-via-composition is verified live.
+  eleventyComputed: {
+    permalink: (data) =>
+      (data.composedPages || []).some((p) => p?.target?.route === "/cv/") ? false : "/cv/",
+  },
+}
 ---
 
 {# CV page — uses configurable layout when cvPageConfig exists, falls back to hardcoded layout #}

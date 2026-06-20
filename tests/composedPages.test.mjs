@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { filterComposedPages } from "../_data/composedPages.mjs";
+import { filterComposedPages, RESERVED_ROOT_SLUGS } from "../_data/composedPages.mjs";
 
 /** Build a well-formed published v4 page entry, with optional overrides. */
 const validPage = (slug, over = {}) => ({
@@ -61,4 +61,20 @@ test("filters a mixed batch to only the surviving entries, preserving order", ()
     out.map((e) => e.target.route),
     ["/first/", "/last/"],
   );
+});
+
+// Phase 7 Task 6 — reserved root-template slug guard.
+
+test("RESERVED_ROOT_SLUGS protects root templates but NOT cv (composition-owned)", () => {
+  assert.ok(RESERVED_ROOT_SLUGS.has("about"), "about.njk owns /about/");
+  assert.ok(RESERVED_ROOT_SLUGS.has("blog"), "blog.njk owns /blog/");
+  assert.ok(!RESERVED_ROOT_SLUGS.has("cv"), "cv is composition-owned (page:cv) — must NOT be reserved");
+});
+
+test("filterComposedPages drops a composed page colliding with a reserved root slug, keeps cv", () => {
+  const out = filterComposedPages(
+    [validPage("about"), validPage("cv")],
+    RESERVED_ROOT_SLUGS,
+  );
+  assert.deepEqual(out.map((e) => e.target.route), ["/cv/"], "about dropped (root template), cv kept");
 });
