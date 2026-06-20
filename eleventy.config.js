@@ -1700,6 +1700,17 @@ export default function (eleventyConfig) {
     if (!pagefindDone) {
       pagefindDone = true;
       const outputDir = directories?.output || dir.output;
+      // Free Eleventy's retained heap BEFORE spawning pagefind. pagefind runs as a
+      // SYNCHRONOUS child process (execFileSync) while THIS process stays alive, so
+      // without this the peak is Eleventy's full transient heap (~2.5-3GB) PLUS
+      // pagefind's index memory concurrently — the late-phase memory explosion that
+      // OOM-killed the swap's initial build (which also races Indiekit startup).
+      // global.gc() collects the build's transient garbage and releases pages to the
+      // OS (madvise), so pagefind indexes against a lean parent (~retained baseline).
+      // (The end-of-hook global.gc() at the bottom ran too late — after pagefind.)
+      logMemory("pre-pagefind (before gc)");
+      if (typeof global.gc === "function") global.gc();
+      logMemory("pre-pagefind (after gc)");
       try {
         console.log(`[pagefind] Indexing ${outputDir} (${runMode})...`);
         execFileSync("npx", ["pagefind", "--site", outputDir, "--output-subdir", "pagefind", "--glob", "**/*.html"], {
@@ -1707,6 +1718,7 @@ export default function (eleventyConfig) {
           timeout: 120000,
         });
         console.log("[pagefind] Indexing complete");
+        logMemory("post-pagefind");
       } catch (err) {
         console.error("[pagefind] Indexing failed:", err.message);
       }
