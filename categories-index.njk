@@ -19,8 +19,8 @@ eleventyImport:
   <ul class="flex flex-wrap gap-3">
     {% for cat in collections.categories %}
     <li>
-      <a href="/categories/{{ cat | slugify }}/" class="inline-block px-4 py-2 bg-panel text-heading rounded-lg hover:bg-accent-100 dark:hover:bg-accent-900 hover:text-accent-700 dark:hover:text-accent-300 transition-colors">
-        {{ cat }}
+      <a href="/categories/{{ cat.slug }}/" class="inline-block px-4 py-2 bg-panel text-heading rounded-lg hover:bg-accent-100 dark:hover:bg-accent-900 hover:text-accent-700 dark:hover:text-accent-300 transition-colors">
+        {{ cat.name }} <span class="text-sm text-fg-muted">{{ cat.count }}</span>
       </a>
     </li>
     {% endfor %}

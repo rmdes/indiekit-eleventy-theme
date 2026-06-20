@@ -16,6 +16,7 @@ import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
 import { prunePreviewOrphans, readCurrentPreviewTokens } from "./lib/prune-preview.mjs";
 import { pruneComposedPageOrphans } from "./lib/prune-composed-pages.mjs";
 import { composedPageSlugs } from "./_data/composedPages.mjs";
+import { buildCategoryIndex, gateCategories, readCategoryConfig, slugifyCategory } from "./lib/categories.mjs";
 import matter from "gray-matter";
 import { createHash, createHmac, randomUUID } from "crypto";
 import { createRequire } from "module";
@@ -877,15 +878,9 @@ export default function (eleventyConfig) {
     });
   });
 
-  // Slugify filter
-  eleventyConfig.addFilter("slugify", (str) => {
-    if (!str) return "";
-    return str
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/[\s_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  });
+  // Slugify filter — delegates to the canonical slugifyCategory (lib/categories.mjs)
+  // so category slugs match everywhere (one copy, not four).
+  eleventyConfig.addFilter("slugify", (str) => slugifyCategory(str));
 
   eleventyConfig.addFilter("stripTrailingSlash", (url) => {
     if (!url || typeof url !== "string") return url || "";
@@ -1287,54 +1282,32 @@ export default function (eleventyConfig) {
       .slice(0, 20);
   });
 
-  // Categories collection - deduplicated by slug to avoid duplicate permalinks
-  eleventyConfig.addCollection("categories", function (collectionApi) {
-    const categoryMap = new Map(); // slug -> original name (first seen)
-    const slugify = (str) => str.toLowerCase().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "");
+  // Category index (governance Layer 3) — ONE source for BOTH listing pages and
+  // feeds (lib/categories.mjs), replacing two duplicated callbacks. Grouping is
+  // case-insensitive (by slug) so mixed-case posts (Politics/politics) merge
+  // rather than being split off the listing (the old in-template case-sensitive
+  // match bug). gateCategories applies the ">=N posts" rule + per-category
+  // overrides from the site-config artifact (content/_data/categories.json,
+  // absent → threshold 2), dropping long-tail 1-post category pages to cut the
+  // build's page count. Both collections now return {name, slug, count, posts}.
+  const categoryConfigPath = resolve(__dirname, "content", "_data", "categories.json");
+  const categoryIndex = (collectionApi) =>
+    buildCategoryIndex(
+      collectionApi
+        .getFilteredByGlob("content/**/*.md")
+        .filter(isPublished)
+        .sort((a, b) => b.date - a.date),
+      { feedPostLimit: 50 },
+    );
 
-    collectionApi.getAll().filter(isPublished).forEach((item) => {
-      if (item.data.category) {
-        const cats = Array.isArray(item.data.category) ? item.data.category : [item.data.category];
-        cats.forEach((cat) => {
-          if (cat && typeof cat === 'string' && cat.trim()) {
-            const slug = slugify(cat.trim());
-            if (slug && !categoryMap.has(slug)) {
-              categoryMap.set(slug, cat.trim());
-            }
-          }
-        });
-      }
-    });
-    return [...categoryMap.values()].sort();
+  eleventyConfig.addCollection("categories", function (collectionApi) {
+    const cfg = readCategoryConfig(categoryConfigPath);
+    return gateCategories(categoryIndex(collectionApi), { ...cfg, surface: "listing" });
   });
 
-  // Category feeds — pre-grouped posts for per-category RSS/JSON feeds
   eleventyConfig.addCollection("categoryFeeds", function (collectionApi) {
-    const slugify = (str) => str.toLowerCase().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "");
-    const grouped = new Map(); // slug -> { name, slug, posts[] }
-
-    collectionApi
-      .getFilteredByGlob("content/**/*.md")
-      .filter(isPublished)
-      .sort((a, b) => b.date - a.date)
-      .forEach((item) => {
-        if (!item.data.category) return;
-        const cats = Array.isArray(item.data.category) ? item.data.category : [item.data.category];
-        for (const cat of cats) {
-          if (!cat || typeof cat !== "string" || !cat.trim()) continue;
-          const slug = slugify(cat.trim());
-          if (!slug) continue;
-          if (!grouped.has(slug)) {
-            grouped.set(slug, { name: cat.trim(), slug, posts: [] });
-          }
-          const entry = grouped.get(slug);
-          if (entry.posts.length < 50) {
-            entry.posts.push(item);
-          }
-        }
-      });
-
-    return [...grouped.values()].sort((a, b) => a.name.localeCompare(b.name));
+    const cfg = readCategoryConfig(categoryConfigPath);
+    return gateCategories(categoryIndex(collectionApi), { ...cfg, surface: "feed" });
   });
 
   // Recent posts for sidebar

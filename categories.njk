@@ -6,33 +6,23 @@ pagination:
   data: collections.categories
   size: 1
   alias: category
-permalink: "categories/{{ category | slugify }}/"
+permalink: "categories/{{ category.slug }}/"
 eleventyComputed:
-  title: "{{ category }}"
+  title: "{{ category.name }}"
 ---
 <div class="h-feed">
-  <h1 class="text-2xl sm:text-3xl font-bold text-heading mb-2">{{ category }}</h1>
+  <h1 class="text-2xl sm:text-3xl font-bold text-heading mb-2">{{ category.name }}</h1>
   <p class="text-fg-muted mb-6 sm:mb-8">
-    Posts tagged with "{{ category }}".
+    Posts tagged with "{{ category.name }}".
   </p>
 
-  {% set categoryPosts = [] %}
-  {% for post in collections.posts %}
-    {% if post.data.category %}
-      {% if post.data.category is string %}
-        {% if post.data.category == category %}
-          {% set categoryPosts = (categoryPosts.push(post), categoryPosts) %}
-        {% endif %}
-      {% else %}
-        {% if category in post.data.category %}
-          {% set categoryPosts = (categoryPosts.push(post), categoryPosts) %}
-        {% endif %}
-      {% endif %}
-    {% endif %}
-  {% endfor %}
+  {# Posts come pre-grouped (case-insensitively) from the `categories` collection
+     (lib/categories.mjs) — no in-template matching, so mixed-case posts aren't
+     dropped. `category.count` is the true total; `category.posts` is capped. #}
+  {% set categoryPosts = category.posts %}
 
   {% if categoryPosts.length > 0 %}
-  <p class="text-sm text-fg-muted mb-4">{{ categoryPosts.length }} post{% if categoryPosts.length != 1 %}s{% endif %}</p>
+  <p class="text-sm text-fg-muted mb-4">{{ category.count }} post{% if category.count != 1 %}s{% endif %}</p>
   <ul class="post-list">
     {% for post in categoryPosts %}
     {% set postType = post.inputPath | replace("./content/", "") %}
