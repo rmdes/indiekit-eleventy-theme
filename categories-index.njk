@@ -10,10 +10,31 @@ eleventyImport:
 ---
 <div>
   <h1 class="text-2xl sm:text-3xl font-bold text-heading mb-2">Categories</h1>
-  <p class="text-fg-muted mb-6 sm:mb-8">
-    Browse posts by category.
+  <p class="text-fg-muted mb-6">
+    Browse posts by category, or search across everything.
     <span class="text-sm">({{ collections.categories.length }} categories)</span>
   </p>
+
+  {# Search box — finds posts by full text, including categories that have no
+     listing page of their own (gated below the per-site threshold). A visitor
+     bounced here from a gated /categories/<slug>/ URL arrives with ?q=<slug>,
+     which auto-runs the search and surfaces those posts. Mirrors search.njk. #}
+  <div id="search" class="mb-8"></div>
+  <noscript>
+    <p class="text-fg-muted mb-8">Search requires JavaScript. Browse the categories below, or the <a href="/blog/" class="text-link hover:underline">blog archive</a>.</p>
+  </noscript>
+  <script>
+    initPagefind("#search", { showSubResults: true, showEmptyFilters: false });
+    window.addEventListener("DOMContentLoaded", () => {
+      const input = document.querySelector("#search input[type='text']");
+      if (input) input.setAttribute("aria-label", "Search all content");
+      const q = new URLSearchParams(window.location.search).get("q");
+      if (q && input) {
+        input.value = q;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    });
+  </script>
 
   {% if collections.categories.length > 0 %}
   <ul class="flex flex-wrap gap-3">
