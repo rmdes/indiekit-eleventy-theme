@@ -159,8 +159,13 @@ export function composedPageSlugs() {
 }
 
 export default function () {
-  const surviving = filterComposedPages(loadArtifact(), authoredPageSlugs());
-
+  const artifact = loadArtifact();
+  const surviving = filterComposedPages(artifact, authoredPageSlugs());
+  // TEMP Phase 7 cutover debug — proves whether Eleventy EXECUTES this global
+  // each build (vs serving a cached []). Remove once /cv cutover is confirmed.
+  console.log(
+    `[composedPages] DEBUG default() EXECUTED artifact=${Array.isArray(artifact) ? artifact.length : typeof artifact} surviving=${surviving.length} routes=${JSON.stringify(surviving.map((p) => p && p.target && p.target.route))}`,
+  );
   if (surviving.length > 0) {
     console.log(`[composedPages] Loaded ${surviving.length} published page(s) from _data/compositions/pages.json`);
   }
