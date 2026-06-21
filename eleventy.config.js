@@ -15,7 +15,7 @@ import { renderAvatar } from "./lib/image-shortcode.mjs";
 import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
 import { prunePreviewOrphans, readCurrentPreviewTokens } from "./lib/prune-preview.mjs";
 import { pruneComposedPageOrphans } from "./lib/prune-composed-pages.mjs";
-import { composedPageSlugs } from "./_data/composedPages.mjs";
+import { composedPageSlugs } from "./lib/composed-pages.mjs";
 import { buildCategoryIndex, gateCategories, readCategoryConfig, slugifyCategory } from "./lib/categories.mjs";
 import { pruneCategoryOrphans } from "./lib/prune-category-pages.mjs";
 import matter from "gray-matter";

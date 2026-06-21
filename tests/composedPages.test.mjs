@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { filterComposedPages, RESERVED_ROOT_SLUGS } from "../_data/composedPages.mjs";
+import { filterComposedPages, RESERVED_ROOT_SLUGS } from "../lib/composed-pages.mjs";
 
 /** Build a well-formed published v4 page entry, with optional overrides. */
 const validPage = (slug, over = {}) => ({
