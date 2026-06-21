@@ -39,8 +39,12 @@ test("cv.njk permalink must NOT use the naive (composedPages || []).some form", 
   );
 });
 
-test("cv.njk permalink yields false (skip) or the /cv/ route — never derived from page.inputPath", () => {
-  assert.match(fm, /["']\/cv\/["']/, "renders /cv when not yielding");
-  assert.match(fm, /\bfalse\b/, "yields (permalink:false) when page:cv is published");
-  assert.doesNotMatch(fm, /inputPath/, "must not read the race-prone page.inputPath");
+test("cv.njk permalink yields false (skip) or the /cv/ route", () => {
+  // Look only at the permalink function body (the comments legitimately mention
+  // page.inputPath to explain why it is avoided).
+  const body = fm.match(/permalink:\s*\(data\)\s*=>\s*\{([\s\S]*?)\n {4}\},/)?.[1] ?? "";
+  assert.ok(body, "permalink arrow body must be present");
+  assert.match(body, /["']\/cv\/["']/, "renders /cv when not yielding");
+  assert.match(body, /\bfalse\b/, "yields (permalink:false) when page:cv is published");
+  assert.doesNotMatch(body, /inputPath/, "the function body must not read page.inputPath");
 });
