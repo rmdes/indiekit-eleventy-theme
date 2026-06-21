@@ -716,6 +716,8 @@ export default function (eleventyConfig) {
   eleventyConfig.addWatchTarget("./content/_data/homepage.json");
   eleventyConfig.addWatchTarget("./content/_data/compositions/");
   eleventyConfig.addWatchTarget("./content/_data/block-catalog.json");
+  // CV data, written by @rmdes/indiekit-endpoint-cv (v2 path; was .indiekit/cv.json).
+  eleventyConfig.addWatchTarget("./content/_data/cv.json");
 
   // Webmentions plugin configuration
   const wmDomain = siteUrl.replace("https://", "").replace("http://", "");

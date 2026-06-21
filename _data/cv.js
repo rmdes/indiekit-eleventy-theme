@@ -1,8 +1,11 @@
 /**
  * CV Data — reads from indiekit-endpoint-cv plugin data file.
  *
- * The CV plugin writes content/.indiekit/cv.json on every save
- * and on startup. Eleventy reads that file here.
+ * The CV plugin writes content/_data/cv.json on every save and on startup
+ * (matching its declared v2 block contract: data.source:"file", file:"cv.json",
+ * the same location site-config writes its artifacts). Eleventy reads it here.
+ * content/.indiekit/cv.json is the pre-v2 legacy path, read only as a fallback
+ * for the first post-migration build (see readCvJson below).
  *
  * Whatever the plugin writes — including malformed JSON, partial objects,
  * or wrong-shape values from a buggy version — we normalize before handing
@@ -47,10 +50,32 @@ function normalize(raw) {
   return out;
 }
 
+/**
+ * Read the raw cv.json, preferring the canonical v2 path and falling back to the
+ * pre-v2 legacy path. The fallback only matters for the first build after the
+ * write-path migration, before the plugin has rewritten the file to _data/; it is
+ * removable (Phase 7d) once both sites have deployed the new writer at least once.
+ * @returns {string|null} raw file contents, or null if neither path exists
+ */
+function readCvJson() {
+  const candidates = [
+    resolve(__dirname, "..", "content", "_data", "cv.json"),
+    resolve(__dirname, "..", "content", ".indiekit", "cv.json"),
+  ];
+  for (const cvPath of candidates) {
+    try {
+      return readFileSync(cvPath, "utf8");
+    } catch {
+      // try next candidate
+    }
+  }
+  return null;
+}
+
 export default function () {
+  const raw = readCvJson();
+  if (raw == null) return { ...EMPTY };
   try {
-    const cvPath = resolve(__dirname, "..", "content", ".indiekit", "cv.json");
-    const raw = readFileSync(cvPath, "utf8");
     const data = JSON.parse(raw);
     console.log("[cv] Loaded CV data from plugin");
     return normalize(data);
