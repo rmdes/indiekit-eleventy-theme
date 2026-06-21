@@ -13,8 +13,19 @@
   // the CV chrome partials (cv-builder/sidebar/footer, _data/cvPageConfig.js)
   // become removable cleanup once /cv-via-composition is verified live.
   eleventyComputed: {
-    permalink: (data) =>
-      (data.composedPages || []).some((p) => p?.target?.route === "/cv/") ? false : "/cv/",
+    // `composedPages` is a _data global. Inside eleventyComputed — and permalink
+    // resolves EARLY — it can arrive as the UNINVOKED data function rather than
+    // its array value; calling .some on the function threw and failed the whole
+    // build. Resolve defensively: array as-is, function → invoke it, else []. We
+    // MUST invoke (not just guard with Array.isArray and bail) or cv.njk would
+    // never see the published page:cv and never yield → /cv collision on publish.
+    permalink: (data) => {
+      const cp = data.composedPages;
+      const pages = Array.isArray(cp) ? cp : typeof cp === "function" ? cp() : [];
+      return Array.isArray(pages) && pages.some((p) => p && p.target && p.target.route === "/cv/")
+        ? false
+        : "/cv/";
+    },
   },
 }
 ---
