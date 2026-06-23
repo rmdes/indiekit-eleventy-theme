@@ -1,8 +1,10 @@
-{# Listening Widget — combined Funkwhale + Last.fm recent tracks #}
-{% set hasListening = (funkwhaleActivity and (funkwhaleActivity.nowPlaying or funkwhaleActivity.listenings.length)) or (lastfmActivity and (lastfmActivity.nowPlaying or lastfmActivity.scrobbles.length)) %}
-{% if hasListening %}
+{# Listening Widget — combined Funkwhale + Last.fm, LIVE client-side (Phase 7c).
+   Converted from build-time Nunjucks to an Alpine component so "now playing" is
+   always current (no rebuild). Component logic: /js/widgets/listening.js
+   (Alpine.data, loaded in base.njk). The plugins own the data via their public
+   APIs; a disabled source just yields null/[] and the widget degrades. #}
 <is-land on:visible>
-<div class="widget">
+<div class="widget" x-data="listeningWidget()" x-init="init()" x-cloak x-show="loading || hasData">
   <h3 class="widget-title flex items-center gap-2">
     <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
@@ -10,100 +12,78 @@
     Listening
   </h3>
 
-  {# Now Playing — show if either source is actively playing #}
-  {% set fwNow = funkwhaleActivity.nowPlaying if funkwhaleActivity and funkwhaleActivity.nowPlaying and funkwhaleActivity.nowPlaying.status == 'now-playing' else null %}
-  {% set lfmNow = lastfmActivity.nowPlaying if lastfmActivity and lastfmActivity.nowPlaying and lastfmActivity.nowPlaying.status == 'now-playing' else null %}
+  {# Loading state #}
+  <div x-show="loading" class="text-sm text-fg-muted py-2" role="status" aria-live="polite">Loading...</div>
 
-  {% if fwNow or lfmNow %}
-  {% set np = fwNow or lfmNow %}
-  {% set npSource = "Funkwhale" if fwNow else "Last.fm" %}
-  {% set npColor = "purple" if fwNow else "red" %}
-  <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mb-3">
-    <div class="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 mb-2">
-      <span class="flex gap-0.5 items-end h-2.5" aria-hidden="true">
-        <span class="w-0.5 bg-green-500 animate-pulse" style="height: 30%;"></span>
-        <span class="w-0.5 bg-green-500 animate-pulse" style="height: 70%; animation-delay: 0.2s;"></span>
-        <span class="w-0.5 bg-green-500 animate-pulse" style="height: 50%; animation-delay: 0.4s;"></span>
-      </span>
-      Now Playing
-      <span class="text-{{ npColor }}-600 dark:text-{{ npColor }}-400 ml-1">({{ npSource }})</span>
-    </div>
-    <div class="flex items-center gap-3">
-      {% if np.coverUrl %}
-      <img src="{{ np.coverUrl }}" alt="" class="w-10 h-10 rounded object-cover flex-shrink-0 shadow-lg" loading="lazy" eleventy:ignore>
-      {% endif %}
-      <div class="min-w-0 flex-1">
-        <p class="font-medium text-sm text-heading truncate">
-          {% if np.trackUrl %}
-          <a href="{{ np.trackUrl }}" class="hover:text-purple-600 dark:hover:text-purple-400" target="_blank" rel="noopener">{{ np.track }}</a>
-          {% else %}
-          {{ np.track }}
-          {% endif %}
-        </p>
-        <p class="text-xs text-fg-muted truncate">{{ np.artist }}</p>
+  {# Now Playing — show if either source is actively playing (Funkwhale preferred) #}
+  <template x-if="!loading && np">
+    <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mb-3">
+      <div class="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 mb-2">
+        <span class="flex gap-0.5 items-end h-2.5" aria-hidden="true">
+          <span class="w-0.5 bg-green-500 animate-pulse" style="height: 30%;"></span>
+          <span class="w-0.5 bg-green-500 animate-pulse" style="height: 70%; animation-delay: 0.2s;"></span>
+          <span class="w-0.5 bg-green-500 animate-pulse" style="height: 50%; animation-delay: 0.4s;"></span>
+        </span>
+        Now Playing
+        <span class="ml-1" :class="fwNow ? 'text-purple-600 dark:text-purple-400' : 'text-red-600 dark:text-red-400'" x-text="'(' + npSource + ')'"></span>
+      </div>
+      <div class="flex items-center gap-3">
+        <img x-show="np.coverUrl" :src="np.coverUrl" alt="" class="w-10 h-10 rounded object-cover flex-shrink-0 shadow-lg" loading="lazy">
+        <div class="min-w-0 flex-1">
+          <p class="font-medium text-sm text-heading truncate">
+            <a x-show="np.trackUrl" :href="np.trackUrl" class="hover:text-purple-600 dark:hover:text-purple-400" target="_blank" rel="noopener" x-text="np.track"></a>
+            <span x-show="!np.trackUrl" x-text="np.track"></span>
+          </p>
+          <p class="text-xs text-fg-muted truncate" x-text="np.artist"></p>
+        </div>
       </div>
     </div>
-  </div>
-  {% endif %}
+  </template>
 
   {# Recent tracks — 2 from each source #}
-  <ul class="space-y-2">
-    {% if funkwhaleActivity and funkwhaleActivity.listenings.length %}
-    {% for listening in funkwhaleActivity.listenings | head(2) %}
-    <li class="flex items-center gap-2">
-      {% if listening.coverUrl %}
-      <img src="{{ listening.coverUrl }}" alt="" class="w-8 h-8 rounded object-cover flex-shrink-0 shadow-lg" loading="lazy" eleventy:ignore>
-      {% else %}
-      <div class="w-8 h-8 rounded bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
-        <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13"/>
-        </svg>
-      </div>
-      {% endif %}
-      <div class="min-w-0 flex-1">
-        <p class="text-sm text-heading truncate">
-          {% if listening.trackUrl %}
-          <a href="{{ listening.trackUrl }}" class="hover:text-purple-600 dark:hover:text-purple-400" target="_blank" rel="noopener">{{ listening.track }}</a>
-          {% else %}
-          {{ listening.track }}
-          {% endif %}
-        </p>
-        <p class="text-xs text-fg-muted truncate">{{ listening.artist }}
-          <span class="text-purple-500 ml-1">Funkwhale</span>
-        </p>
-      </div>
-    </li>
-    {% endfor %}
-    {% endif %}
+  <ul x-show="!loading" class="space-y-2">
+    <template x-for="t in listenings" :key="'fw-' + (t.trackUrl || t.track)">
+      <li class="flex items-center gap-2">
+        <img x-show="t.coverUrl" :src="t.coverUrl" alt="" class="w-8 h-8 rounded object-cover flex-shrink-0 shadow-lg" loading="lazy">
+        <div x-show="!t.coverUrl" class="w-8 h-8 rounded bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+          <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13"/>
+          </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm text-heading truncate">
+            <a x-show="t.trackUrl" :href="t.trackUrl" class="hover:text-purple-600 dark:hover:text-purple-400" target="_blank" rel="noopener" x-text="t.track"></a>
+            <span x-show="!t.trackUrl" x-text="t.track"></span>
+          </p>
+          <p class="text-xs text-fg-muted truncate">
+            <span x-text="t.artist"></span>
+            <span class="text-purple-500 ml-1">Funkwhale</span>
+          </p>
+        </div>
+      </li>
+    </template>
 
-    {% if lastfmActivity and lastfmActivity.scrobbles.length %}
-    {% for scrobble in lastfmActivity.scrobbles | head(2) %}
-    <li class="flex items-center gap-2">
-      {% if scrobble.coverUrl %}
-      <img src="{{ scrobble.coverUrl }}" alt="" class="w-8 h-8 rounded object-cover flex-shrink-0 shadow-lg" loading="lazy" eleventy:ignore>
-      {% else %}
-      <div class="w-8 h-8 rounded bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
-        <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13"/>
-        </svg>
-      </div>
-      {% endif %}
-      <div class="min-w-0 flex-1">
-        <p class="text-sm text-heading truncate">
-          {% if scrobble.trackUrl %}
-          <a href="{{ scrobble.trackUrl }}" class="hover:text-red-600 dark:hover:text-red-400" target="_blank" rel="noopener">{{ scrobble.track }}</a>
-          {% else %}
-          {{ scrobble.track }}
-          {% endif %}
-          {% if scrobble.loved %}<span class="text-red-500 ml-0.5">&#9829;</span>{% endif %}
-        </p>
-        <p class="text-xs text-fg-muted truncate">{{ scrobble.artist }}
-          <span class="text-red-500 ml-1">Last.fm</span>
-        </p>
-      </div>
-    </li>
-    {% endfor %}
-    {% endif %}
+    <template x-for="t in scrobbles" :key="'lfm-' + (t.trackUrl || t.track)">
+      <li class="flex items-center gap-2">
+        <img x-show="t.coverUrl" :src="t.coverUrl" alt="" class="w-8 h-8 rounded object-cover flex-shrink-0 shadow-lg" loading="lazy">
+        <div x-show="!t.coverUrl" class="w-8 h-8 rounded bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+          <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13"/>
+          </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm text-heading truncate">
+            <a x-show="t.trackUrl" :href="t.trackUrl" class="hover:text-red-600 dark:hover:text-red-400" target="_blank" rel="noopener" x-text="t.track"></a>
+            <span x-show="!t.trackUrl" x-text="t.track"></span>
+            <span x-show="t.loved" class="text-red-500 ml-0.5">&#9829;</span>
+          </p>
+          <p class="text-xs text-fg-muted truncate">
+            <span x-text="t.artist"></span>
+            <span class="text-red-500 ml-1">Last.fm</span>
+          </p>
+        </div>
+      </li>
+    </template>
   </ul>
 
   <a href="/listening/" class="text-sm text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 mt-3">
@@ -112,4 +92,3 @@
   </a>
 </div>
 </is-land>
-{% endif %}

@@ -17,23 +17,22 @@ document.addEventListener("alpine:init", () => {
 
     async init() {
       try {
-        const fetches = [
+        // All four tabs now fetch the github plugin's public API (Phase 7c).
+        // The Repos tab previously hit api.github.com directly from the browser;
+        // it now routes through /githubapi/api/repos so the plugin (with its
+        // token + cache) is the single source of truth and fork/private are
+        // filtered server-side. `username` is retained for signature/template
+        // compatibility but no longer drives a fetch.
+        const [commitsRes, featuredRes, contribRes, reposRes] = await Promise.all([
           fetch('/githubapi/api/commits').then(r => r.ok ? r.json() : null).catch(() => null),
           fetch('/githubapi/api/featured').then(r => r.ok ? r.json() : null).catch(() => null),
           fetch('/githubapi/api/contributions').then(r => r.ok ? r.json() : null).catch(() => null),
-        ];
-        if (username) {
-          fetches.push(
-            fetch('https://api.github.com/users/' + username + '/repos?sort=updated&per_page=10&type=owner', {
-              headers: { 'Accept': 'application/vnd.github.v3+json' }
-            }).then(r => r.ok ? r.json() : null).catch(() => null)
-          );
-        }
-        const [commitsRes, featuredRes, contribRes, reposRes] = await Promise.all(fetches);
+          fetch('/githubapi/api/repos').then(r => r.ok ? r.json() : null).catch(() => null),
+        ]);
         this.commits = commitsRes?.commits || [];
         this.featured = featuredRes?.featured || [];
         this.contributions = contribRes?.contributions || [];
-        this.repos = (reposRes || []).filter(r => !r.fork && !r.private);
+        this.repos = reposRes?.repos || [];
       } catch (err) {
         console.error('GitHub widget error:', err);
       } finally {
