@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { renderNode, resolveBlockTemplate, KNOWN_WIDGET_TYPES, COLLISION_TYPES, ENDPOINT_SLUGS } from "../lib/render-composition.mjs";
+import { renderNode, resolveBlockTemplate, KNOWN_WIDGET_TYPES, COLLISION_TYPES } from "../lib/render-composition.mjs";
 
 const mockRender = async (templatePath, data) => {
   if (templatePath.includes("crash")) throw new Error("boom");
@@ -108,28 +108,42 @@ test("WIDGET ROUTING: a widget-type section node renders via the widget partial 
   assert.deepEqual(captured.data.config, { compact: true });
 });
 
-// ── Phase-3 catalog-driven dispatch ──────────────────────────────────────────
-// When ctx.blockCatalog.available, the catalog owns block EXISTENCE (unknown
-// types → placeholder comment) and PLUGIN GATING (requiresPlugin display name
-// → loadout slug via ENDPOINT_SLUGS → ctx.loadedPlugins). Template PATH
-// resolution stays convention-based (resolveBlockTemplate) until Phase 7.
-// Display names below are the VERIFIED plugin `name` values — see the
-// ENDPOINT_SLUGS provenance comment in lib/render-composition.mjs.
+// ── Catalog-driven dispatch (Phase 7d: catalog PRESENCE is the gate) ──────────
+// When ctx.blockCatalog.available, the catalog owns block EXISTENCE: a type in
+// the catalog renders; an unknown type → placeholder comment. Phase 7d REMOVED
+// render-time PLUGIN GATING (the requiresPlugin→ENDPOINT_SLUGS→loadedPlugins
+// path and the legacy widget/section requirement maps): a plugin-owned block is
+// in a site's catalog ONLY when its plugin is loaded (the plugin's get blocks()
+// is the sole source now that the BUILTIN_BLOCKS seeds are gone), so presence
+// already gates it. requiresPlugin is retained on entries as provenance but no
+// longer drives a render-time skip. Template PATH resolution stays
+// convention-based (resolveBlockTemplate).
 
 const CATALOG = { available: true, byId: {
   "recent-posts": { id: "recent-posts", label: "Recent Posts", icon: "newspaper", requiresPlugin: null },
   "github-repos": { id: "github-repos", label: "GitHub Projects", icon: "github", requiresPlugin: "GitHub activity endpoint", legacy: false },
   "cv-experience": { id: "cv-experience", label: "Experience", requiresPlugin: "CV editor endpoint", legacy: true },
-  "donation-box": { id: "donation-box", label: "Donate", requiresPlugin: "Some unmapped endpoint" },
 }};
 
-test("catalog-driven: known type renders; requiresPlugin gates on loadedPlugins via ENDPOINT_SLUGS", async () => {
+test("catalog-driven: a type present in the catalog renders, regardless of loadedPlugins", async () => {
   const node = { block: "section", id: "b1", type: "github-repos", config: {} };
-  const ctxLoaded = { blockCatalog: CATALOG, loadedPlugins: { github: true } };
-  assert.match(await renderNode(node, mockRender, ctxLoaded), /widgets\/github-repos/);
-  const ctxUnloaded = { blockCatalog: CATALOG, loadedPlugins: {} };
-  const html = await renderNode(node, mockRender, ctxUnloaded);
-  assert.match(html, /<!-- block-skipped: github-repos \(requires github\) -->/);
+  // Present in the catalog → renders. requiresPlugin is stamped, but the
+  // renderer no longer re-gates: catalog presence already means the plugin is
+  // loaded for this site. Same result with a populated OR empty loadedPlugins.
+  assert.match(await renderNode(node, mockRender, { blockCatalog: CATALOG, loadedPlugins: { github: true } }), /widgets\/github-repos/);
+  assert.match(await renderNode(node, mockRender, { blockCatalog: CATALOG, loadedPlugins: {} }), /widgets\/github-repos/);
+});
+
+test("Phase 7d: a plugin-owned block ABSENT from the catalog IS the gate for plugin-less sites", async () => {
+  // After the BUILTIN_BLOCKS seeds were removed, a site that doesn't load the
+  // owning plugin simply has no catalog entry for the block — so it takes the
+  // unknown-type placeholder path. This replaces the old render-time skip.
+  const catalogWithoutGithub = { available: true, byId: {
+    "recent-posts": { id: "recent-posts", label: "Recent Posts", requiresPlugin: null },
+  }};
+  const node = { block: "section", id: "g1", type: "github-repos", config: {} };
+  const html = await renderNode(node, mockRender, { blockCatalog: catalogWithoutGithub, loadedPlugins: {} });
+  assert.match(html, /<!-- block-unknown: github-repos -->/);
 });
 
 test("catalog-driven: unknown type yields a logged placeholder comment, not silence", async () => {
@@ -153,73 +167,10 @@ test("catalog absent: falls back to convention-based resolution (Phase 1 behavio
   assert.match(html, /sections\/recent-posts/);
 });
 
-test("built-ins (requiresPlugin null) are never gated", async () => {
+test("built-ins (requiresPlugin null) render ungated", async () => {
   const node = { block: "section", id: "b3", type: "recent-posts", config: {} };
   const html = await renderNode(node, mockRender, { blockCatalog: CATALOG, loadedPlugins: {} });
   assert.match(html, /id=b3/);
-});
-
-// ── Phase-3 interim legacy-map gate (dies in Phase 7) ────────────────────────
-// The catalog marks api-source widgets (github-repos, blogroll, webmentions, …)
-// requiresPlugin: null because site-config registers them on behalf of their
-// data plugins. Until Phase 7, whenever the catalog produced no slug, the v3
-// legacy maps (widgetPluginRequirements / sectionPluginRequirements) provide a
-// secondary gate so a plugin-less site skips cleanly instead of rendering
-// broken widget chrome.
-
-test("LEGACY GATE: catalog-built-in api-source widget (requiresPlugin null) keeps v3 gating via legacy map", async () => {
-  // Models PRODUCTION reality: github-repos is in the live catalog with
-  // requiresPlugin null — the legacy widget map still requires "github".
-  const catalogProd = { available: true, byId: {
-    "github-repos": { id: "github-repos", label: "GitHub Projects", requiresPlugin: null },
-  }};
-  const node = { block: "section", id: "g1", type: "github-repos", config: {} };
-  const skipped = await renderNode(node, mockRender, { blockCatalog: catalogProd, loadedPlugins: {} });
-  assert.match(skipped, /<!-- block-skipped: github-repos \(requires github\) -->/);
-  const rendered = await renderNode(node, mockRender, { blockCatalog: catalogProd, loadedPlugins: { github: true } });
-  assert.match(rendered, /widgets\/github-repos/);
-  assert.match(rendered, /id=g1/);
-});
-
-test("LEGACY GATE: requiresPlugin-null type absent from both legacy maps still renders ungated", async () => {
-  // "author-card" is in KNOWN_WIDGET_TYPES but NOT in widgetPluginRequirements
-  // (plugin-independent theme widget) — the secondary gate must not block it.
-  const catalogProd = { available: true, byId: {
-    "author-card": { id: "author-card", label: "Author Card", requiresPlugin: null },
-  }};
-  const node = { block: "section", id: "a1", type: "author-card", config: {} };
-  const html = await renderNode(node, mockRender, { blockCatalog: catalogProd, loadedPlugins: {} });
-  assert.match(html, /widgets\/author-card/);
-  assert.match(html, /id=a1/);
-});
-
-test("FAIL-OPEN: an UNMAPPED requiresPlugin display name renders UNGATED (with a warn)", async () => {
-  // "Some unmapped endpoint" has no ENDPOINT_SLUGS entry — the renderer must
-  // not guess a slug; it warns and renders the block ungated (runtime safety
-  // net for catalog entries registered by plugins newer than this theme).
-  // NOTE: the fail-open path now also runs the legacy-map secondary gate —
-  // "donation-box" is verified absent from BOTH legacy maps, so it stays a
-  // pure fail-open probe.
-  const node = { block: "section", id: "b4", type: "donation-box", config: {} };
-  const html = await renderNode(node, mockRender, { blockCatalog: CATALOG, loadedPlugins: {} });
-  assert.match(html, /sections\/donation-box/);
-  assert.match(html, /id=b4/);
-});
-
-test("ENDPOINT_SLUGS drift guard: display-name keys map to well-formed loadout slugs", () => {
-  // Source of truth for the KEYS is the production block catalog
-  // (requiresPlugin = registering endpoint's display name); the VALUES are
-  // loadout keys from loaded-plugins.json. A fully mechanical theme-side
-  // drift guard isn't possible (the catalog lives in production) — the
-  // fail-open behavior above is the runtime safety net for drift.
-  assert.ok(Object.keys(ENDPOINT_SLUGS).length > 0, "ENDPOINT_SLUGS must not be empty");
-  for (const [name, slug] of Object.entries(ENDPOINT_SLUGS)) {
-    assert.equal(typeof name, "string");
-    assert.ok(name.length > 0, "display-name key must be non-empty");
-    assert.match(slug, /^[a-z][a-z0-9-]*$/, `slug "${slug}" for "${name}" is not a valid loadout key`);
-  }
-  // The one mapping the production catalog requires today:
-  assert.equal(ENDPOINT_SLUGS["CV editor endpoint"], "cv");
 });
 
 // ── Phase-3 container-owned collapse chrome ──────────────────────────────────
@@ -366,13 +317,13 @@ test("CHROME: skipped/unknown/errored placeholder children are emitted bare — 
   // (an empty collapsible with a title for a block that isn't there is wrong).
   const gated = makeChromeSpyRender();
   const tree = { block: "container", as: "stack", role: "complementary", children: [
-    { block: "section", id: "g1", type: "github-repos", config: {} },  // requiresPlugin, not loaded → block-skipped
+    { block: "section", id: "g1", type: "funkwhale", config: {} },     // plugin-owned, absent from this catalog (plugin-less site) → block-unknown (Phase 7d gate)
     { block: "section", id: "u1", type: "no-such-block", config: {} }, // → block-unknown
     { block: "section", id: "r1", type: "recent-posts", config: {} },  // renders
   ]};
   const html = await renderNode(tree, gated.renderFn, { blockCatalog: CATALOG, loadedPlugins: {} });
   assert.deepEqual(gated.chromeCalls.map((c) => c.data.blockId), ["r1"]);
-  assert.match(html, /<!-- block-skipped: github-repos \(requires github\) -->/);
+  assert.match(html, /<!-- block-unknown: funkwhale -->/);
   assert.match(html, /<!-- block-unknown: no-such-block -->/);
   assert.doesNotMatch(html, /<chrome id=g1|<chrome id=u1/);
   assert.match(html, /<chrome id=r1 open=true>/); // position heuristic: index 2 of the container
