@@ -1522,12 +1522,17 @@ export default function (eleventyConfig) {
   // Note: --incremental CLI flag sets incremental=true even for the watcher's first full build,
   // so we cannot use the incremental flag to guard pagefind. Use a one-shot flag instead.
   let pagefindDone = false;
+  // Markdown-for-agents runs once per process, on the first build (the watcher's
+  // first pass is a full build but reports incremental=true, so we can't gate on
+  // !incremental — same one-shot pattern as pagefind above).
+  let markdownAgentsDone = false;
   eleventyConfig.on("eleventy.after", async ({ dir, directories, runMode, incremental, results }) => {
     logMemory("after-build (pre-hooks)");
     // Markdown for Agents — .md twins (articles + notes) + /about + homepage + llms.txt
     // (logic lives in lib/markdown-agents.mjs; see 2026-06-25-llms-txt-design.md)
     const mdEnabled = (process.env.MARKDOWN_AGENTS_ENABLED || "true").toLowerCase() === "true";
-    if (mdEnabled && !incremental) {
+    if (mdEnabled && !markdownAgentsDone) {
+      markdownAgentsDone = true;
       const outputDir = directories?.output || dir.output;
       try {
         const { mdCount, llmsCount } = generateMarkdownForAgents({
