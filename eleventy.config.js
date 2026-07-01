@@ -20,6 +20,7 @@ import { buildCategoryIndex, gateCategories, readCategoryConfig, slugifyCategory
 import { pruneCategoryOrphans } from "./lib/prune-category-pages.mjs";
 import registerTextFilters from "./lib/text-filters.mjs";
 import matter from "gray-matter";
+import { generateMarkdownForAgents } from "./lib/markdown-agents.mjs";
 import { createHash, createHmac, randomUUID } from "crypto";
 import { createRequire } from "module";
 import { execFileSync } from "child_process";
@@ -1521,59 +1522,23 @@ export default function (eleventyConfig) {
   // Note: --incremental CLI flag sets incremental=true even for the watcher's first full build,
   // so we cannot use the incremental flag to guard pagefind. Use a one-shot flag instead.
   let pagefindDone = false;
-  eleventyConfig.on("eleventy.after", async ({ dir, directories, runMode, incremental }) => {
+  eleventyConfig.on("eleventy.after", async ({ dir, directories, runMode, incremental, results }) => {
     logMemory("after-build (pre-hooks)");
-    // Markdown for Agents — generate index.md alongside index.html for articles
+    // Markdown for Agents — .md twins (articles + notes) + /about + homepage + llms.txt
+    // (logic lives in lib/markdown-agents.mjs; see 2026-06-25-llms-txt-design.md)
     const mdEnabled = (process.env.MARKDOWN_AGENTS_ENABLED || "true").toLowerCase() === "true";
     if (mdEnabled && !incremental) {
       const outputDir = directories?.output || dir.output;
-      const contentDir = resolve(__dirname, "content/articles");
-      const aiTrain = process.env.MARKDOWN_AGENTS_AI_TRAIN || "yes";
-      const search = process.env.MARKDOWN_AGENTS_SEARCH || "yes";
-      const aiInput = process.env.MARKDOWN_AGENTS_AI_INPUT || "yes";
-      const authorName = process.env.AUTHOR_NAME || "Blog Author";
-      let mdCount = 0;
       try {
-        const files = readdirSync(contentDir).filter(f => f.endsWith(".md"));
-        for (const file of files) {
-          const src = readFileSync(resolve(contentDir, file), "utf-8");
-          const { data: fm, content: body } = matter(src);
-          if (!fm || fm.draft) continue;
-          // Derive the output path from the article's permalink or url
-          const articleUrl = fm.permalink || fm.url;
-          if (!articleUrl || !articleUrl.startsWith("/articles/")) continue;
-          const mdDir = resolve(outputDir, articleUrl.replace(/^\//, "").replace(/\/$/, ""));
-          const mdPath = resolve(mdDir, "index.md");
-          const trimmedBody = body.trim();
-          const tokens = Math.ceil(trimmedBody.length / 4);
-          const title = (fm.title || "").replace(/"/g, '\\"');
-          const date = fm.date ? new Date(fm.date).toISOString() : fm.published || "";
-          let frontLines = [
-            "---",
-            `title: "${title}"`,
-            `date: ${date}`,
-            `author: ${authorName}`,
-            `url: ${siteUrl}${articleUrl}`,
-          ];
-          if (fm.category && Array.isArray(fm.category) && fm.category.length > 0) {
-            frontLines.push("categories:");
-            for (const cat of fm.category) {
-              frontLines.push(`  - ${cat}`);
-            }
-          }
-          if (fm.description) {
-            frontLines.push(`description: "${fm.description.replace(/"/g, '\\"')}"`);
-          }
-          frontLines.push(`tokens: ${tokens}`);
-          frontLines.push(`content_signal: ai-train=${aiTrain}, search=${search}, ai-input=${aiInput}`);
-          frontLines.push("---");
-          mkdirSync(mdDir, { recursive: true });
-          writeFileSync(mdPath, frontLines.join("\n") + "\n\n# " + (fm.title || "") + "\n\n" + trimmedBody + "\n");
-          mdCount++;
-        }
-        console.log(`[markdown-agents] Generated ${mdCount} article .md files`);
+        const { mdCount, llmsCount } = generateMarkdownForAgents({
+          results,
+          outputDir,
+          env: process.env,
+          io: { readFileSync, writeFileSync, mkdirSync },
+        });
+        console.log(`[markdown-agents] Generated ${mdCount} .md files + llms.txt (${llmsCount} entries)`);
       } catch (err) {
-        console.error("[markdown-agents] Error generating .md files:", err.message);
+        console.error("[markdown-agents] Error:", err.message);
       }
     }
 
