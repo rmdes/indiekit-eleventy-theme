@@ -96,3 +96,37 @@ test("buildHomeMarkdown is thin: identity + section pointers + llms.txt", () => 
   assert.match(out, /- \[Articles\]\(https:\/\/rmendes\.net\/articles\/\)/);
   assert.match(out, /https:\/\/rmendes\.net\/llms\.txt/);
 });
+
+import { buildLlmsTxt } from "../lib/markdown-agents.mjs";
+
+const LLMS_ENV = {
+  SITE_URL: "https://rmendes.net", SITE_NAME: "A Node on the Web",
+  SITE_DESCRIPTION: "desc", AUTHOR_NAME: "Ricardo Mendes",
+  MARKDOWN_AGENTS_AI_TRAIN: "yes", MARKDOWN_AGENTS_SEARCH: "yes", MARKDOWN_AGENTS_AI_INPUT: "yes",
+};
+
+test("buildLlmsTxt: articles newest-first w/ summary; notes capped w/ disclosure", () => {
+  const entries = [
+    { type: "articles", title: "Old", mdUrl: "https://rmendes.net/a/old.md", summary: "s1", date: "2025-01-01" },
+    { type: "articles", title: "New", mdUrl: "https://rmendes.net/a/new.md", summary: "s2", date: "2026-01-01" },
+  ];
+  for (let i = 0; i < 30; i++) {
+    const d = `2026-01-${String(i + 1).padStart(2, "0")}`;
+    entries.push({ type: "notes", title: `${d} — n${i}`, mdUrl: `https://rmendes.net/n/${i}.md`, summary: "", date: d });
+  }
+  const out = buildLlmsTxt({ entries, env: LLMS_ENV });
+  assert.match(out, /# A Node on the Web/);
+  assert.match(out, /ai-train=yes, search=yes, ai-input=yes/);
+  assert.ok(out.indexOf("[New]") < out.indexOf("[Old]"), "newest article first");
+  assert.match(out, /- \[New\]\(https:\/\/rmendes\.net\/a\/new\.md\): s2/);
+  assert.match(out, /Showing 25 most recent of 30/);
+  const noteLines = out.split("\n").filter((l) => /\/n\/\d+\.md/.test(l));
+  assert.equal(noteLines.length, 25);
+  assert.match(out, /- \[About Ricardo Mendes\]\(https:\/\/rmendes\.net\/about\.md\)/);
+});
+
+test("buildLlmsTxt empty-state still emits header and More", () => {
+  const out = buildLlmsTxt({ entries: [], env: LLMS_ENV });
+  assert.match(out, /# A Node on the Web/);
+  assert.match(out, /## More/);
+});
