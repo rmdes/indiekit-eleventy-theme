@@ -5,7 +5,6 @@
 import { dataLog } from "../lib/log.js";
 
 import { cachedFetch } from "../lib/data-fetch.js";
-import { BskyAgent } from "@atproto/api";
 
 export default async function () {
   const handle = process.env.BLUESKY_HANDLE || "";
@@ -16,10 +15,7 @@ export default async function () {
   }
 
   try {
-    // Create agent and resolve handle to DID
-    const agent = new BskyAgent({ service: "https://bsky.social" });
-
-    // Get the author's feed using public API (no auth needed for public posts)
+    // Get the author's feed using the public API (no auth needed for public posts)
     const feedUrl = `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=${handle}&limit=10`;
 
     const response = await cachedFetch(feedUrl, {
