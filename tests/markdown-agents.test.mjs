@@ -1,7 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { stripMarkdown, noteExcerpt, sanitizeSummary } from "../lib/markdown-agents.mjs";
-import { buildPostMarkdown } from "../lib/markdown-agents.mjs";
+import {
+  stripMarkdown,
+  noteExcerpt,
+  sanitizeSummary,
+  buildPostMarkdown,
+  buildAboutMarkdown,
+  buildHomeMarkdown,
+  buildLlmsTxt,
+  generateMarkdownForAgents,
+} from "../lib/markdown-agents.mjs";
 
 test("stripMarkdown removes links, images, md tokens, and html", () => {
   assert.equal(stripMarkdown("__Replied to[a post](http://x)__: hello #tag"), "Replied to a post: hello tag");
@@ -24,6 +32,13 @@ test("sanitizeSummary collapses whitespace and newlines", () => {
   assert.equal(sanitizeSummary("a  b\nc"), "a b c");
 });
 
+test("sanitizeSummary truncates at the 160-char default with an ellipsis", () => {
+  const input = "word ".repeat(60); // 300 chars, well over 160
+  const out = sanitizeSummary(input);
+  assert.ok(out.length <= 161, `length ${out.length}`);
+  assert.ok(out.endsWith("…"));
+});
+
 const POST_ENV = {
   AUTHOR_NAME: "Ricardo Mendes", SITE_URL: "https://rmendes.net",
   MARKDOWN_AGENTS_AI_TRAIN: "yes", MARKDOWN_AGENTS_SEARCH: "yes", MARKDOWN_AGENTS_AI_INPUT: "yes",
@@ -42,7 +57,7 @@ test("buildPostMarkdown uses summary (not description) + AI-transparency fields"
   assert.match(out, /title: "The Brexit Bus"/);
   assert.match(out, /author: Ricardo Mendes/);
   assert.match(out, /url: https:\/\/rmendes\.net\/articles\/2026\/06\/06\/the-brexit-bus\//);
-  assert.match(out, /categories:\n {2}- Brexit\n {2}- Disinformation/);
+  assert.match(out, /categories:\n {2}- "Brexit"\n {2}- "Disinformation"/);
   assert.match(out, /description: "One day historians will look back\."/);
   assert.match(out, /ai_text_level: "1"/);
   assert.match(out, /ai_tools: "ChatGPT"/);
@@ -60,8 +75,6 @@ test("buildPostMarkdown gives a titleless note an excerpt heading", () => {
   assert.match(out, /type: notes/);
   assert.match(out, /# nous sommes la meilleur partie/);
 });
-
-import { buildAboutMarkdown, buildHomeMarkdown } from "../lib/markdown-agents.mjs";
 
 test("buildAboutMarkdown renders an h-card from env and links llms.txt", () => {
   const env = {
@@ -85,6 +98,19 @@ test("buildAboutMarkdown degrades gracefully with empty env (no 'undefined')", (
   assert.match(out, /# Blog Author/);
 });
 
+test("buildAboutMarkdown honors SITE_SOCIAL CSV-pipe list and skips malformed items", () => {
+  const env = {
+    SITE_URL: "https://rmendes.net", AUTHOR_NAME: "Ricardo Mendes",
+    // well-formed pair, a malformed item missing its URL, and another well-formed pair
+    SITE_SOCIAL: "GitHub|https://github.com/x|github,BrokenNoUrl,Mastodon|https://m.example/@x|mastodon",
+  };
+  let out;
+  assert.doesNotThrow(() => { out = buildAboutMarkdown(env); });
+  assert.match(out, /- \[GitHub\]\(https:\/\/github\.com\/x\)/);
+  assert.match(out, /- \[Mastodon\]\(https:\/\/m\.example\/@x\)/);
+  assert.doesNotMatch(out, /BrokenNoUrl/);
+});
+
 test("buildHomeMarkdown is thin: identity + section pointers + llms.txt", () => {
   const env = {
     SITE_URL: "https://rmendes.net", SITE_NAME: "A Node on the Web",
@@ -96,8 +122,6 @@ test("buildHomeMarkdown is thin: identity + section pointers + llms.txt", () => 
   assert.match(out, /- \[Articles\]\(https:\/\/rmendes\.net\/articles\/\)/);
   assert.match(out, /https:\/\/rmendes\.net\/llms\.txt/);
 });
-
-import { buildLlmsTxt } from "../lib/markdown-agents.mjs";
 
 const LLMS_ENV = {
   SITE_URL: "https://rmendes.net", SITE_NAME: "A Node on the Web",
@@ -131,8 +155,6 @@ test("buildLlmsTxt empty-state still emits header and More", () => {
   assert.match(out, /## More/);
 });
 
-import { generateMarkdownForAgents } from "../lib/markdown-agents.mjs";
-
 test("generateMarkdownForAgents writes .md per matching result + twins + llms.txt", () => {
   const writes = {};
   const io = {
@@ -161,4 +183,9 @@ test("generateMarkdownForAgents writes .md per matching result + twins + llms.tx
   const llms = writes["/out/llms.txt"];
   assert.ok(llms.includes("## Articles") && llms.includes("[Brexit]"));
   assert.ok(llms.includes("2016-01-27 — note body text"), "note entry = date — excerpt");
+
+  // Subset invariant (spec §8): only articles/notes get twins + llms entries
+  assert.ok(!writes["/out/bookmarks/2020/01/01/b/index.md"], "bookmarks must not get a .md");
+  assert.ok(!llms.includes("/bookmarks/"), "bookmarks must not appear in llms.txt");
+  assert.ok(!writes["/out/articles/index.md"], "paginated /articles/ index must not get a .md");
 });
