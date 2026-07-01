@@ -125,8 +125,14 @@
   <link rel="alternate" type="application/json" href="/feed.json" title="JSON Feed">
   <link rel="alternate" type="application/rss+xml" href="/updated.xml" title="Recently Updated — RSS Feed">
   <link rel="alternate" type="application/rss+xml" href="/digest/feed.xml" title="Weekly Digest — RSS Feed">
-  {% if site.markdownAgents.enabled and page.url and page.url.startsWith('/articles/') and page.url != '/articles/' %}
+  {% if site.markdownAgents.enabled and page.url %}
+    {% if (page.url.startsWith('/articles/') and page.url != '/articles/') or (page.url.startsWith('/notes/') and page.url != '/notes/') %}
   <link rel="alternate" type="text/markdown" href="{{ page.url | stripTrailingSlash }}.md" title="Markdown version">
+    {% elif page.url == '/about/' %}
+  <link rel="alternate" type="text/markdown" href="/about.md" title="Markdown version">
+    {% elif page.url == '/' %}
+  <link rel="alternate" type="text/markdown" href="/index.md" title="Markdown version">
+    {% endif %}
   {% endif %}
   {% if category and page.url and page.url.startsWith('/categories/') and page.url != '/categories/' %}
   <link rel="alternate" type="application/rss+xml" href="/categories/{{ category | slugify }}/feed.xml" title="{{ category }} — RSS Feed">
