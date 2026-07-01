@@ -18,6 +18,7 @@ import { pruneComposedPageOrphans } from "./lib/prune-composed-pages.mjs";
 import { composedPageSlugs } from "./lib/composed-pages.mjs";
 import { buildCategoryIndex, gateCategories, readCategoryConfig, slugifyCategory } from "./lib/categories.mjs";
 import { pruneCategoryOrphans } from "./lib/prune-category-pages.mjs";
+import registerTextFilters from "./lib/text-filters.mjs";
 import matter from "gray-matter";
 import { createHash, createHmac, randomUUID } from "crypto";
 import { createRequire } from "module";
@@ -364,17 +365,9 @@ export default function (eleventyConfig) {
   // Email obfuscation filter - converts email to HTML entities
   // Blocks ~95% of spam harvesters while remaining valid for microformat parsers
   // Usage: {{ email | obfuscateEmail }} or {{ email | obfuscateEmail("href") }}
-  eleventyConfig.addFilter("obfuscateEmail", (email, mode = "display") => {
-    if (!email) return "";
-    // Convert each character to HTML decimal entity
-    const encoded = [...email].map(char => `&#${char.charCodeAt(0)};`).join("");
-    if (mode === "href") {
-      // For mailto: links, also encode the "mailto:" prefix
-      const mailto = [...("mailto:")].map(char => `&#${char.charCodeAt(0)};`).join("");
-      return mailto + encoded;
-    }
-    return encoded;
-  });
+  // Text filters (truncate, plainText, ogDescription, extractFirstImage,
+  // obfuscateEmail) — extracted to lib/text-filters.mjs (unit-tested).
+  registerTextFilters(eleventyConfig);
 
   // Alias dateToRfc822 (plugin provides dateToRfc2822)
   eleventyConfig.addFilter("dateToRfc822", (date) => {
@@ -805,58 +798,8 @@ export default function (eleventyConfig) {
     return html;
   });
 
-  // Truncate filter
-  eleventyConfig.addFilter("truncate", (str, len = 200) => {
-    if (!str) return "";
-    if (str.length <= len) return str;
-    return str.slice(0, len).trim() + "...";
-  });
-
-  // Strip HTML tags and decode common entities → clean plain text.
-  // Shared by `plainText` (full) and `ogDescription` (truncated excerpt).
-  // Decoding matters: a bare `striptags` leaves entities like &quot; encoded,
-  // and Nunjucks auto-escaping then double-encodes them (&amp;quot; → literal
-  // &quot;). Decoding here yields real chars that escape cleanly on output.
-  const toPlainText = (content) => {
-    if (!content) return "";
-    let text = content.replace(/<[^>]+>/g, ' ');
-    text = text.replace(/&amp;/g, '&')
-               .replace(/&lt;/g, '<')
-               .replace(/&gt;/g, '>')
-               .replace(/&quot;/g, '"')
-               .replace(/&#39;/g, "'")
-               .replace(/&nbsp;/g, ' ');
-    return text.replace(/\s+/g, ' ').trim();
-  };
-
-  // Plain-text content (HTML stripped, entities decoded), NOT truncated.
-  // Use for excerpts/feeds that must not double-encode entities.
-  eleventyConfig.addFilter("plainText", (content) => toPlainText(content));
-
-  // Clean excerpt for OpenGraph / cards - plain text, truncated.
-  eleventyConfig.addFilter("ogDescription", (content, len = 200) => {
-    let text = toPlainText(content);
-    if (text.length > len) {
-      text = text.slice(0, len).trim() + "...";
-    }
-    return text;
-  });
-
-  // Extract first image from content for OpenGraph fallback
-  eleventyConfig.addFilter("extractFirstImage", (content) => {
-    if (!content) return null;
-    // Match all <img> tags, skip hidden ones and data URIs
-    const imgRegex = /<img[^>]*?\ssrc=["']([^"']+)["'][^>]*>/gi;
-    let match;
-    while ((match = imgRegex.exec(content)) !== null) {
-      const fullTag = match[0];
-      const src = match[1];
-      if (src.startsWith("data:")) continue;
-      if (/\bhidden\b/.test(fullTag)) continue;
-      return src;
-    }
-    return null;
-  });
+  // Text filters (truncate/plainText/ogDescription/extractFirstImage) live in
+  // lib/text-filters.mjs and are registered above via registerTextFilters().
 
   // Head filter for arrays
   eleventyConfig.addFilter("head", (array, n) => {
