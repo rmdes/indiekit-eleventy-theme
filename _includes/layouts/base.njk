@@ -518,8 +518,9 @@
   <script type="module" src="/js/table-saw.js"></script>
   {# Client-side filtering for archive pages #}
   <script type="module" src="/js/filter-container.js"></script>
-  {# Client-side webmention fetcher - supplements build-time cache with real-time data #}
-  <script src="/js/webmentions.js?v={{ '/js/webmentions.js' | hash }}" defer></script>
+  {# Client-side webmention fetcher - supplements build-time cache with real-time data.
+     ESM entry (imports webmentions/core|render|reply.js); type=module is deferred by default. #}
+  <script type="module" src="/js/webmentions.js?v={{ '/js/webmentions.js' | hash }}"></script>
   {# Admin auth detection - shows dashboard link + FAB when logged in #}
   <script src="/js/admin.js?v={{ '/js/admin.js' | hash }}" defer></script>
   {# Save for Later buttons — active when logged in #}
