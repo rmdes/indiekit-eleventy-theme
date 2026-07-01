@@ -130,3 +130,35 @@ test("buildLlmsTxt empty-state still emits header and More", () => {
   assert.match(out, /# A Node on the Web/);
   assert.match(out, /## More/);
 });
+
+import { generateMarkdownForAgents } from "../lib/markdown-agents.mjs";
+
+test("generateMarkdownForAgents writes .md per matching result + twins + llms.txt", () => {
+  const writes = {};
+  const io = {
+    readFileSync: (p) => {
+      if (p.includes("brexit")) return "---\ntitle: Brexit\ndate: 2026-06-06\nsummary: S\n---\nBody";
+      if (p.includes("note1")) return "---\ndate: 2016-01-27\n---\nnote body text";
+      throw new Error("nofile");
+    },
+    writeFileSync: (p, c) => { writes[p.replace(/\\/g, "/")] = c; },
+    mkdirSync: () => {},
+  };
+  const results = [
+    { url: "/articles/2026/06/06/brexit/", inputPath: "/x/content/articles/2026-06-06-brexit.md", outputPath: "/out/articles/2026/06/06/brexit/index.html" },
+    { url: "/notes/2016/01/27/note1/", inputPath: "/x/content/notes/2016-01-27-note1.md", outputPath: "/out/notes/2016/01/27/note1/index.html" },
+    { url: "/articles/", inputPath: "/x/articles.njk", outputPath: "/out/articles/index.html" },
+    { url: "/bookmarks/2020/01/01/b/", inputPath: "/x/content/bookmarks/b.md", outputPath: "/out/bookmarks/2020/01/01/b/index.html" },
+  ];
+  const env = { SITE_URL: "https://rmendes.net", AUTHOR_NAME: "RM" };
+  const res = generateMarkdownForAgents({ results, outputDir: "/out", env, io });
+
+  assert.equal(res.mdCount, 2, "only article + note, not index/bookmark");
+  assert.ok(writes["/out/articles/2026/06/06/brexit/index.md"]);
+  assert.ok(writes["/out/notes/2016/01/27/note1/index.md"]);
+  assert.ok(writes["/out/about/index.md"]);
+  assert.ok(writes["/out/index.md"]);
+  const llms = writes["/out/llms.txt"];
+  assert.ok(llms.includes("## Articles") && llms.includes("[Brexit]"));
+  assert.ok(llms.includes("2016-01-27 — note body text"), "note entry = date — excerpt");
+});
