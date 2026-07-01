@@ -3,6 +3,7 @@
  * Fetches from Indiekit's endpoint-youtube public API
  * Supports single or multiple channels
  */
+import { dataLog } from "../lib/log.js";
 
 import { cachedFetch } from "../lib/data-fetch.js";
 
@@ -14,15 +15,15 @@ const INDIEKIT_URL = process.env.SITE_URL || "https://example.com";
 async function fetchFromIndiekit(endpoint) {
   try {
     const url = `${INDIEKIT_URL}/youtubeapi/api/${endpoint}`;
-    console.log(`[youtubeChannel] Fetching from Indiekit: ${url}`);
+    dataLog(`[youtubeChannel] Fetching from Indiekit: ${url}`);
     const data = await cachedFetch(url, {
       duration: "5m",
       type: "json",
     });
-    console.log(`[youtubeChannel] Indiekit ${endpoint} success`);
+    dataLog(`[youtubeChannel] Indiekit ${endpoint} success`);
     return data;
   } catch (error) {
-    console.log(
+    dataLog(
       `[youtubeChannel] Indiekit API unavailable for ${endpoint}: ${error.message}`
     );
     return null;
@@ -96,7 +97,7 @@ function formatVideo(video) {
 
 export default async function () {
   try {
-    console.log("[youtubeChannel] Fetching YouTube data...");
+    dataLog("[youtubeChannel] Fetching YouTube data...");
 
     // Fetch all data from Indiekit API
     const [channelData, videosData, liveData] = await Promise.all([
@@ -112,7 +113,7 @@ export default async function () {
       videosData?.videos?.length;
 
     if (!hasData) {
-      console.log("[youtubeChannel] No data available from Indiekit");
+      dataLog("[youtubeChannel] No data available from Indiekit");
       return {
         channel: null,
         channels: [],
@@ -125,7 +126,7 @@ export default async function () {
       };
     }
 
-    console.log("[youtubeChannel] Using Indiekit API data");
+    dataLog("[youtubeChannel] Using Indiekit API data");
 
     // Determine if multi-channel mode
     const isMultiChannel = !!(channelData?.channels && channelData.channels.length > 1);

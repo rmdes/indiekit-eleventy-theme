@@ -5,6 +5,7 @@
  * list is discarded after parsing, keeping build memory low.
  * The starred page fetches all data client-side via Alpine.js.
  */
+import { dataLog } from "../lib/log.js";
 
 import { cachedFetch } from "../lib/data-fetch.js";
 
@@ -23,7 +24,7 @@ export default async function () {
       buildDate: new Date().toISOString(),
     };
   } catch (error) {
-    console.log(`[githubStarred] Could not fetch starred count: ${error.message}`);
+    dataLog(`[githubStarred] Could not fetch starred count: ${error.message}`);
     return {
       totalCount: 0,
       buildDate: new Date().toISOString(),

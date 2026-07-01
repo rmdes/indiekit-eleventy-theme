@@ -1,10 +1,11 @@
+import { dataLog } from "../lib/log.js";
 import { cachedFetch } from "../lib/data-fetch.js";
 
 const INDIEKIT_URL = process.env.INDIEKIT_URL || process.env.SITE_URL || "";
 
 export default async function () {
   if (!INDIEKIT_URL) {
-    console.log("[conversationMentions] SITE_URL/INDIEKIT_URL unset — skipping");
+    dataLog("[conversationMentions] SITE_URL/INDIEKIT_URL unset — skipping");
     return [];
   }
   try {
@@ -14,7 +15,7 @@ export default async function () {
     );
     return data.children || [];
   } catch (e) {
-    console.log(`[conversationMentions] API unavailable: ${e.message}`);
+    dataLog(`[conversationMentions] API unavailable: ${e.message}`);
     return [];
   }
 }

@@ -2,6 +2,7 @@
  * Bluesky Feed Data
  * Fetches recent posts from Bluesky using the AT Protocol API
  */
+import { dataLog } from "../lib/log.js";
 
 import { cachedFetch } from "../lib/data-fetch.js";
 import { BskyAgent } from "@atproto/api";
@@ -10,7 +11,7 @@ export default async function () {
   const handle = process.env.BLUESKY_HANDLE || "";
 
   if (!handle) {
-    console.log("[blueskyFeed] BLUESKY_HANDLE unset — skipping");
+    dataLog("[blueskyFeed] BLUESKY_HANDLE unset — skipping");
     return [];
   }
 
@@ -32,7 +33,7 @@ export default async function () {
     });
 
     if (!response.feed) {
-      console.log("No Bluesky feed found for handle:", handle);
+      dataLog("No Bluesky feed found for handle:", handle);
       return [];
     }
 

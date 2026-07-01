@@ -2,6 +2,7 @@
  * Last.fm Activity Data
  * Fetches from Indiekit's endpoint-lastfm public API
  */
+import { dataLog } from "../lib/log.js";
 
 import { cachedFetch } from "../lib/data-fetch.js";
 
@@ -14,15 +15,15 @@ const LASTFM_USERNAME = process.env.LASTFM_USERNAME || "";
 async function fetchFromIndiekit(endpoint) {
   try {
     const url = `${INDIEKIT_URL}/lastfmapi/api/${endpoint}`;
-    console.log(`[lastfmActivity] Fetching from Indiekit: ${url}`);
+    dataLog(`[lastfmActivity] Fetching from Indiekit: ${url}`);
     const data = await cachedFetch(url, {
       duration: "15m",
       type: "json",
     });
-    console.log(`[lastfmActivity] Indiekit ${endpoint} success`);
+    dataLog(`[lastfmActivity] Indiekit ${endpoint} success`);
     return data;
   } catch (error) {
-    console.log(
+    dataLog(
       `[lastfmActivity] Indiekit API unavailable for ${endpoint}: ${error.message}`
     );
     return null;
@@ -31,7 +32,7 @@ async function fetchFromIndiekit(endpoint) {
 
 export default async function () {
   try {
-    console.log("[lastfmActivity] Fetching Last.fm data...");
+    dataLog("[lastfmActivity] Fetching Last.fm data...");
 
     // Fetch all data from Indiekit API
     const [nowPlaying, scrobbles, loved, stats] = await Promise.all([
@@ -45,7 +46,7 @@ export default async function () {
     const hasData = nowPlaying || scrobbles?.scrobbles?.length || stats?.summary;
 
     if (!hasData) {
-      console.log("[lastfmActivity] No data available from Indiekit");
+      dataLog("[lastfmActivity] No data available from Indiekit");
       return {
         nowPlaying: null,
         scrobbles: [],
@@ -57,7 +58,7 @@ export default async function () {
       };
     }
 
-    console.log("[lastfmActivity] Using Indiekit API data");
+    dataLog("[lastfmActivity] Using Indiekit API data");
 
     return {
       nowPlaying: nowPlaying || null,

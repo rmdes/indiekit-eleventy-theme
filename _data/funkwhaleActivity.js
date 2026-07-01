@@ -2,6 +2,7 @@
  * Funkwhale Activity Data
  * Fetches from Indiekit's endpoint-funkwhale public API
  */
+import { dataLog } from "../lib/log.js";
 
 import { cachedFetch } from "../lib/data-fetch.js";
 
@@ -14,15 +15,15 @@ const FUNKWHALE_INSTANCE = process.env.FUNKWHALE_INSTANCE || "";
 async function fetchFromIndiekit(endpoint) {
   try {
     const url = `${INDIEKIT_URL}/funkwhaleapi/api/${endpoint}`;
-    console.log(`[funkwhaleActivity] Fetching from Indiekit: ${url}`);
+    dataLog(`[funkwhaleActivity] Fetching from Indiekit: ${url}`);
     const data = await cachedFetch(url, {
       duration: "15m",
       type: "json",
     });
-    console.log(`[funkwhaleActivity] Indiekit ${endpoint} success`);
+    dataLog(`[funkwhaleActivity] Indiekit ${endpoint} success`);
     return data;
   } catch (error) {
-    console.log(
+    dataLog(
       `[funkwhaleActivity] Indiekit API unavailable for ${endpoint}: ${error.message}`
     );
     return null;
@@ -52,7 +53,7 @@ function formatDuration(seconds) {
 
 export default async function () {
   try {
-    console.log("[funkwhaleActivity] Fetching Funkwhale data...");
+    dataLog("[funkwhaleActivity] Fetching Funkwhale data...");
 
     // Fetch all data from Indiekit API
     const [nowPlaying, listenings, favorites, stats] = await Promise.all([
@@ -66,7 +67,7 @@ export default async function () {
     const hasData = nowPlaying || listenings?.listenings?.length || stats?.summary;
 
     if (!hasData) {
-      console.log("[funkwhaleActivity] No data available from Indiekit");
+      dataLog("[funkwhaleActivity] No data available from Indiekit");
       return {
         nowPlaying: null,
         listenings: [],
@@ -77,7 +78,7 @@ export default async function () {
       };
     }
 
-    console.log("[funkwhaleActivity] Using Indiekit API data");
+    dataLog("[funkwhaleActivity] Using Indiekit API data");
 
     // Format stats with human-readable durations
     let formattedStats = null;

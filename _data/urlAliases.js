@@ -8,6 +8,7 @@
  * - redirects.map (e.g., micro.blog: /YYYY/MM/DD/slug.html → /notes/...)
  * - old-blog-redirects.map (e.g., Known/WP: /YYYY/slug → /content/...)
  */
+import { dataLog } from "../lib/log.js";
 
 import { readFileSync, existsSync } from "fs";
 import { resolve, dirname } from "path";
@@ -24,7 +25,7 @@ function parseRedirectMap(filePath) {
   const aliases = {};
 
   if (!existsSync(filePath)) {
-    console.log(`[urlAliases] File not found: ${filePath}`);
+    dataLog(`[urlAliases] File not found: ${filePath}`);
     return aliases;
   }
 
@@ -83,11 +84,11 @@ const pkgRoot = resolve(__dirname, "../..");
 function findFile(candidates) {
   for (const path of candidates) {
     if (existsSync(path)) {
-      console.log(`[urlAliases] Found: ${path}`);
+      dataLog(`[urlAliases] Found: ${path}`);
       return path;
     }
   }
-  console.log(`[urlAliases] No file found in: ${candidates.join(", ")}`);
+  dataLog(`[urlAliases] No file found in: ${candidates.join(", ")}`);
   return null;
 }
 
@@ -110,7 +111,7 @@ const allAliases = mergeAliases(microblogAliases, knownAliases);
 // Log summary
 const totalMappings = Object.keys(allAliases).length;
 const totalOldUrls = Object.values(allAliases).reduce((sum, urls) => sum + urls.length, 0);
-console.log(`[urlAliases] Loaded ${totalMappings} URL mappings with ${totalOldUrls} old URLs`);
+dataLog(`[urlAliases] Loaded ${totalMappings} URL mappings with ${totalOldUrls} old URLs`);
 
 export default {
   // The merged alias map: new URL → [old URLs]

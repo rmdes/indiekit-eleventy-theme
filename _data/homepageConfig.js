@@ -9,6 +9,7 @@
  * content/ symlink). Eleventy watches this file; on change, a rebuild
  * picks up the new composition without a Docker rebuild.
  */
+import { dataLog } from "../lib/log.js";
 
 import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
@@ -22,7 +23,7 @@ export default function () {
     const configPath = resolve(__dirname, "..", "content", "_data", "homepage.json");
     const raw = readFileSync(configPath, "utf8");
     const config = JSON.parse(raw);
-    console.log("[homepageConfig] Loaded plugin config from _data/homepage.json");
+    dataLog("[homepageConfig] Loaded plugin config from _data/homepage.json");
     return config;
   } catch (error) {
     if (error.code !== "ENOENT") {

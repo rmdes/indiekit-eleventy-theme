@@ -2,6 +2,7 @@
  * Mastodon Feed Data
  * Fetches recent posts from Mastodon using the public API
  */
+import { dataLog } from "../lib/log.js";
 
 import { cachedFetch } from "../lib/data-fetch.js";
 
@@ -24,7 +25,7 @@ export default async function () {
     });
 
     if (!account || !account.id) {
-      console.log("Mastodon account not found:", username);
+      dataLog("Mastodon account not found:", username);
       return [];
     }
 
@@ -42,7 +43,7 @@ export default async function () {
     });
 
     if (!statuses || !Array.isArray(statuses)) {
-      console.log("No Mastodon statuses found for:", username);
+      dataLog("No Mastodon statuses found for:", username);
       return [];
     }
 

@@ -2,6 +2,7 @@
  * News/RSS Activity Data
  * Fetches from Indiekit's endpoint-rss public API
  */
+import { dataLog } from "../lib/log.js";
 
 import { cachedFetch } from "../lib/data-fetch.js";
 
@@ -13,15 +14,15 @@ const INDIEKIT_URL = process.env.SITE_URL || "https://example.com";
 async function fetchFromIndiekit(endpoint) {
   try {
     const url = `${INDIEKIT_URL}/rssapi/api/${endpoint}`;
-    console.log(`[newsActivity] Fetching from Indiekit: ${url}`);
+    dataLog(`[newsActivity] Fetching from Indiekit: ${url}`);
     const data = await cachedFetch(url, {
       duration: "15m",
       type: "json",
     });
-    console.log(`[newsActivity] Indiekit ${endpoint} success`);
+    dataLog(`[newsActivity] Indiekit ${endpoint} success`);
     return data;
   } catch (error) {
-    console.log(
+    dataLog(
       `[newsActivity] Indiekit API unavailable for ${endpoint}: ${error.message}`
     );
     return null;
@@ -30,7 +31,7 @@ async function fetchFromIndiekit(endpoint) {
 
 export default async function () {
   try {
-    console.log("[newsActivity] Fetching RSS feed data...");
+    dataLog("[newsActivity] Fetching RSS feed data...");
 
     // Fetch all data from Indiekit API
     const [itemsRes, feedsRes, statusRes] = await Promise.all([
@@ -43,7 +44,7 @@ export default async function () {
     const hasData = itemsRes?.items?.length || feedsRes?.feeds?.length;
 
     if (!hasData) {
-      console.log("[newsActivity] No data available from Indiekit");
+      dataLog("[newsActivity] No data available from Indiekit");
       return {
         items: [],
         feeds: [],
@@ -53,7 +54,7 @@ export default async function () {
       };
     }
 
-    console.log(
+    dataLog(
       `[newsActivity] Got ${itemsRes?.items?.length || 0} items from ${feedsRes?.feeds?.length || 0} feeds`
     );
 

@@ -3,6 +3,7 @@
  * Fetches from Indiekit's endpoint-github public API
  * Falls back to direct GitHub API if Indiekit is unavailable
  */
+import { dataLog } from "../lib/log.js";
 
 import { cachedFetch } from "../lib/data-fetch.js";
 
@@ -18,15 +19,15 @@ const FALLBACK_FEATURED_REPOS = process.env.GITHUB_FEATURED_REPOS?.split(",").fi
 async function fetchFromIndiekit(endpoint) {
   try {
     const url = `${INDIEKIT_URL}/githubapi/api/${endpoint}`;
-    console.log(`[githubActivity] Fetching from Indiekit: ${url}`);
+    dataLog(`[githubActivity] Fetching from Indiekit: ${url}`);
     const data = await cachedFetch(url, {
       duration: "15m",
       type: "json",
     });
-    console.log(`[githubActivity] Indiekit ${endpoint} success`);
+    dataLog(`[githubActivity] Indiekit ${endpoint} success`);
     return data;
   } catch (error) {
-    console.log(
+    dataLog(
       `[githubActivity] Indiekit API unavailable for ${endpoint}: ${error.message}`
     );
     return null;
@@ -147,7 +148,7 @@ async function fetchFeaturedFromGitHub(repoList) {
           date: c.commit.author.date,
         }));
       } catch (e) {
-        console.log(`[githubActivity] Could not fetch commits for ${repoFullName}`);
+        dataLog(`[githubActivity] Could not fetch commits for ${repoFullName}`);
       }
 
       featured.push({
@@ -162,7 +163,7 @@ async function fetchFeaturedFromGitHub(repoList) {
         commits,
       });
     } catch (error) {
-      console.log(`[githubActivity] Could not fetch ${repoFullName}: ${error.message}`);
+      dataLog(`[githubActivity] Could not fetch ${repoFullName}: ${error.message}`);
     }
   }
 
@@ -209,14 +210,14 @@ async function fetchCommitsFromRepos(username, limit = 10) {
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .slice(0, limit);
   } catch (error) {
-    console.log(`[githubActivity] Could not fetch commits from repos: ${error.message}`);
+    dataLog(`[githubActivity] Could not fetch commits from repos: ${error.message}`);
     return [];
   }
 }
 
 export default async function () {
   if (!GITHUB_USERNAME) {
-    console.log("[githubActivity] GITHUB_USERNAME unset — skipping");
+    dataLog("[githubActivity] GITHUB_USERNAME unset — skipping");
     return {
       stars: [],
       commits: [],
@@ -227,7 +228,7 @@ export default async function () {
   }
 
   try {
-    console.log("[githubActivity] Fetching GitHub data...");
+    dataLog("[githubActivity] Fetching GitHub data...");
 
     // Try Indiekit public API first
     const [indiekitStars, indiekitCommits, indiekitContributions, indiekitActivity, indiekitFeatured] =
@@ -246,7 +247,7 @@ export default async function () {
       indiekitFeatured?.featured;
 
     if (hasIndiekitData) {
-      console.log("[githubActivity] Using Indiekit API data");
+      dataLog("[githubActivity] Using Indiekit API data");
       return {
         stars: indiekitStars?.stars || [],
         commits: indiekitCommits?.commits || [],
@@ -258,7 +259,7 @@ export default async function () {
     }
 
     // Fallback to direct GitHub API
-    console.log("[githubActivity] Falling back to GitHub API");
+    dataLog("[githubActivity] Falling back to GitHub API");
 
     const [events, starred, featured] = await Promise.all([
       fetchFromGitHub(`/users/${GITHUB_USERNAME}/events/public?per_page=50`),
@@ -271,7 +272,7 @@ export default async function () {
 
     // If events API didn't have commits, fetch directly from repos
     if (commits.length === 0 && GITHUB_USERNAME) {
-      console.log("[githubActivity] Events API returned no commits, fetching from repos");
+      dataLog("[githubActivity] Events API returned no commits, fetching from repos");
       commits = await fetchCommitsFromRepos(GITHUB_USERNAME, 10);
     }
 

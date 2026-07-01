@@ -12,6 +12,7 @@
  * to the templates. Templates trust the shape; broken cv.json should never
  * crash the build.
  */
+import { dataLog } from "../lib/log.js";
 
 import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
@@ -77,7 +78,7 @@ export default function () {
   if (raw == null) return { ...EMPTY };
   try {
     const data = JSON.parse(raw);
-    console.log("[cv] Loaded CV data from plugin");
+    dataLog("[cv] Loaded CV data from plugin");
     return normalize(data);
   } catch {
     return { ...EMPTY };

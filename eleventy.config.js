@@ -203,6 +203,8 @@ export default function (eleventyConfig) {
   // Per-build block-data memo (cleared each build like the other caches).
   // Reserved for Phase 2+ block-data memoization — Phase 1 only declares and
   // clears it to establish the pattern; it is intentionally unused for now.
+  // ponytail: speculative scaffolding, read by nothing — delete if Phase 2
+  // block-data memoization isn't implemented by the next perf pass.
   const _blockDataCache = new Map();
   eleventyConfig.on("eleventy.before", () => { _blockDataCache.clear(); });
 
