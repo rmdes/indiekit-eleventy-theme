@@ -171,6 +171,8 @@ test("generateMarkdownForAgents writes .md per matching result + twins + llms.tx
     { url: "/notes/2016/01/27/note1/", inputPath: "/x/content/notes/2016-01-27-note1.md", outputPath: "/out/notes/2016/01/27/note1/index.html" },
     { url: "/articles/", inputPath: "/x/articles.njk", outputPath: "/out/articles/index.html" },
     { url: "/bookmarks/2020/01/01/b/", inputPath: "/x/content/bookmarks/b.md", outputPath: "/out/bookmarks/2020/01/01/b/index.html" },
+    { url: "/about/", inputPath: "/x/about.njk", outputPath: "/out/about/index.html" },
+    { url: "/", inputPath: "/x/index.njk", outputPath: "/out/index.html" },
   ];
   const env = { SITE_URL: "https://rmendes.net", AUTHOR_NAME: "RM" };
   const res = generateMarkdownForAgents({ results, outputDir: "/out", env, io });
@@ -188,4 +190,26 @@ test("generateMarkdownForAgents writes .md per matching result + twins + llms.tx
   assert.ok(!writes["/out/bookmarks/2020/01/01/b/index.md"], "bookmarks must not get a .md");
   assert.ok(!llms.includes("/bookmarks/"), "bookmarks must not appear in llms.txt");
   assert.ok(!writes["/out/articles/index.md"], "paginated /articles/ index must not get a .md");
+});
+
+test("generateMarkdownForAgents skips About twin + llms About link when no /about/ page renders", () => {
+  const writes = {};
+  const io = {
+    readFileSync: () => { throw new Error("nofile"); },
+    writeFileSync: (p, c) => { writes[p.replace(/\\/g, "/")] = c; },
+    mkdirSync: () => {},
+  };
+  // Site with a homepage but NO /about/ page (e.g. chardonsbleus).
+  const results = [{ url: "/", inputPath: "/x/index.njk", outputPath: "/out/index.html" }];
+  generateMarkdownForAgents({ results, outputDir: "/out", env: { SITE_URL: "https://c.org", AUTHOR_NAME: "C" }, io });
+  assert.ok(!writes["/out/about/index.md"], "no orphan About twin without an /about/ page");
+  assert.ok(writes["/out/index.md"], "home twin still written (/ exists)");
+  assert.ok(!writes["/out/llms.txt"].includes("/about.md"), "llms.txt omits the About link");
+});
+
+test("buildLlmsTxt omits the About link when hasAbout=false", () => {
+  const out = buildLlmsTxt({ entries: [], env: LLMS_ENV, hasAbout: false });
+  assert.doesNotMatch(out, /\/about\.md/);
+  assert.match(out, /## More/);
+  assert.match(out, /\/articles\//);
 });
