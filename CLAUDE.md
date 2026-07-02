@@ -93,6 +93,23 @@ build layer doesn't affect feed output. The earlier debt-1b `hasImages` gate (wh
 parse but never optimized content images, because their URLs weren't build-resolvable) was
 removed; see `documentation-central/plans/2026-06-14-image-pipeline-refactor-plan.md`.
 
+## Markdown for Agents (llms.txt + `.md` twins)
+
+Clean-Markdown surface for AI agents (GEO/AEO). Full reference: `documentation-central/docs/2026-07-01-agent-readable-stack.md`.
+
+**What & where:**
+- Logic lives in `lib/markdown-agents.mjs` (pure builders + an `io`-injected orchestrator; unit-tested in `tests/markdown-agents.test.mjs`), called once from the `eleventy.after` hook in `eleventy.config.js`.
+- On the first full build it writes: `.md` twins beside each `index.html` for **articles + notes** (parsed from `content/**` source), **synthesized** `/about/index.md` + `/index.md` (built from `AUTHOR_*`/`SITE_*` env, not from source), and a curated `/llms.txt`.
+- `_includes/layouts/base.njk` advertises each twin via `<link rel="alternate" type="text/markdown">` (gated on `site.markdownAgents.enabled`).
+- nginx serving (`.md` extension + `Accept: text/markdown`) and the robots `Content-Signal` live in `indiekit-cloudron`, not here.
+
+**CRITICAL — do not regress these:**
+- The `eleventy.after` block is gated on a **one-shot module flag (`markdownAgentsDone`), NOT `!incremental`**. Prod runs `--watch --incremental`, so `incremental` is `true` even on the watcher's first full build — a `!incremental` gate would never fire. Any new "run once per full build" post-processing must use this pattern (see `pagefindDone`).
+- **Synthesized twins (about/home) are gated on the page existing in Eleventy `results`** (`results.some(r => r.url === "/about/")`). A site with no `/about/` page must NOT get an orphan `/about/index.md`, or nginx returns **403** on `/about/`. (Article/note twins are gated on a real source post existing.)
+- The module is **neutral** — no personal data; all identity comes from the injected `env`.
+
+**Extend to a new post type:** widen `URL_RE`/`SRC_RE`/`ENABLED_TYPES` here AND the nginx regex + `Accept` negotiation in `indiekit-cloudron` (all three nginx files). Interaction types (likes/reposts/replies/bookmarks) are intentionally excluded (they point at others' content).
+
 ## Architecture
 
 ### Multi-Site / Site-Config Architecture
