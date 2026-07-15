@@ -48,7 +48,7 @@ test("buildPostMarkdown uses summary (not description) + AI-transparency fields"
   const fm = {
     title: "The Brexit Bus", date: "2026-06-06T11:15:32.045+01:00",
     summary: "One day historians will look back.", category: ["Brexit", "Disinformation"],
-    aiTextLevel: "1", aiTools: "ChatGPT", aiDescription: "Editorial assistance",
+    aiTextLevel: "1", aiCodeLevel: "0", aiTools: "ChatGPT", aiDescription: "Editorial assistance",
   };
   const out = buildPostMarkdown({
     fm, body: "Body text here.", type: "articles",
@@ -60,6 +60,7 @@ test("buildPostMarkdown uses summary (not description) + AI-transparency fields"
   assert.match(out, /categories:\n {2}- "Brexit"\n {2}- "Disinformation"/);
   assert.match(out, /description: "One day historians will look back\."/);
   assert.match(out, /ai_text_level: "1"/);
+  assert.match(out, /ai_code_level: "0"/);
   assert.match(out, /ai_tools: "ChatGPT"/);
   assert.match(out, /ai_description: "Editorial assistance"/);
   assert.match(out, /content_signal: ai-train=yes, search=yes, ai-input=yes/);
