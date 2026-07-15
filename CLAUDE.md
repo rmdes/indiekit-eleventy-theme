@@ -110,6 +110,16 @@ Clean-Markdown surface for AI agents (GEO/AEO). Full reference: `documentation-c
 
 **Extend to a new post type:** widen `URL_RE`/`SRC_RE`/`ENABLED_TYPES` here AND the nginx regex + `Accept` negotiation in `indiekit-cloudron` (all three nginx files). Interaction types (likes/reposts/replies/bookmarks) are intentionally excluded (they point at others' content).
 
+## AI Transparency (authorship disclosure — distinct from Markdown for Agents)
+
+Per-post disclosure of **how much AI helped make a post**. Full reference: `documentation-central/docs/2026-07-15-ai-transparency.md`.
+
+- **Two AI axes — DO NOT conflate:** `content_signal` (`ai-train`/`search`/`ai-input`) = "may AI *consume* this?" (crawler permission / GEO — see the Markdown-for-Agents section above). `aiTextLevel`/`aiCodeLevel`/`aiTools`/`aiDescription` = "how much AI helped *make* this?" (authorship transparency). Independent — a post can be `ai-train=yes` *and* `aiTextLevel=0`.
+- **Per-post fields** (theme reads BOTH camelCase and underscore): `aiTextLevel` (0–3: None/Editorial/Co-drafting/AI-generated), `aiCodeLevel` (0–2: Human/AI-assisted/AI-generated), `aiTools`, `aiDescription`.
+- **Renders in:** `_includes/layouts/post.njk` (disclosure badge + schema.org JSON-LD `usageInfo`), `_includes/layouts/page.njk` (`/ai` post-graph), `_includes/components/widgets/ai-usage.njk` + `_includes/components/sections/ai-usage.njk`, and the `.md` twins (`lib/markdown-agents.mjs` `buildPostMarkdown` emits `ai_text_level`/`ai_code_level`/`ai_tools`/`ai_description`). ALL gated on `site.features.aiTransparency`.
+- **Config:** `aiTransparency` flag + `aiTransparencyUrl` (default `/ai`) — owned by `@rmdes/indiekit-endpoint-site-config`. The `/ai` policy page is per-site content (`content/pages/ai.md`).
+- **If you add/rename an AI-disclosure field, update ALL surfaces in sync:** the `post.njk` badge AND its JSON-LD `usageInfo`, the `ai-usage` widget/section, the `page.njk` graph, AND `buildPostMarkdown`. (The `ai_code_level` twin field was missing until 2026-07-15 precisely because these drifted — keep them aligned.)
+
 ## Architecture
 
 ### Multi-Site / Site-Config Architecture
