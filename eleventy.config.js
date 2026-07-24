@@ -202,14 +202,6 @@ export default function (eleventyConfig) {
   // engine (all filters/globals available).
   eleventyConfig.addPlugin(EleventyRenderPlugin, { accessGlobalData: true });
 
-  // Per-build block-data memo (cleared each build like the other caches).
-  // Reserved for Phase 2+ block-data memoization — Phase 1 only declares and
-  // clears it to establish the pattern; it is intentionally unused for now.
-  // ponytail: speculative scaffolding, read by nothing — delete if Phase 2
-  // block-data memoization isn't implemented by the next perf pass.
-  const _blockDataCache = new Map();
-  eleventyConfig.on("eleventy.before", () => { _blockDataCache.clear(); });
-
   // Recursive composition renderer. Runs each block's Nunjucks partial through
   // RenderPlugin's `renderFile` in the same engine with all filters/globals.
   // Failure paths log loudly with the `[composition]` prefix — the htmlmin
@@ -217,7 +209,7 @@ export default function (eleventyConfig) {
   // dev-build-only signal. (Per-block render errors log from
   // lib/render-composition.mjs with the `[render-composition]` prefix.)
   // Perf note: RenderPlugin recompiles partials on every renderFile call;
-  // _blockDataCache may grow into that memo role in later phases.
+  // a per-build block-data memo is a future lever if this shows up in profiles.
   eleventyConfig.addAsyncShortcode("renderCompositionTree", async function (treeJson) {
     let tree;
     try { tree = typeof treeJson === "string" ? JSON.parse(treeJson) : treeJson; }
