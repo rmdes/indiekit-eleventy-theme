@@ -1,0 +1,43 @@
+{#
+  Embed Section — media embed for an allowlisted provider URL
+  Rendered by the composition renderer. All URL parsing/allowlisting lives in
+  lib/embed-providers.mjs (embedInfo filter) — this template stays thin.
+  Autoescape stays ON: no | safe anywhere here (config is never trusted).
+#}
+
+{% set sectionConfig = section.config or {} %}
+{% set embed = sectionConfig.url | embedInfo %}
+
+<section class="mb-8 sm:mb-12">
+  {% if sectionConfig.title %}
+  <h2 class="text-xl sm:text-2xl font-bold text-heading mb-4 sm:mb-6">
+    {{ sectionConfig.title }}
+  </h2>
+  {% endif %}
+
+  {% if embed.kind == "lite-youtube" %}
+  {# lite-yt-embed is loaded globally in base.njk; link inside = js-less fallback #}
+  <lite-youtube videoid="{{ embed.videoId }}" style="max-width:100%">
+    <a class="lite-youtube-fallback" href="https://www.youtube.com/watch?v={{ embed.videoId }}" rel="noopener noreferrer">
+      {{ sectionConfig.title or "Watch on YouTube" }}
+    </a>
+  </lite-youtube>
+  {% elif embed.kind == "iframe" %}
+  <iframe
+    src="{{ embed.src }}"
+    loading="lazy"
+    sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
+    allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+    referrerpolicy="strict-origin-when-cross-origin"
+    title="{{ sectionConfig.title or embed.provider }}"
+    {% if embed.aspect %}style="aspect-ratio:{{ embed.aspect }};width:100%"{% else %}height="{{ embed.height }}" style="width:100%"{% endif %}
+    frameborder="0"></iframe>
+  {% elif sectionConfig.url and sectionConfig.url.startsWith and sectionConfig.url.startsWith("https://") %}
+  {# Unrecognized URL shape — degrade to a visible link, never echo into src #}
+  <a href="{{ sectionConfig.url }}" rel="noopener noreferrer" class="text-link hover:underline break-all">
+    {{ sectionConfig.title or sectionConfig.url }}
+  </a>
+  {% else %}
+  <!-- embed: no embeddable url -->
+  {% endif %}
+</section>

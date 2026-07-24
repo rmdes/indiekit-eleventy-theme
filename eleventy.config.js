@@ -19,6 +19,7 @@ import { composedPageSlugs } from "./lib/composed-pages.mjs";
 import { buildCategoryIndex, gateCategories, readCategoryConfig, slugifyCategory } from "./lib/categories.mjs";
 import { pruneCategoryOrphans } from "./lib/prune-category-pages.mjs";
 import registerTextFilters from "./lib/text-filters.mjs";
+import { embedInfo } from "./lib/embed-providers.mjs";
 import matter from "gray-matter";
 import { generateMarkdownForAgents } from "./lib/markdown-agents.mjs";
 import { createHash, createHmac, randomUUID } from "crypto";
@@ -398,6 +399,10 @@ export default function (eleventyConfig) {
   // Safe for deeply nested includes where async shortcodes fail silently.
   // Usage: {{ url | unfurlCard | safe }}
   eleventyConfig.addFilter("unfurlCard", getCachedCard);
+
+  // Embed-block URL mapper (allowlisted providers) — lib/embed-providers.mjs (unit-tested).
+  // Usage in sections/embed.njk: {% set info = sectionConfig.url | embedInfo %}
+  eleventyConfig.addFilter("embedInfo", embedInfo);
 
   // Custom transform to convert YouTube links to lite-youtube embeds
   // Catches bare YouTube links in Markdown that the embed plugin misses
