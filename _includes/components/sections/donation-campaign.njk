@@ -1,0 +1,70 @@
+{# Donation campaign block — bespoke `source:"api"` section (donation plugin).
+   Config: campaignId (Stripe product id; empty = all active), title.
+   Data fetched client-side from the public /donation/stats.json (60s cache)
+   by js/widgets/donation-campaign.js — live counters without a rebuild.
+   campaignId travels via data-attribute (not a JS-string literal) so Nunjucks
+   attribute-escaping is the only encoding in play. #}
+{% set sectionConfig = section.config or {} %}
+<is-land on:visible>
+<section class="mb-8 sm:mb-12"
+  data-campaign="{{ sectionConfig.campaignId }}"
+  x-data="donationCampaign($el.dataset.campaign)" x-init="init()">
+
+  {% if sectionConfig.title %}
+  <h2 class="text-xl sm:text-2xl font-bold text-heading mb-4">{{ sectionConfig.title }}</h2>
+  {% endif %}
+
+  {# Loading state #}
+  <div x-show="loading" class="text-sm text-fg-muted py-4" role="status" aria-live="polite">
+    Loading…
+  </div>
+
+  <div x-show="!loading" x-cloak>
+    <ul x-show="campaigns.length > 0" class="space-y-6 list-none p-0">
+      <template x-for="campaign in campaigns" :key="campaign.id">
+        <li class="rounded-lg border border-border bg-panel p-4 sm:p-6">
+          <h3 class="text-lg font-semibold text-heading" x-text="campaign.title"></h3>
+          <p x-show="campaign.subtitle" class="text-sm text-fg-muted mt-1" x-text="campaign.subtitle"></p>
+
+          {# Progress bar — only when the campaign declares a goal #}
+          <div x-show="percent(campaign) !== null" class="mt-4">
+            <div class="h-2 rounded-full bg-border overflow-hidden"
+              role="progressbar"
+              :aria-valuenow="percent(campaign)" aria-valuemin="0" aria-valuemax="100"
+              :aria-label="campaign.title + ' funding progress'">
+              <div class="h-full rounded-full bg-accent-500 transition-[width] duration-500"
+                :style="'width:' + percent(campaign) + '%'"></div>
+            </div>
+            <p class="text-sm text-fg mt-2">
+              <span class="font-semibold" x-text="amount(campaign.raised_cents)"></span>
+              <span class="text-fg-muted"> raised of </span>
+              <span x-text="amount(campaign.goal_cents)"></span>
+              <span class="text-fg-muted" x-text="' · ' + percent(campaign) + '%'"></span>
+            </p>
+          </div>
+
+          {# Goal-less campaign — show the running total only #}
+          <p x-show="percent(campaign) === null && campaign.raised_cents > 0" class="text-sm text-fg mt-3">
+            <span class="font-semibold" x-text="amount(campaign.raised_cents)"></span>
+            <span class="text-fg-muted"> raised</span>
+          </p>
+
+          <div class="flex items-center justify-between gap-3 mt-4">
+            <span class="text-xs text-fg-muted"
+              x-show="campaign.donor_count > 0"
+              x-text="campaign.donor_count + (campaign.donor_count === 1 ? ' donor' : ' donors')"></span>
+            <a x-show="campaign.stripe_payment_link" :href="campaign.stripe_payment_link"
+              target="_blank" rel="noopener"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-accent-500 text-white text-sm font-medium hover:opacity-90 transition-opacity">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              Donate
+            </a>
+          </div>
+        </li>
+      </template>
+    </ul>
+    <p x-show="campaigns.length === 0" class="text-sm text-fg-muted py-2">No active campaigns right now.</p>
+  </div>
+</section>
+</is-land>
+{# Component logic lives in /js/widgets/donation-campaign.js (Alpine.data, loaded in base.njk) #}
