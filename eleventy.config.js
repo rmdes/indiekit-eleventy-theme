@@ -13,6 +13,7 @@ import registerUnfurlShortcode, { getCachedCard, prefetchUrl } from "./lib/unfur
 import { renderNode } from "./lib/render-composition.mjs";
 import { renderAvatar } from "./lib/image-shortcode.mjs";
 import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
+import { createBuildLint } from "./lib/build-lint.mjs";
 import { prunePreviewOrphans, readCurrentPreviewTokens } from "./lib/prune-preview.mjs";
 import { pruneComposedPageOrphans } from "./lib/prune-composed-pages.mjs";
 import { composedPageSlugs } from "./lib/composed-pages.mjs";
@@ -1523,6 +1524,9 @@ export default function (eleventyConfig) {
   // first pass is a full build but reports incremental=true, so we can't gate on
   // !incremental — same one-shot pattern as pagefind above).
   let markdownAgentsDone = false;
+  // Build lint (C6): one instance across the watcher's builds so incremental
+  // rebuilds update the over-budget set rather than replace it.
+  const buildLint = createBuildLint();
   eleventyConfig.on("eleventy.after", async ({ dir, directories, runMode, incremental, results }) => {
     logMemory("after-build (pre-hooks)");
     // Markdown for Agents — .md twins (articles + notes) + /about + homepage + llms.txt
@@ -1748,12 +1752,22 @@ export default function (eleventyConfig) {
       const finishedAt = Date.now();
       const durationSeconds =
         buildStart === null ? undefined : Number(((finishedAt - buildStart) / 1000).toFixed(1));
+      // Build lint (C6): fold this build's pages into the running over-budget
+      // set (stateful across watcher builds — incremental rebuilds update
+      // rebuilt pages, they don't replace the full-build list).
+      const pageWarnings = buildLint.record(results);
+      if (pageWarnings.length > 0) {
+        console.log(
+          `[build-lint] ${pageWarnings.length} page(s) over budget (worst: ${pageWarnings[0].url} ${Math.round(pageWarnings[0].htmlBytes / 1024)}KB/${pageWarnings[0].imageCount} imgs)`,
+        );
+      }
       await writeBuildStatus({
         state: "ok",
         ...(buildId ? { buildId } : {}),
         finishedAt: new Date(finishedAt).toISOString(),
         durationSeconds,
         incremental: Boolean(incremental),
+        pageWarnings,
         // Omitted when unknown so the writer carries the previous value forward
         ...(durationSeconds === undefined ? {} : { lastOkDurationSeconds: durationSeconds }),
       });
