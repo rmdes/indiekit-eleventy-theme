@@ -112,6 +112,30 @@ export default function (eleventyConfig) {
   eleventyConfig.watchIgnores.add(".cache/unfurl");
   eleventyConfig.watchIgnores.add(".cache/unfurl/**");
 
+  // Runtime artifacts written by the site-config / CV plugins into
+  // /app/data/content/_data (reached via the content/ symlink, hence both the
+  // relative and absolute forms — same reason _site and /app/data/site are both
+  // listed above). These are NOT Eleventy data files (dir.data is the theme's own
+  // _data/); they are read via fs inside _data/*.mjs, so Eleventy cannot scope a
+  // change to any template and answers an mtime bump with a FULL rebuild.
+  //
+  // Every container start rehydrates them from MongoDB with byte-identical
+  // content, which used to cost a second full rebuild (measured 2026-08-20 on
+  // rmendes: 3420 pages, ~138-180s, zero data change). Worse, on a REAL change
+  // both this watcher and start.sh's rebuild-trigger fired, and the trigger's
+  // pkill killed a rebuild already in flight.
+  //
+  // start.sh's rebuild-trigger is now the SINGLE owner: it hashes this exact set
+  // and restarts the watcher only when the CONTENT actually changed. Keep the two
+  // lists in sync — anything ignored here must be hashed there, or real edits
+  // will never propagate.
+  // theme.css / critical.css are deliberately NOT ignored: they stay watched so
+  // branding saves propagate as assets without a full rebuild.
+  eleventyConfig.watchIgnores.add("content/_data/*.json");
+  eleventyConfig.watchIgnores.add("content/_data/compositions/**");
+  eleventyConfig.watchIgnores.add("/app/data/content/_data/*.json");
+  eleventyConfig.watchIgnores.add("/app/data/content/_data/compositions/**");
+
   // Watcher tuning: handle rapid successive file changes
   // When a post is created via Micropub, the file is written twice in quick
   // succession: first the initial content, then ~2s later a Micropub update
@@ -706,12 +730,10 @@ export default function (eleventyConfig) {
   // the content/ symlink to /app/data/content/_data/.
   eleventyConfig.addWatchTarget("./content/_data/theme.css");
   eleventyConfig.addWatchTarget("./content/_data/critical.css");
-  eleventyConfig.addWatchTarget("./content/_data/site-config.json");
-  eleventyConfig.addWatchTarget("./content/_data/homepage.json");
-  eleventyConfig.addWatchTarget("./content/_data/compositions/");
-  eleventyConfig.addWatchTarget("./content/_data/block-catalog.json");
-  // CV data, written by @rmdes/indiekit-endpoint-cv (v2 path; was .indiekit/cv.json).
-  eleventyConfig.addWatchTarget("./content/_data/cv.json");
+  // The *.json artifacts under content/_data are intentionally NOT watch targets:
+  // they are watchIgnored above and owned by start.sh's rebuild-trigger, which
+  // restarts this watcher on a real content change. Re-adding them here would
+  // reinstate the double build.
 
   // Webmentions plugin configuration
   const wmDomain = siteUrl.replace("https://", "").replace("http://", "");
