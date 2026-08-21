@@ -139,6 +139,9 @@
   <link rel="alternate" type="application/rss+xml" href="/categories/{{ category | slugify }}/feed.xml" title="{{ category }} — RSS Feed">
   <link rel="alternate" type="application/json" href="/categories/{{ category | slugify }}/feed.json" title="{{ category }} — JSON Feed">
   {% endif %}
+  {# Metadata is preferred over the endpoint rels below, which remain for
+     clients predating it. Both are served by @rmdes/indiekit-endpoint-auth. #}
+  <link rel="indieauth-metadata" href="{{ site.url }}/.well-known/oauth-authorization-server">
   <link rel="authorization_endpoint" href="{{ site.url }}/auth">
   <link rel="token_endpoint" href="{{ site.url }}/auth/token">
   <link rel="micropub" href="{{ site.url }}/micropub">
