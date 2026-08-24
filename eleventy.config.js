@@ -854,12 +854,22 @@ export default function (eleventyConfig) {
   // produced. Optional per-site pages (notably the /ai policy page, which is
   // site content and not shipped by the theme) must not be linked when the
   // deployment has not created them. See issue #2.
+  // Memoised per collection array: rmendes.net builds ~2900 pages, and a
+  // linear scan per render would make this O(pages^2). Eleventy hands the same
+  // array reference to every template in a build, so the Set is built once and
+  // is dropped automatically when a rebuild produces a new array.
+  const urlSetCache = new WeakMap();
   eleventyConfig.addFilter("urlExists", (collection, url) => {
     if (!url) return false;
     if (/^https?:\/\//i.test(url)) return true;
     if (!Array.isArray(collection)) return false;
+    let urls = urlSetCache.get(collection);
+    if (!urls) {
+      urls = new Set(collection.map((item) => item.url));
+      urlSetCache.set(collection, urls);
+    }
     const withSlash = url.endsWith("/") ? url : `${url}/`;
-    return collection.some((item) => item.url === url || item.url === withSlash);
+    return urls.has(url) || urls.has(withSlash);
   });
 
   eleventyConfig.addFilter("slugify", (str) => slugifyCategory(str));
