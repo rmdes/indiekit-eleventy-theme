@@ -11,6 +11,7 @@ import { minify } from "html-minifier-terser";
 import { minify as minifyJS } from "terser";
 import registerUnfurlShortcode, { getCachedCard, prefetchUrl } from "./lib/unfurl-shortcode.js";
 import { renderNode } from "./lib/render-composition.mjs";
+import { isListed } from "./lib/visibility.mjs";
 import { renderAvatar } from "./lib/image-shortcode.mjs";
 import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
 import { createBuildLint } from "./lib/build-lint.mjs";
@@ -849,6 +850,28 @@ export default function (eleventyConfig) {
 
   // Slugify filter — delegates to the canonical slugifyCategory (lib/categories.mjs)
   // so category slugs match everywhere (one copy, not four).
+  // True when `url` is external, or points at a page this build actually
+  // produced. Optional per-site pages (notably the /ai policy page, which is
+  // site content and not shipped by the theme) must not be linked when the
+  // deployment has not created them. See issue #2.
+  // Memoised per collection array: rmendes.net builds ~2900 pages, and a
+  // linear scan per render would make this O(pages^2). Eleventy hands the same
+  // array reference to every template in a build, so the Set is built once and
+  // is dropped automatically when a rebuild produces a new array.
+  const urlSetCache = new WeakMap();
+  eleventyConfig.addFilter("urlExists", (collection, url) => {
+    if (!url) return false;
+    if (/^https?:\/\//i.test(url)) return true;
+    if (!Array.isArray(collection)) return false;
+    let urls = urlSetCache.get(collection);
+    if (!urls) {
+      urls = new Set(collection.map((item) => item.url));
+      urlSetCache.set(collection, urls);
+    }
+    const withSlash = url.endsWith("/") ? url : `${url}/`;
+    return urls.has(url) || urls.has(withSlash);
+  });
+
   eleventyConfig.addFilter("slugify", (str) => slugifyCategory(str));
 
   eleventyConfig.addFilter("stripTrailingSlash", (url) => {
@@ -1150,7 +1173,8 @@ export default function (eleventyConfig) {
   });
 
   // Helper: exclude drafts from collections
-  const isPublished = (item) => !item.data.draft;
+  // Drafts, plus Micropub `visibility: unlisted|private` — see lib/visibility.mjs.
+  const isPublished = (item) => isListed(item.data);
 
   // Collections for different post types
   // Note: content path is content/ due to symlink structure
