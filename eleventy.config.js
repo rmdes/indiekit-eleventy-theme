@@ -1848,8 +1848,9 @@ export default function (eleventyConfig) {
       }
     }
 
-    // WebSub hub notification — skip on incremental rebuilds
-    if (incremental) return;
+    // WebSub hub notification — skip on incremental rebuilds and in CI
+    // (CI builds are throwaway; publishing them to the public hub is a real side effect)
+    if (incremental || process.env.CI) return;
     const hubUrl = "https://websubhub.com/hub";
     const feedUrls = [
       `${siteUrl}/`,

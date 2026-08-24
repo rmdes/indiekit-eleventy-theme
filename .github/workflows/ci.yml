@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      - run: npm run build:css
+
+      # The _data/* fetchers hit external APIs and degrade to `source: "error"`
+      # when unreachable, so this passes offline. It is here to catch an Eleventy
+      # or plugin bump that breaks the build outright.
+      - run: npm run build
