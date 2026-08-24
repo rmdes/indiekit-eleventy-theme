@@ -98,7 +98,9 @@ withBlogSidebar: true
     {% if aiDescription %}
     <p class="mt-1 pl-5">{{ aiDescription }}</p>
     {% endif %}
+    {% if collections.all | urlExists(aiUrl) %}
     <p class="mt-1 pl-5"><a href="{{ aiUrl }}" class="hover:text-link underline">Learn more about AI usage on this site</a></p>
+    {% endif %}
   </details>
   {% endif %}
 

@@ -113,7 +113,9 @@ withSidebar: true
     {% if aiDescription %}
     <p class="mt-2 text-xs text-fg-muted">{{ aiDescription }}</p>
     {% endif %}
+    {% if collections.all | urlExists(aiUrl) %}
     <p class="mt-2 text-xs"><a href="{{ aiUrl }}" class="text-link hover:underline">Learn more about AI usage on this site &rarr;</a></p>
+    {% endif %}
   </aside>
   {% endif %}
 
