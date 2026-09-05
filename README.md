@@ -42,7 +42,7 @@ Integrates with custom Indiekit endpoint plugins:
 
 | Plugin | Features |
 |--------|----------|
-| `@rmdes/indiekit-endpoint-homepage` | Dynamic homepage builder with admin UI |
+| `@rmdes/indiekit-endpoint-site-config` | Site identity, branding, navigation and the homepage builder |
 | `@rmdes/indiekit-endpoint-cv` | CV/resume builder with admin UI |
 | `@rmdes/indiekit-endpoint-github` | GitHub activity, commits, stars, featured repos |
 | `@rmdes/indiekit-endpoint-funkwhale` | Listening activity from Funkwhale |
