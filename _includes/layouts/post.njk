@@ -263,7 +263,7 @@ withBlogSidebar: true
   {
     "@context": "https://schema.org",
     "@type": "Article",
-    "headline": {{ (title or "Untitled") | dump | safe }},
+    "headline": {{ (title or "Untitled") | jsonLd | safe }},
     "url": "{{ site.url }}{{ page.url }}",
     "mainEntityOfPage": {
       "@type": "WebPage",
@@ -285,7 +285,7 @@ withBlogSidebar: true
         "url": "{{ site.url }}/images/og-default.png"
       }
     },
-    "description": {{ postDesc | dump | safe }}{% if postImage and postImage != "" and (postImage | length) > 10 %},
+    "description": {{ postDesc | jsonLd | safe }}{% if postImage and postImage != "" and (postImage | length) > 10 %},
     "image": ["{% if postImage.startsWith('http') %}{{ postImage }}{% elif '/' in postImage and postImage[0] == '/' %}{{ site.url }}{{ postImage }}{% else %}{{ site.url }}/{{ postImage }}{% endif %}"]{% endif %}{% if site.features and site.features.aiTransparency and (aiTextLevel or aiCodeLevel or aiTools) %},
     "usageInfo": "{% set _aiUrl = site.features.aiTransparencyUrl or '/ai' %}{% if _aiUrl.startsWith('http') %}{{ _aiUrl }}{% else %}{{ site.url }}{{ _aiUrl }}{% endif %}"{% set _aiParts = [] %}{% if aiTextLevel %}{% set _textLabel %}{% if aiTextLevel === "0" %}None{% elif aiTextLevel === "1" %}Editorial assistance{% elif aiTextLevel === "2" %}Co-drafting{% elif aiTextLevel === "3" %}AI-generated{% endif %}{% endset %}{% set _aiParts = (_aiParts.push("Text: " + _textLabel), _aiParts) %}{% endif %}{% if aiCodeLevel %}{% set _codeLabel %}{% if aiCodeLevel === "0" %}Human-written{% elif aiCodeLevel === "1" %}AI-assisted{% elif aiCodeLevel === "2" %}AI-generated{% endif %}{% endset %}{% set _aiParts = (_aiParts.push("Code: " + _codeLabel), _aiParts) %}{% endif %}{% if aiTools %}{% set _aiParts = (_aiParts.push("Tools: " + aiTools), _aiParts) %}{% endif %},
     "creativeWorkStatus": "{{ _aiParts | join(', ') }}"{% endif %}

@@ -310,6 +310,17 @@ export default function (eleventyConfig) {
     return JSON.stringify(value);
   });
 
+  // JSON-LD embedded in an HTML <script> block needs more than JSON.stringify:
+  // stringify leaves `</script>` intact, so any value reaching it can close the
+  // script element and turn the rest of the page into live markup. Escaping
+  // < > & as \uXXXX keeps the JSON valid and inert. Do not use jsonEncode here.
+  eleventyConfig.addFilter("jsonLd", (value) =>
+    JSON.stringify(value)
+      .replaceAll("<", "\\u003c")
+      .replaceAll(">", "\\u003e")
+      .replaceAll("&", "\\u0026"),
+  );
+
   // Guess MIME type from URL extension
   function guessMimeType(url, category) {
     const lower = (typeof url === "string" ? url : "").toLowerCase();
