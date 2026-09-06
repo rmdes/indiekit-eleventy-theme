@@ -14,7 +14,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { cachedFetch, resolveDuration, FETCH_TIMEOUT_MS } from "../lib/data-fetch.js";
+import { cachedFetch, resolveDuration, isWatchMode, FETCH_TIMEOUT_MS } from "../lib/data-fetch.js";
 
 // --- resolveDuration (pure) ---
 
@@ -92,4 +92,56 @@ test("cachedFetch clears the timeout on success (no late abort)", async (t) => {
   // If the timeout weren't cleared, advancing time would fire a stale abort.
   // A cleared timer makes this a no-op; the test simply must not throw.
   t.mock.timers.tick(FETCH_TIMEOUT_MS * 2);
+});
+
+// --- isWatchMode: the production/dev distinction ---
+
+test("isWatchMode is false in the deployed container even while watching", () => {
+  // Production serves the site with `eleventy --watch --incremental`, so the
+  // run mode is never "build" there. Keying only on it handed every deployed
+  // fetch the 4h dev TTL, and /app/data/cache survives container recreation,
+  // so the stale entry outlived deploys and restarts.
+  const runMode = process.env.ELEVENTY_RUN_MODE;
+  const origin = process.env.CLOUDRON_APP_ORIGIN;
+  try {
+    process.env.ELEVENTY_RUN_MODE = "watch";
+    process.env.CLOUDRON_APP_ORIGIN = "https://example.com";
+    assert.equal(isWatchMode(), false);
+    assert.equal(resolveDuration({ duration: "15m" }, isWatchMode()), "15m");
+  } finally {
+    runMode === undefined
+      ? delete process.env.ELEVENTY_RUN_MODE
+      : (process.env.ELEVENTY_RUN_MODE = runMode);
+    origin === undefined
+      ? delete process.env.CLOUDRON_APP_ORIGIN
+      : (process.env.CLOUDRON_APP_ORIGIN = origin);
+  }
+});
+
+test("isWatchMode stays true for a local watch", () => {
+  const runMode = process.env.ELEVENTY_RUN_MODE;
+  const origin = process.env.CLOUDRON_APP_ORIGIN;
+  try {
+    process.env.ELEVENTY_RUN_MODE = "watch";
+    delete process.env.CLOUDRON_APP_ORIGIN;
+    assert.equal(isWatchMode(), true);
+    assert.equal(resolveDuration({ duration: "15m" }, isWatchMode()), "4h");
+  } finally {
+    runMode === undefined
+      ? delete process.env.ELEVENTY_RUN_MODE
+      : (process.env.ELEVENTY_RUN_MODE = runMode);
+    if (origin !== undefined) process.env.CLOUDRON_APP_ORIGIN = origin;
+  }
+});
+
+test("a one-shot local build still honours the caller", () => {
+  const runMode = process.env.ELEVENTY_RUN_MODE;
+  try {
+    process.env.ELEVENTY_RUN_MODE = "build";
+    assert.equal(isWatchMode(), false);
+  } finally {
+    runMode === undefined
+      ? delete process.env.ELEVENTY_RUN_MODE
+      : (process.env.ELEVENTY_RUN_MODE = runMode);
+  }
 });
