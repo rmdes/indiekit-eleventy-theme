@@ -66,12 +66,14 @@ permalink: /blogroll/
 
       {# All Blogs Tab #}
       <div x-show="activeTab === 'blogs' && !loading" role="tabpanel" id="blogroll-panel-blogs" aria-labelledby="blogroll-tab-blogs" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {#
+          The card is a container, not one big link: the title goes to the blog,
+          the category goes to its tab, and the feed icon lets a visitor subscribe
+          in their own reader. Anchors cannot nest, so these must be siblings.
+        #}
         <template x-for="blog in blogs" :key="blog.id">
-          <a
-            :href="blog.siteUrl || blog.feedUrl"
+          <div
             class="block bg-surface-50 dark:bg-surface-800 rounded-lg border border-border p-4 hover:border-orange-400 dark:hover:border-orange-600 transition-colors group shadow-sm"
-            target="_blank"
-            rel="noopener"
           >
             <div class="flex items-center gap-3 mb-2">
               <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -79,9 +81,38 @@ permalink: /blogroll/
                 <span x-show="!blog.photo" class="text-white text-sm font-bold" x-text="blog.title?.charAt(0)?.toUpperCase()"></span>
               </div>
               <div class="flex-1 min-w-0">
-                <h3 class="font-medium text-heading truncate group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors" x-text="blog.title"></h3>
-                <p x-show="blog.category" class="text-xs text-fg-muted truncate" x-text="blog.category"></p>
+                <h3 class="font-medium text-heading truncate">
+                  {# Falls back to the feed when no site is known — better an honest
+                     feed link than a fabricated homepage. #}
+                  <a
+                    :href="blog.siteUrl || blog.feedUrl"
+                    class="hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                    target="_blank"
+                    rel="noopener"
+                    x-text="blog.title"
+                  ></a>
+                </h3>
+                <button
+                  x-show="blog.category"
+                  @click="switchTab('category:' + blog.category)"
+                  class="text-xs text-fg-muted truncate hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                  :title="`Show all blogs in ${blog.category}`"
+                  x-text="blog.category"
+                ></button>
               </div>
+              <a
+                :href="blog.feedUrl"
+                class="flex-shrink-0 p-1.5 rounded text-fg-muted hover:text-orange-600 dark:hover:text-orange-400 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+                target="_blank"
+                rel="noopener"
+                :title="`Subscribe to ${blog.title}`"
+                :aria-label="`Subscribe to ${blog.title}`"
+              >
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="6.18" cy="17.82" r="2.18"/>
+                  <path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/>
+                </svg>
+              </a>
             </div>
             <p x-show="blog.description" class="text-sm text-fg-muted line-clamp-2 mb-3" x-text="blog.description"></p>
             <div class="flex items-center gap-3 text-xs text-fg-muted">
@@ -97,7 +128,7 @@ permalink: /blogroll/
                 </span>
               </span>
             </div>
-          </a>
+          </div>
         </template>
       </div>
 
