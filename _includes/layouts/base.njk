@@ -26,8 +26,15 @@
      treatment — collapsed whitespace and a 200-char cap. site.description in
      particular is operator prose from the admin UI: rmendes' is 310 chars and
      contains a newline, which would otherwise break the meta tag across lines. #}
+  {# A homepage is never "one post". Whatever its layout renders — hero, banner,
+     builder sections, a post list — is a composite, so scraping it yields a
+     run-on ("You can login to the demo backend using this password demodemo
+     This is a demo site, it will…"). Skip the scrape there; the site's own
+     description is what a homepage card should say. Listing pages reach the
+     same fallback via ogDescription returning "" for multiple e-content. #}
+  {% set ogBody = "" if page.url == "/" else (content | ogDescription(200)) %}
   {% set ogDesc = (description | ogDescription(200))
-                  or (content | ogDescription(200))
+                  or ogBody
                   or (site.description | ogDescription(200)) %}
   {# Normalize photo - could be array for multi-photo posts #}
   {% set ogPhoto = photo %}
