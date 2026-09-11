@@ -27,7 +27,7 @@ import { generateMarkdownForAgents } from "./lib/markdown-agents.mjs";
 import { createHash, createHmac, randomUUID } from "crypto";
 import { createRequire } from "module";
 import { execFileSync } from "child_process";
-import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync, copyFileSync, appendFileSync } from "fs";
+import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync, copyFileSync, appendFileSync, statSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -37,31 +37,79 @@ const postGraph = esmRequire("@rknightuk/eleventy-plugin-post-graph");
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const siteUrl = process.env.SITE_URL || "https://example.com";
 
+// Fallback OG card for pages with no image of their own. Generated per site by
+// lib/og.js into .cache/og/ (passthrough-copied to /og/), NOT a static asset —
+// a static one in this shared theme would put one deployment's artwork on every
+// other deployment's pages.
+const OG_DEFAULT_PATH = "/og/default.png";
+
+/**
+ * Read the runtime site-config.json written by the site-config plugin, with a
+ * fallback to the theme's _data/site.example.json for theme-only dev. Wrapped
+ * in try/catch so a missing or broken file degrades to env-var defaults rather
+ * than throwing during the build.
+ * @returns {object} Parsed site config, or {} when unavailable
+ */
+function readSiteConfig() {
+  const RUNTIME = "/app/data/content/_data/site-config.json";
+  const EXAMPLE = resolve(__dirname, "_data", "site.example.json");
+  try {
+    const source = existsSync(RUNTIME) ? RUNTIME : EXAMPLE;
+    return JSON.parse(readFileSync(source, "utf8")) || {};
+  } catch {
+    return {};
+  }
+}
+
 /**
  * Resolve the site TITLE/brand for build-time consumers (e.g. the OG card
  * generator) using the same precedence as _data/site.js:
  *   identity.siteName → SITE_NAME env → identity.name → "My IndieWeb Blog".
- * Reads the runtime site-config.json written by the site-config plugin, with a
- * fallback to the theme's _data/site.example.json for theme-only dev. Wrapped in
- * try/catch so a missing/broken file degrades to the env var, never throwing
- * during the build.
+ * @returns {string} Site title
  */
 function resolveSiteName() {
-  const RUNTIME = "/app/data/content/_data/site-config.json";
-  const EXAMPLE = resolve(__dirname, "_data", "site.example.json");
-  let identity = {};
-  try {
-    const source = existsSync(RUNTIME) ? RUNTIME : EXAMPLE;
-    identity = JSON.parse(readFileSync(source, "utf8")).identity || {};
-  } catch {
-    identity = {};
-  }
+  const identity = readSiteConfig().identity || {};
   return (
     identity.siteName ||
     process.env.SITE_NAME ||
     identity.name ||
     "My IndieWeb Blog"
   );
+}
+
+/**
+ * Per-site OG card configuration, handed to lib/og-cli.js as one JSON argument.
+ *
+ * Every visual element of the card used to be frozen into the theme — one
+ * person's photo, one accent colour — so every deployment sharing this theme
+ * published cards carrying another site's identity. Each field now traces back
+ * to the same source the rendered page uses:
+ *
+ *   siteName/description  site-config identity (SITE_* env as fallback)
+ *   accent                site-config branding.colors.primary — the colour the
+ *                         site actually renders with
+ *   avatar                AUTHOR_AVATAR (env.sh), matching _data/site.js; an
+ *                         empty value means no avatar, and the card drops it
+ *   hide                  OG_CARD_HIDE (env.sh), a comma-separated opt-out list
+ *                         ("date,siteName") for operators who want less on the
+ *                         card. Absent = the full card.
+ * @returns {object} Config consumed by resolveCard() in lib/og.js
+ */
+function resolveOgConfig() {
+  const config = readSiteConfig();
+  const identity = config.identity || {};
+  const branding = config.branding || {};
+
+  return {
+    siteName: resolveSiteName(),
+    description:
+      identity.description || process.env.SITE_DESCRIPTION || "",
+    accent: branding.colors?.primary || branding.accentBase || "",
+    // identity.avatar is not in the site-config schema today; it is read first
+    // so the card follows the admin UI automatically if the plugin adds it.
+    avatar: identity.avatar || process.env.AUTHOR_AVATAR || "",
+    hide: process.env.OG_CARD_HIDE || "",
+  };
 }
 
 // Memory profiler — logs RSS + V8 heap at key build phases
@@ -613,7 +661,7 @@ export default function (eleventyConfig) {
       const hasOg = hasOgImage(ogSlug);
       const ogImageUrl = hasOg
         ? `${siteUrl}/og/${ogSlug}.png`
-        : `${siteUrl}/images/og-default.png`;
+        : `${siteUrl}${OG_DEFAULT_PATH}`;
       const twitterCard = hasOg ? "summary_large_image" : "summary";
 
       // Fix og:url and canonical (also affected by race condition)
@@ -633,7 +681,7 @@ export default function (eleventyConfig) {
       // Non-date pages (homepage, about, etc.): use defaults
       content = content.replace(
         /__OG_IMAGE_PLACEHOLDER__/g,
-        `${siteUrl}/images/og-default.png`
+        `${siteUrl}${OG_DEFAULT_PATH}`
       );
       content = content.replace(/__TWITTER_CARD_PLACEHOLDER__/g, "summary");
     }
@@ -1461,11 +1509,10 @@ export default function (eleventyConfig) {
     logMemory("before-build (OG start)");
     const contentDir = resolve(__dirname, "content");
     const cacheDir = resolve(__dirname, ".cache");
-    // Resolve the SITE TITLE the same way _data/site.js does so OG card images
-    // match the header/<title>: identity.siteName → SITE_NAME env → identity.name
-    // → default. Reading the runtime site-config.json (written by the site-config
-    // plugin) keeps the UI-configured brand authoritative without an env var.
-    const siteName = resolveSiteName();
+    // Resolve this site's card composition — title, description, accent,
+    // avatar — from site-config and env.sh, so the shared theme renders each
+    // deployment's own identity. See resolveOgConfig above.
+    const ogConfig = JSON.stringify(resolveOgConfig());
     const BATCH_SIZE = 100;
     let totalGenerated = 0;
     let batch = 0;
@@ -1480,7 +1527,7 @@ export default function (eleventyConfig) {
             resolve(__dirname, "lib", "og-cli.js"),
             contentDir,
             cacheDir,
-            siteName,
+            ogConfig,
             String(BATCH_SIZE),
           ], {
             stdio: "inherit",
@@ -1507,8 +1554,17 @@ export default function (eleventyConfig) {
         mkdirSync(ogOutputDir, { recursive: true });
         let synced = 0;
         for (const file of readdirSync(ogCacheDir)) {
-          if (file.endsWith(".png") && !existsSync(resolve(ogOutputDir, file))) {
-            copyFileSync(resolve(ogCacheDir, file), resolve(ogOutputDir, file));
+          if (!file.endsWith(".png")) continue;
+          const from = resolve(ogCacheDir, file);
+          const to = resolve(ogOutputDir, file);
+          // Copy when missing, and when the cached card is newer than the one
+          // in output: a card REgenerated because the site's branding changed
+          // would otherwise never reach the site, since .cache/og is in
+          // watchIgnores and passthrough copy doesn't run on incrementals.
+          const stale =
+            !existsSync(to) || statSync(from).mtimeMs > statSync(to).mtimeMs;
+          if (stale) {
+            copyFileSync(from, to);
             synced++;
           }
         }

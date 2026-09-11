@@ -280,9 +280,12 @@ withBlogSidebar: true
       "@type": "Organization",
       "name": "{{ site.name }}",
       "url": "{{ site.url }}",
+      {# Branding logo when the site has one, else its generated OG card —
+         never a static theme asset, which would be another site's artwork. #}
       "logo": {
         "@type": "ImageObject",
-        "url": "{{ site.url }}/images/og-default.png"
+        {%- set _logo = site.branding.logo if site.branding and site.branding.logo else "/og/default.png" -%}
+        "url": "{% if _logo.startsWith('http') %}{{ _logo }}{% else %}{{ site.url }}{{ _logo }}{% endif %}"
       }
     },
     "description": {{ postDesc | jsonLd | safe }}{% if postImage and postImage != "" and (postImage | length) > 10 %},

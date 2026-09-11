@@ -11,6 +11,9 @@ import assert from "node:assert/strict";
 
 import {
   computeHash,
+  mixWithWhite,
+  buildPalette,
+  resolveCard,
   detectPostType,
   formatDate,
   sanitize,
@@ -108,4 +111,93 @@ test("extractFirstParagraph strips frontmatter and returns the first prose block
   const raw = "---\ntitle: x\n---\n\nFirst paragraph here.\n\nSecond paragraph.";
   const out = extractFirstParagraph(raw);
   assert.equal(out, "First paragraph here.");
+});
+
+// --- per-site card configuration ---
+//
+// The card used to hardcode one deployment's avatar and accent, so a shared
+// theme published another site's identity. These cover the guards that keep
+// that fixed: bad colour input must degrade rather than render wrong, and the
+// cache key must move when a site's branding does.
+
+test("mixWithWhite lightens a hex colour toward white", () => {
+  assert.equal(mixWithWhite("#000000", 0), "#000000");
+  assert.equal(mixWithWhite("#000000", 1), "#ffffff");
+  assert.equal(mixWithWhite("#e2b71d", 0.88), "#fcf6e4");
+});
+
+test("mixWithWhite rejects anything that is not 6-digit hex", () => {
+  // site-config writes plain hex; an oklch()/named/short value must not reach
+  // Satori, which would render an unverifiable colour or throw.
+  for (const bad of ["oklch(70% 0.1 90)", "rebeccapurple", "#fff", "", null, undefined]) {
+    assert.equal(mixWithWhite(bad, 0.5), null, `expected null for ${String(bad)}`);
+  }
+});
+
+test("buildPalette applies a valid accent to the bar and badge", () => {
+  const palette = buildPalette("#e2b71d");
+  assert.equal(palette.bar, "#e2b71d");
+  assert.equal(palette.badgeText, "#e2b71d");
+  assert.equal(palette.badge, "#fcf6e4");
+  // Greys are fixed so contrast survives any brand colour.
+  assert.equal(palette.title, "#24292f");
+});
+
+test("buildPalette falls back to the neutral palette for an unusable accent", () => {
+  assert.deepEqual(buildPalette("oklch(70% 0.1 90)"), buildPalette(""));
+  assert.equal(buildPalette("").bar, "#3b82f6");
+});
+
+test("resolveCard shows every element by default", () => {
+  const card = resolveCard({ siteName: "Site" });
+  assert.deepEqual(card.show, {
+    badge: true,
+    date: true,
+    avatar: true,
+    description: true,
+    siteName: true,
+  });
+});
+
+test("resolveCard hides the elements named in the opt-out list", () => {
+  const card = resolveCard({ siteName: "Site", hide: " Date , SiteName " });
+  assert.equal(card.show.date, false);
+  assert.equal(card.show.siteName, false);
+  assert.equal(card.show.badge, true);
+});
+
+test("resolveCard drops the avatar when none is configured", () => {
+  // The demo and chardonsbleus sites run with AUTHOR_AVATAR="" — they must get
+  // a text-only card, never another site's photo.
+  assert.equal(resolveCard({ siteName: "Indiekit Demo" }).avatar, null);
+  assert.equal(resolveCard({ siteName: "X", avatar: "" }).avatar, null);
+});
+
+test("resolveCard ignores a remote avatar rather than fetching it", () => {
+  assert.equal(
+    resolveCard({ avatar: "https://example.com/elsewhere/nobody.jpg" }).avatar,
+    null,
+  );
+});
+
+test("resolveCard refuses an avatar path that escapes the site", () => {
+  assert.equal(resolveCard({ avatar: "/../../etc/passwd" }).avatar, null);
+});
+
+test("cardKey changes with every visual setting (cache invalidation)", () => {
+  const base = resolveCard({ siteName: "Site", accent: "#e2b71d" }).cardKey;
+  assert.notEqual(base, resolveCard({ siteName: "Other", accent: "#e2b71d" }).cardKey);
+  assert.notEqual(base, resolveCard({ siteName: "Site", accent: "#3b82f6" }).cardKey);
+  assert.notEqual(
+    base,
+    resolveCard({ siteName: "Site", accent: "#e2b71d", hide: "date" }).cardKey,
+  );
+  assert.equal(base, resolveCard({ siteName: "Site", accent: "#e2b71d" }).cardKey);
+});
+
+test("a changed cardKey changes the post hash, forcing regeneration", () => {
+  const post = ["Title", "Desc", "2026-01-01", "Article"];
+  const a = computeHash(...post, resolveCard({ siteName: "Site" }).cardKey);
+  const b = computeHash(...post, resolveCard({ siteName: "Site", accent: "#e2b71d" }).cardKey);
+  assert.notEqual(a, b);
 });

@@ -445,15 +445,40 @@ Page templates in the root directory:
 Generates OpenGraph images for posts without photos using Satori (Yoga WASM → SVG) + Resvg (Rust WASM → PNG).
 
 **Key files:**
-- `lib/og.js` — generation logic, card layout, manifest-based caching
-- `lib/og-cli.js` — CLI wrapper, accepts `batchSize` argument
-- `eleventy.config.js` — spawns og-cli with batch loop
+- `lib/og.js` — generation logic, card layout, per-site config, manifest-based caching
+- `lib/og-cli.js` — CLI wrapper: `<contentDir> <cacheDir> <configJson> [batchSize]`
+- `eleventy.config.js` — `resolveOgConfig()` + spawns og-cli with batch loop
+
+**Per-site composition (CRITICAL — the theme is shared):** nothing about the card
+is hardcoded. `resolveOgConfig()` in `eleventy.config.js` resolves it per site and
+passes it to og-cli as ONE JSON argument:
+
+| Field | Source | Effect on the card |
+|---|---|---|
+| `siteName` | site-config `identity.siteName` → `SITE_NAME` → `identity.name` | footer |
+| `description` | site-config `identity.description` → `SITE_DESCRIPTION` | subtitle of the fallback card |
+| `accent` | site-config `branding.colors.primary` → `branding.accentBase` | top bar + badge (must be 6-digit hex; anything else falls back to the neutral blue) |
+| `avatar` | site-config `identity.avatar` (not in the schema yet) → `AUTHOR_AVATAR` (env.sh) | avatar, **dropped entirely when empty** |
+| `hide` | `OG_CARD_HIDE` (env.sh), e.g. `"date,siteName"` | opt-out list: `badge`, `date`, `avatar`, `description`, `siteName`. Title is never hideable |
+
+Avatars are read from disk only (theme `images/`, then site `media/`) and must be
+`.jpg`/`.jpeg`/`.png` — no build-time network fetch, and no SVG (Satori's SVG-in-img
+support is unreliable and a throw would fail the build). Unusable values warn and
+degrade to no avatar.
+
+**The fallback card is generated, not shipped.** `/og/default.png` is rendered per
+site from the same config and used wherever a page has no OG image of its own
+(`OG_DEFAULT_PATH` in `eleventy.config.js`, plus the JSON-LD publisher logo in
+`post.njk`, which prefers `branding.logo` when set). A static `images/og-default.png`
+would put one deployment's artwork on every other deployment's pages — that was the
+bug fixed in Sep 2026, alongside a hardcoded `images/rick.jpg` avatar that put one
+operator's face on every site's cards.
 
 **Architecture:** Runs as a separate process (`execFileSync`) to isolate WASM native memory from Eleventy. Uses **batch spawning** — each invocation generates up to 100 images, then exits with code 2 ("more remain"). The spawner re-loops until exit code 0. This keeps peak RSS at ~460 MB per batch regardless of total image count.
 
 **Why batch spawning:** Satori and Resvg allocate native memory outside V8's heap. `--max-old-space-size` only limits V8 — WASM native allocations are invisible to it. Without batching, 2,350+ images grow native memory to ~3 GB, OOM-killing the process in the 3 GB container. Batching fully releases native memory between invocations.
 
-**Caching:** Manifest at `.cache/og/manifest.json` maps slug → content hash. Only changed/new posts generate images. Manifest saved every 10 images for crash resilience.
+**Caching:** Manifest at `.cache/og/manifest.json` maps slug → content hash. Only changed/new posts generate images. Manifest saved every 10 images for crash resilience. The hash folds in a `cardKey` fingerprint of the whole per-site config, so changing a site's accent, avatar or `OG_CARD_HIDE` regenerates its cards automatically — `DESIGN_VERSION` only needs bumping for changes to the layout code itself. The `__default__` manifest entry tracks `/og/default.png`.
 
 #### Post-Build Hooks (`eleventy.after`)
 
