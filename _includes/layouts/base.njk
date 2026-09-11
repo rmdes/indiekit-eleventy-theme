@@ -21,8 +21,14 @@
   {% set ogTitle = (site.name if page.url == "/" else title) or site.name %}
   {# `or` rather than `| default`: default only fires on undefined, but
      ogDescription returns "" for a listing page (many e-content blocks = no
-     single body) and that must fall through to the site description too. #}
-  {% set ogDesc = description or (content | ogDescription(200)) or site.description %}
+     single body) and that must fall through to the site description too.
+     Every branch goes through ogDescription so all three get the same
+     treatment — collapsed whitespace and a 200-char cap. site.description in
+     particular is operator prose from the admin UI: rmendes' is 310 chars and
+     contains a newline, which would otherwise break the meta tag across lines. #}
+  {% set ogDesc = (description | ogDescription(200))
+                  or (content | ogDescription(200))
+                  or (site.description | ogDescription(200)) %}
   {# Normalize photo - could be array for multi-photo posts #}
   {% set ogPhoto = photo %}
   {% if ogPhoto %}

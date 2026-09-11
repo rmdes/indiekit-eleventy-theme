@@ -224,3 +224,21 @@ test("toPlainText drops mailto: links, contents and all", () => {
 test("toPlainText leaves ordinary links' text intact", () => {
   assert.equal(toPlainText('see <a href="/about/">the about page</a> now'), "see the about page now");
 });
+
+test("ogDescription is safe on absent input", () => {
+  // base.njk pipes `description` (often undefined) through this filter.
+  assert.equal(ogDescription(undefined, 200), "");
+  assert.equal(ogDescription(null, 200), "");
+  assert.equal(ogDescription("", 200), "");
+});
+
+test("ogDescription normalises operator prose for a meta attribute", () => {
+  // site.description comes from the admin UI: rmendes' is 310 chars with a
+  // newline in it, which would split the meta tag across lines.
+  const prose = "First line.\n\n   Second line after a blank one.";
+  assert.equal(ogDescription(prose, 200), "First line. Second line after a blank one.");
+  assert.doesNotMatch(ogDescription(prose, 200), /\n/);
+
+  const long = "word ".repeat(80);
+  assert.ok(ogDescription(long, 200).length <= 203);
+});
