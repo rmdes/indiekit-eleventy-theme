@@ -30,9 +30,17 @@
      builder sections, a post list — is a composite, so scraping it yields a
      run-on ("You can login to the demo backend using this password demodemo
      This is a demo site, it will…"). Skip the scrape there; the site's own
-     description is what a homepage card should say. Listing pages reach the
-     same fallback via ogDescription returning "" for multiple e-content. #}
-  {% set ogBody = "" if page.url == "/" else (content | ogDescription(200)) %}
+     description is what a homepage card should say.
+
+     `pagination` catches listings directly: every listing template declares it
+     (blog.njk, notes.njk, categories.njk...), posts and prose pages never do.
+     Counting e-content alone was not enough — chardonsbleus' /blog/ renders
+     its cards WITHOUT e-content, so it scraped "Blog All posts including
+     articles and notes. (1 total) All Posts (1) Articles (0)..." while
+     rmendes' /blog/, whose cards do carry e-content, was already correct. The
+     e-content>1 rule stays as a second line of defence for any multi-post page
+     that is not paginated. #}
+  {% set ogBody = "" if (page.url == "/" or pagination) else (content | ogDescription(200)) %}
   {% set ogDesc = (description | ogDescription(200))
                   or ogBody
                   or (site.description | ogDescription(200)) %}
