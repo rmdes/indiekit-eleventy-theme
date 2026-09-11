@@ -16,8 +16,13 @@
   <title>{% if title %}{{ title }} - {% endif %}{{ site.name }}</title>
 
   {# OpenGraph meta tags #}
-  {% set ogTitle = title | default(site.name) %}
-  {% set ogDesc = description | default(content | ogDescription(200)) | default(site.description) %}
+  {# The homepage's `title` ("Home") is a NAV label — as a shared card title it
+     says nothing about whose site this is, so the site name wins there. #}
+  {% set ogTitle = (site.name if page.url == "/" else title) or site.name %}
+  {# `or` rather than `| default`: default only fires on undefined, but
+     ogDescription returns "" for a listing page (many e-content blocks = no
+     single body) and that must fall through to the site description too. #}
+  {% set ogDesc = description or (content | ogDescription(200)) or site.description %}
   {# Normalize photo - could be array for multi-photo posts #}
   {% set ogPhoto = photo %}
   {% if ogPhoto %}

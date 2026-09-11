@@ -181,3 +181,46 @@ test("plainText keeps the whole document even when e-content is present", () => 
   const rendered = '<span>badge</span><div class="e-content"><p>body</p></div>';
   assert.equal(toPlainText(rendered), "badge body");
 });
+
+// --- listing pages have no body of their own ---
+//
+// e-content is emitted in exactly one place (post.njk), so counting it says what
+// kind of page this is. A listing renders 20 of them; describing it by the first
+// would make /notes/ and /blog/ describe whatever post is newest, and the
+// description would churn on every publish.
+
+const postCard = (body) => `<article class="h-entry"><div class="e-content"><p>${body}</p></div></article>`;
+
+test("ogDescription returns nothing for a listing page (many e-content blocks)", () => {
+  const listing = postCard("Newest post") + postCard("Older post") + postCard("Oldest");
+  assert.equal(ogDescription(listing, 200), "");
+});
+
+test("ogDescription still uses the body when the page renders exactly one post", () => {
+  assert.equal(ogDescription(postCard("The only post."), 200), "The only post.");
+});
+
+test("ogDescription falls back to the whole page when nothing is a post", () => {
+  // /categories/ and /search/ are their own prose, not a post listing.
+  assert.equal(
+    ogDescription("<h1>Categories</h1><p>Browse posts by category.</p>", 200),
+    "Categories Browse posts by category.",
+  );
+});
+
+// --- obfuscated addresses must not survive into a scraped description ---
+
+test("toPlainText drops mailto: links, contents and all", () => {
+  // h-card.njk writes the address as numeric entities to deter harvesters.
+  // toPlainText decodes numeric entities, so the element has to go first.
+  const hcard =
+    '<p>Before</p><a href="mailto:a@b.example" class="u-email" ' +
+    'aria-label="Email a@b.example">&#97;&#64;&#98;&#46;&#101;&#120;</a><p>After</p>';
+  const text = toPlainText(hcard);
+  assert.equal(text, "Before After");
+  assert.doesNotMatch(text, /@/);
+});
+
+test("toPlainText leaves ordinary links' text intact", () => {
+  assert.equal(toPlainText('see <a href="/about/">the about page</a> now'), "see the about page now");
+});
