@@ -115,3 +115,69 @@ test("registerTextFilters registers exactly the five text filters", () => {
     ["extractFirstImage", "obfuscateEmail", "ogDescription", "plainText", "truncate"],
   );
 });
+
+// --- entity decoding + e-content scoping (the og:description regressions) ---
+//
+// rmendes.net shipped `og:description="&amp;#9998; Note 2 September 2026 …"`:
+// post.njk writes its post-type badge as NUMERIC references, which the old
+// fixed list of six named entities never matched, and base.njk derives the
+// description from the whole rendered layout.
+
+test("toPlainText decodes numeric character references", () => {
+  assert.equal(toPlainText("&#9998; Note"), "\u270E Note");
+  assert.equal(toPlainText("&#128278; Bookmark"), "\u{1F516} Bookmark");
+  assert.equal(toPlainText("&#x270E; hex"), "\u270E hex");
+  assert.equal(toPlainText("&#X270E; upper-X hex"), "\u270E upper-X hex");
+});
+
+test("toPlainText decodes accented named entities and leaves real accents alone", () => {
+  // Typed accents arrive as UTF-8 and must survive untouched.
+  assert.equal(toPlainText("<p>\u00E9l\u00E8ve \u00E0 Gen\u00E8ve, \u00E7a d\u00E9\u00E7oit</p>"),
+    "\u00E9l\u00E8ve \u00E0 Gen\u00E8ve, \u00E7a d\u00E9\u00E7oit");
+  assert.equal(toPlainText("&#233;l&#232;ve"), "\u00E9l\u00E8ve");
+});
+
+test("toPlainText decodes each entity exactly once", () => {
+  // Chained replaces decoded &amp; first, so a literal &amp;lt; became "<".
+  assert.equal(toPlainText("&amp;lt;not-a-tag&amp;gt;"), "&lt;not-a-tag&gt;");
+  assert.equal(toPlainText("A &amp;amp; B"), "A &amp; B");
+});
+
+test("toPlainText leaves an unknown named entity as written", () => {
+  // Dropping it would silently eat text.
+  assert.equal(toPlainText("&bogus; x"), "&bogus; x");
+});
+
+test("toPlainText rejects out-of-range numeric references instead of emitting U+FFFD", () => {
+  assert.equal(toPlainText("&#1114112;x"), "x");
+  assert.equal(toPlainText("&#0;x"), "x");
+});
+
+test("ogDescription uses only the e-content body, not the page furniture", () => {
+  const rendered = [
+    '<span>&#9998; Note</span>',
+    '<time>2 September 2026</time>',
+    '<a class="p-category">bluesky</a>',
+    '<div class="e-content prose max-w-none"><p>The actual post body.</p></div>',
+    '<p class="p-summary hidden">The actual post body.</p>',
+    '<details><summary>AI: Text None</summary>Learn more about AI usage</details>',
+  ].join("");
+  assert.equal(ogDescription(rendered, 200), "The actual post body.");
+});
+
+test("ogDescription walks nested tags to the matching e-content close", () => {
+  const rendered =
+    '<div class="e-content"><div class="quote"><p>inner</p></div> outer</div>' +
+    '<p>chrome that must not appear</p>';
+  assert.equal(ogDescription(rendered, 200), "inner outer");
+});
+
+test("ogDescription falls back to the whole document when there is no e-content", () => {
+  assert.equal(ogDescription("<p>A plain page.</p>", 200), "A plain page.");
+});
+
+test("plainText keeps the whole document even when e-content is present", () => {
+  // Only the OG excerpt is scoped; plainText has other callers.
+  const rendered = '<span>badge</span><div class="e-content"><p>body</p></div>';
+  assert.equal(toPlainText(rendered), "badge body");
+});

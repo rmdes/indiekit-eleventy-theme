@@ -14,6 +14,7 @@ import {
   mixWithWhite,
   buildPalette,
   resolveCard,
+  stripPictographs,
   detectPostType,
   formatDate,
   sanitize,
@@ -200,4 +201,43 @@ test("a changed cardKey changes the post hash, forcing regeneration", () => {
   const a = computeHash(...post, resolveCard({ siteName: "Site" }).cardKey);
   const b = computeHash(...post, resolveCard({ siteName: "Site", accent: "#e2b71d" }).cardKey);
   assert.notEqual(a, b);
+});
+
+// --- stripPictographs: the NO GLYPH box on card titles ---
+//
+// Frontmatter titles bypass sanitize(), so a title opening with an emoji
+// rendered a "NO GLYPH" box on the card (seen on the demo's PR-comment notes).
+// sanitize() is too blunt for titles: it keeps only Latin ranges.
+
+test("stripPictographs removes a leading emoji from a title", () => {
+  assert.equal(
+    stripPictographs("\u{1F527} @rmdes \u2014 PR #925 : fix(endpoint-posts)"),
+    "@rmdes \u2014 PR #925 : fix(endpoint-posts)",
+  );
+});
+
+test("stripPictographs preserves accented Latin text", () => {
+  const accented = "\u00C9lections fran\u00E7aises : o\u00F9 va-t-on ? \u00C0 Gen\u00E8ve, \u00E7a d\u00E9\u00E7oit";
+  assert.equal(stripPictographs(accented), accented);
+});
+
+test("stripPictographs leaves non-Latin scripts alone", () => {
+  // Erasing them (as sanitize would) turns a real title into nothing.
+  assert.equal(stripPictographs("\u041F\u0440\u0438\u0432\u0435\u0442 \u043C\u0438\u0440"), "\u041F\u0440\u0438\u0432\u0435\u0442 \u043C\u0438\u0440");
+  assert.equal(stripPictographs("\u65E5\u672C\u8A9E\u306E\u30BF\u30A4\u30C8\u30EB"), "\u65E5\u672C\u8A9E\u306E\u30BF\u30A4\u30C8\u30EB");
+});
+
+test("stripPictographs keeps symbols Inter can actually render", () => {
+  assert.equal(stripPictographs("Foo \u00A9 2026 Bar \u2122"), "Foo \u00A9 2026 Bar \u2122");
+});
+
+test("stripPictographs removes joiners and modifiers, not just the pictographs", () => {
+  // A bare pictograph strip would leave invisible ZWJ/variation selectors behind.
+  assert.equal(stripPictographs("\u{1F468}\u200D\u{1F469}\u200D\u{1F467} family"), "family");
+  assert.equal(stripPictographs("\u{1F44D}\u{1F3FD} thumbs"), "thumbs");
+  assert.equal(stripPictographs("5\uFE0F\u20E3 keycap"), "5 keycap");
+});
+
+test("sanitize keeps accents (body text path)", () => {
+  assert.equal(sanitize("caf\u00E9 \u00E0 Gen\u00E8ve"), "caf\u00E9 \u00E0 Gen\u00E8ve");
 });
