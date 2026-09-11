@@ -458,13 +458,22 @@ passes it to og-cli as ONE JSON argument:
 | `siteName` | site-config `identity.siteName` → `SITE_NAME` → `identity.name` | footer |
 | `description` | site-config `identity.description` → `SITE_DESCRIPTION` | subtitle of the fallback card |
 | `accent` | site-config `branding.colors.primary` → `branding.accentBase` | top bar + badge (must be 6-digit hex; anything else falls back to the neutral blue) |
-| `avatar` | site-config `identity.avatar` (not in the schema yet) → `AUTHOR_AVATAR` (env.sh) | avatar, **dropped entirely when empty** |
+| `avatar` | site-config `identity.avatar` (not in the schema yet) → `AUTHOR_AVATAR` (env.sh) | avatar; when unset/unresolvable falls back to `images/default-avatar.png`, the same neutral silhouette `_data/site.js` gives the h-card. `hide=avatar` renders none at all |
 | `hide` | `OG_CARD_HIDE` (env.sh), e.g. `"date,siteName"` | opt-out list: `badge`, `date`, `avatar`, `description`, `siteName`. Title is never hideable |
 
 Avatars are read from disk only (theme `images/`, then site `media/`) and must be
 `.jpg`/`.jpeg`/`.png` — no build-time network fetch, and no SVG (Satori's SVG-in-img
 support is unreliable and a throw would fail the build). Unusable values warn and
-degrade to no avatar.
+degrade to the neutral silhouette.
+
+**Point `AUTHOR_AVATAR` at site media, never at a theme asset.** `images/` is
+passthrough-copied to every deployment, so a personal photo there is published by
+every other site built from this theme. rmendes' avatar lived at
+`images/rick.jpg` until Sep 2026 and was fetchable at 200 on the demo and
+chardonsbleus; it now lives in its own site media at `/media/images/rick.jpg`
+(nginx serves `/media/<photos|images|videos|audio>/*` from
+`/app/data/content/media/`). The theme keeps only neutral assets:
+`default-avatar.svg`, `default-avatar.png` and `favicon.svg`.
 
 **The fallback card is generated, not shipped.** `/og/default.png` is rendered per
 site from the same config and used wherever a page has no OG image of its own

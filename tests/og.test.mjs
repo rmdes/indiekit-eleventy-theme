@@ -8,6 +8,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import {
   computeHash,
@@ -167,22 +168,35 @@ test("resolveCard hides the elements named in the opt-out list", () => {
   assert.equal(card.show.badge, true);
 });
 
-test("resolveCard drops the avatar when none is configured", () => {
-  // The demo and chardonsbleus sites run with AUTHOR_AVATAR="" — they must get
-  // a text-only card, never another site's photo.
-  assert.equal(resolveCard({ siteName: "Indiekit Demo" }).avatar, null);
-  assert.equal(resolveCard({ siteName: "X", avatar: "" }).avatar, null);
+// The neutral silhouette the card falls back to, matching what _data/site.js
+// gives the h-card. Computed rather than hardcoded so the assertions follow the
+// asset if it is ever redrawn.
+const SILHOUETTE = `data:image/png;base64,${readFileSync(
+  new URL("../images/default-avatar.png", import.meta.url),
+).toString("base64")}`;
+
+test("resolveCard falls back to the neutral silhouette when no avatar is configured", () => {
+  // A site with AUTHOR_AVATAR="" must get the generic figure — never another
+  // site's photo, which is what the hardcoded images/rick.jpg used to produce.
+  assert.equal(resolveCard({ siteName: "Indiekit Demo" }).avatar, SILHOUETTE);
+  assert.equal(resolveCard({ siteName: "X", avatar: "" }).avatar, SILHOUETTE);
 });
 
 test("resolveCard ignores a remote avatar rather than fetching it", () => {
+  // No network in the build: an unreachable avatar degrades to the silhouette.
   assert.equal(
     resolveCard({ avatar: "https://example.com/elsewhere/nobody.jpg" }).avatar,
-    null,
+    SILHOUETTE,
   );
 });
 
 test("resolveCard refuses an avatar path that escapes the site", () => {
-  assert.equal(resolveCard({ avatar: "/../../etc/passwd" }).avatar, null);
+  assert.equal(resolveCard({ avatar: "/../../etc/passwd" }).avatar, SILHOUETTE);
+});
+
+test("resolveCard still renders no avatar at all when the site hides it", () => {
+  // hide=avatar is an explicit choice and must not be overridden by a fallback.
+  assert.equal(resolveCard({ siteName: "X", hide: "avatar" }).avatar, null);
 });
 
 test("cardKey changes with every visual setting (cache invalidation)", () => {
