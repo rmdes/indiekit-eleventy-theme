@@ -13,14 +13,20 @@ import { deriveDescription, firstParagraph, stripMarkdown } from "../lib/descrip
 
 // --- source of truth: frontmatter, then the post's opening ---
 
-test("an explicit frontmatter description wins", () => {
+test("summary wins — it is the field Micropub populates", () => {
+  const item = { data: { summary: "A summary." }, rawInput: "Body text." };
+  assert.equal(deriveDescription(item), "A summary.");
+});
+
+test("description is used for pages authored outside Micropub", () => {
   const item = { data: { description: "Set by the author." }, rawInput: "Body text." };
   assert.equal(deriveDescription(item), "Set by the author.");
 });
 
-test("summary is used when there is no description", () => {
-  const item = { data: { summary: "A summary." }, rawInput: "Body text." };
-  assert.equal(deriveDescription(item), "A summary.");
+test("summary takes precedence when a page somehow carries both", () => {
+  // No file on rmendes has both today, but the order must be deliberate.
+  const item = { data: { summary: "The summary.", description: "The description." } };
+  assert.equal(deriveDescription(item), "The summary.");
 });
 
 test("otherwise the first paragraph of the post is used", () => {
