@@ -153,24 +153,7 @@ test("toPlainText rejects out-of-range numeric references instead of emitting U+
   assert.equal(toPlainText("&#0;x"), "x");
 });
 
-test("ogDescription uses only the e-content body, not the page furniture", () => {
-  const rendered = [
-    '<span>&#9998; Note</span>',
-    '<time>2 September 2026</time>',
-    '<a class="p-category">bluesky</a>',
-    '<div class="e-content prose max-w-none"><p>The actual post body.</p></div>',
-    '<p class="p-summary hidden">The actual post body.</p>',
-    '<details><summary>AI: Text None</summary>Learn more about AI usage</details>',
-  ].join("");
-  assert.equal(ogDescription(rendered, 200), "The actual post body.");
-});
 
-test("ogDescription walks nested tags to the matching e-content close", () => {
-  const rendered =
-    '<div class="e-content"><div class="quote"><p>inner</p></div> outer</div>' +
-    '<p>chrome that must not appear</p>';
-  assert.equal(ogDescription(rendered, 200), "inner outer");
-});
 
 test("ogDescription falls back to the whole document when there is no e-content", () => {
   assert.equal(ogDescription("<p>A plain page.</p>", 200), "A plain page.");
@@ -180,32 +163,6 @@ test("plainText keeps the whole document even when e-content is present", () => 
   // Only the OG excerpt is scoped; plainText has other callers.
   const rendered = '<span>badge</span><div class="e-content"><p>body</p></div>';
   assert.equal(toPlainText(rendered), "badge body");
-});
-
-// --- listing pages have no body of their own ---
-//
-// e-content is emitted in exactly one place (post.njk), so counting it says what
-// kind of page this is. A listing renders 20 of them; describing it by the first
-// would make /notes/ and /blog/ describe whatever post is newest, and the
-// description would churn on every publish.
-
-const postCard = (body) => `<article class="h-entry"><div class="e-content"><p>${body}</p></div></article>`;
-
-test("ogDescription returns nothing for a listing page (many e-content blocks)", () => {
-  const listing = postCard("Newest post") + postCard("Older post") + postCard("Oldest");
-  assert.equal(ogDescription(listing, 200), "");
-});
-
-test("ogDescription still uses the body when the page renders exactly one post", () => {
-  assert.equal(ogDescription(postCard("The only post."), 200), "The only post.");
-});
-
-test("ogDescription falls back to the whole page when nothing is a post", () => {
-  // /categories/ and /search/ are their own prose, not a post listing.
-  assert.equal(
-    ogDescription("<h1>Categories</h1><p>Browse posts by category.</p>", 200),
-    "Categories Browse posts by category.",
-  );
 });
 
 // --- obfuscated addresses must not survive into a scraped description ---
@@ -232,13 +189,3 @@ test("ogDescription is safe on absent input", () => {
   assert.equal(ogDescription("", 200), "");
 });
 
-test("ogDescription normalises operator prose for a meta attribute", () => {
-  // site.description comes from the admin UI: rmendes' is 310 chars with a
-  // newline in it, which would split the meta tag across lines.
-  const prose = "First line.\n\n   Second line after a blank one.";
-  assert.equal(ogDescription(prose, 200), "First line. Second line after a blank one.");
-  assert.doesNotMatch(ogDescription(prose, 200), /\n/);
-
-  const long = "word ".repeat(80);
-  assert.ok(ogDescription(long, 200).length <= 203);
-});

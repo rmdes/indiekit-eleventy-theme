@@ -19,31 +19,12 @@
   {# The homepage's `title` ("Home") is a NAV label — as a shared card title it
      says nothing about whose site this is, so the site name wins there. #}
   {% set ogTitle = (site.name if page.url == "/" else title) or site.name %}
-  {# `or` rather than `| default`: default only fires on undefined, but
-     ogDescription returns "" for a listing page (many e-content blocks = no
-     single body) and that must fall through to the site description too.
-     Every branch goes through ogDescription so all three get the same
-     treatment — collapsed whitespace and a 200-char cap. site.description in
-     particular is operator prose from the admin UI: rmendes' is 310 chars and
-     contains a newline, which would otherwise break the meta tag across lines. #}
-  {# A homepage is never "one post". Whatever its layout renders — hero, banner,
-     builder sections, a post list — is a composite, so scraping it yields a
-     run-on ("You can login to the demo backend using this password demodemo
-     This is a demo site, it will…"). Skip the scrape there; the site's own
-     description is what a homepage card should say.
-
-     `pagination` catches listings directly: every listing template declares it
-     (blog.njk, notes.njk, categories.njk...), posts and prose pages never do.
-     Counting e-content alone was not enough — chardonsbleus' /blog/ renders
-     its cards WITHOUT e-content, so it scraped "Blog All posts including
-     articles and notes. (1 total) All Posts (1) Articles (0)..." while
-     rmendes' /blog/, whose cards do carry e-content, was already correct. The
-     e-content>1 rule stays as a second line of defence for any multi-post page
-     that is not paginated. #}
-  {% set ogBody = "" if (page.url == "/" or pagination) else (content | ogDescription(200)) %}
-  {% set ogDesc = (description | ogDescription(200))
-                  or ogBody
-                  or (site.description | ogDescription(200)) %}
+  {# Descriptions are resolved by the `og-fix` transform, not here: only the
+     transform knows which page it is writing (Eleventy 3 leaks `page.*`
+     between concurrently rendered templates, #3183 — the same reason og:image
+     and canonical use placeholders). The transform reads each page's own
+     markdown via the pageDescriptions map and falls back to the site
+     description for pages with no prose of their own. #}
   {# Normalize photo - could be array for multi-photo posts #}
   {% set ogPhoto = photo %}
   {% if ogPhoto %}
@@ -55,8 +36,8 @@
   <meta property="og:site_name" content="{{ site.name }}">
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
   <meta property="og:type" content="{% if page.url == '/' %}website{% else %}article{% endif %}">
-  <meta property="og:description" content="{{ ogDesc }}">
-  <meta name="description" content="{{ ogDesc }}">
+  <meta property="og:description" content="__OG_DESCRIPTION_PLACEHOLDER__">
+  <meta name="description" content="__OG_DESCRIPTION_PLACEHOLDER__">
   {% if ogPhoto and ogPhoto != "" and (ogPhoto | length) > 10 %}
   <meta property="og:image" content="{% if 'http' in ogPhoto %}{{ ogPhoto }}{% else %}{{ site.url }}{% if ogPhoto[0] != '/' %}/{% endif %}{{ ogPhoto }}{% endif %}">
   {% elif image and image != "" and (image | length) > 10 %}
@@ -72,7 +53,7 @@
   {% set hasExplicitImage = (ogPhoto and ogPhoto != "" and (ogPhoto | length) > 10) or (image and image != "" and (image | length) > 10) %}
   <meta name="twitter:card" content="{% if hasExplicitImage %}summary_large_image{% else %}__TWITTER_CARD_PLACEHOLDER__{% endif %}">
   <meta name="twitter:title" content="{{ ogTitle }}">
-  <meta name="twitter:description" content="{{ ogDesc }}">
+  <meta name="twitter:description" content="__OG_DESCRIPTION_PLACEHOLDER__">
   {% if ogPhoto and ogPhoto != "" and (ogPhoto | length) > 10 %}
   <meta name="twitter:image" content="{% if 'http' in ogPhoto %}{{ ogPhoto }}{% else %}{{ site.url }}{% if ogPhoto[0] != '/' %}/{% endif %}{{ ogPhoto }}{% endif %}">
   {% elif image and image != "" and (image | length) > 10 %}

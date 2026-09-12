@@ -19,6 +19,7 @@ import { prunePreviewOrphans, readCurrentPreviewTokens } from "./lib/prune-previ
 import { pruneComposedPageOrphans } from "./lib/prune-composed-pages.mjs";
 import { composedPageSlugs } from "./lib/composed-pages.mjs";
 import { buildCategoryIndex, gateCategories, readCategoryConfig, slugifyCategory } from "./lib/categories.mjs";
+import { deriveDescription } from "./lib/description.mjs";
 import { pruneCategoryOrphans } from "./lib/prune-category-pages.mjs";
 import registerTextFilters from "./lib/text-filters.mjs";
 import { embedInfo } from "./lib/embed-providers.mjs";
@@ -644,8 +645,80 @@ export default function (eleventyConfig) {
     }
     return _ogFileSet.has(`${ogSlug}.png`);
   }
+  // ---------------------------------------------------------------------------
+  // Per-page descriptions, derived from each page's own markdown.
+  //
+  // Collection items carry their OWN inputPath/outputPath/rawInput/data — unlike
+  // the shared `page` object, which Eleventy 3 leaks between concurrently
+  // rendered templates (#3183, see _data/eleventyComputed.js). So this map is
+  // race-immune, and the transform below resolves it by outputPath exactly as
+  // og-fix already resolves the OG image.
+  //
+  // Only pages with prose of their own are mapped: `content/` holds the posts
+  // and slash pages. A listing template (notes.njk, blog.njk, categories.njk)
+  // has no content source, gets no entry, and falls back to the site
+  // description — which is the correct description for a listing, reached
+  // without heuristics about pagination or markup.
+  const pageDescriptions = new Map();
+
+  /** The site's own description, for pages with no prose of their own. */
+  let _siteDescription;
+  function siteDescription() {
+    if (_siteDescription === undefined) {
+      const identity = readSiteConfig().identity || {};
+      _siteDescription = (
+        identity.description ||
+        process.env.SITE_DESCRIPTION ||
+        ""
+      )
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 200);
+    }
+    return _siteDescription;
+  }
+
+  /** Escape for an HTML attribute — these strings are author prose. */
+  function escapeAttribute(text) {
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  /** Normalise an output path to a site-root key ("/notes/x/index.html"). */
+  function descriptionKey(outputPath) {
+    return String(outputPath || "")
+      .replace(/^\.\//, "")
+      .replace(/^_site\//, "/")
+      .replace(/^(?!\/)/, "/");
+  }
+
+  eleventyConfig.addCollection("pageDescriptions", (collectionApi) => {
+    pageDescriptions.clear();
+    for (const item of collectionApi.getAll()) {
+      if (!item.outputPath || !item.inputPath.includes("/content/")) continue;
+      const description = deriveDescription(item, 200);
+      if (description) pageDescriptions.set(descriptionKey(item.outputPath), description);
+    }
+    return [];
+  });
+
   eleventyConfig.addTransform("og-fix", function (content, outputPath) {
     if (!outputPath || !outputPath.endsWith(".html")) return content;
+
+    // Description: the page's own prose, else the site description. Resolved
+    // here rather than in the layout because only the transform knows which
+    // page it is actually writing (#3183).
+    if (content.includes("__OG_DESCRIPTION_PLACEHOLDER__")) {
+      const pageDescription =
+        pageDescriptions.get(descriptionKey(outputPath)) || siteDescription();
+      content = content.replaceAll(
+        "__OG_DESCRIPTION_PLACEHOLDER__",
+        escapeAttribute(pageDescription),
+      );
+    }
 
     // Derive correct page URL and OG slug from outputPath (immune to race condition)
     // Content pages match: .../type/yyyy/MM/dd/slug/index.html
