@@ -21,6 +21,7 @@ import { pruneComposedPageOrphans } from "./lib/prune-composed-pages.mjs";
 import { composedPageSlugs } from "./lib/composed-pages.mjs";
 import { buildCategoryIndex, gateCategories, readCategoryConfig, slugifyCategory } from "./lib/categories.mjs";
 import { deriveDescription } from "./lib/description.mjs";
+import { formatOgSlug, ogSlugFromUrl } from "./lib/og.js";
 import { pruneCategoryOrphans } from "./lib/prune-category-pages.mjs";
 import { pruneOgOrphans, readOgManifestSlugs } from "./lib/prune-og.mjs";
 import registerTextFilters from "./lib/text-filters.mjs";
@@ -738,7 +739,7 @@ export default function (eleventyConfig) {
       // sharing a basename collide on one cache entry and one PNG, each
       // overwriting the other every build. Here `type` is the first URL
       // segment, which is the same string as the content directory.
-      const ogSlug = `${type}-${year}-${month}-${day}-${slug}`;
+      const ogSlug = formatOgSlug(type, year, month, day, slug);
       const hasOg = hasOgImage(ogSlug);
       const ogImageUrl = hasOg
         ? `${siteUrl}/og/${ogSlug}.png`
@@ -1054,17 +1055,11 @@ export default function (eleventyConfig) {
   // Derive OG slug from page.url (reliable) instead of page.fileSlug
   // (which suffers from Nunjucks race conditions in Eleventy 3.x parallel rendering).
   // OG images are named with the full date prefix to match URL segments exactly.
-  eleventyConfig.addFilter("ogSlug", (url) => {
-    if (!url) return "";
-    const segments = url.split("/").filter(Boolean);
-    // Date-based URL: /type/yyyy/MM/dd/slug/ → 5 segments → "yyyy-MM-dd-slug"
-    if (segments.length === 5) {
-      const [, year, month, day, slug] = segments;
-      return `${year}-${month}-${day}-${slug}`;
-    }
-    // Fallback: last segment (for pages, legacy URLs)
-    return segments[segments.length - 1] || "";
-  });
+  // Delegates to lib/og.js so the URL-based derivation cannot drift from the
+  // path-based one the generator uses. It did drift once: this filter kept the
+  // pre-2026-09-13 flat key after the generator moved to "<type>-<date>-<slug>",
+  // so hasOgImage found nothing and every prev/next nav thumbnail vanished.
+  eleventyConfig.addFilter("ogSlug", ogSlugFromUrl);
 
   // Check if a generated OG image exists for this slug
   eleventyConfig.addFilter("hasOgImage", (slug) => {

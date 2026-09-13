@@ -17,6 +17,8 @@ import {
   buildPalette,
   resolveCard,
   toOgSlug,
+  ogSlugFromUrl,
+  formatOgSlug,
   stripPictographs,
   detectPostType,
   formatDate,
@@ -315,4 +317,51 @@ test("the whole old slug scheme is dropped after a rename", () => {
   const manifest = { "2026-02-22-5be34": { hash: "old" }, "likes-2026-02-22-5be34": { hash: "new" } };
   const out = pruneManifest(manifest, new Set(["likes-2026-02-22-5be34"]), false);
   assert.deepEqual(Object.keys(out), ["likes-2026-02-22-5be34"]);
+});
+
+// --- all three derivations of the cache key must agree ---
+//
+// The key is derived from three different inputs at three call sites: the
+// SOURCE path (generation), the OUTPUT path (og-fix transform) and the page URL
+// (the `ogSlug` filter, for prev/next nav thumbnails). When the type prefix was
+// added, the URL one was missed — hasOgImage stopped finding cards and every
+// nav thumbnail on the site lost its image. This is the test that catches it.
+
+test("URL-derived and path-derived slugs agree for the same post", () => {
+  const cases = [
+    ["/likes/2026/02/22/5be34/", "/app/data/content/likes/2026-02-22-5be34.md"],
+    ["/replies/2026/02/22/5be34/", "/app/data/content/replies/2026-02-22-5be34.md"],
+    ["/articles/2026/08/29/trump-successor-election/",
+     "/app/data/content/articles/2026-08-29-trump-successor-election.md"],
+    ["/notes/2026/09/02/4414d/", "/app/data/content/notes/2026-09-02-4414d.md"],
+  ];
+  for (const [url, path] of cases) {
+    assert.equal(ogSlugFromUrl(url), toOgSlug(path), `${url} vs ${path}`);
+  }
+});
+
+test("the transform's derivation agrees too", () => {
+  // og-fix regexes the OUTPUT path into these five parts, then calls formatOgSlug.
+  assert.equal(
+    formatOgSlug("likes", "2026", "02", "22", "5be34"),
+    ogSlugFromUrl("/likes/2026/02/22/5be34/"),
+  );
+  assert.equal(
+    formatOgSlug("likes", "2026", "02", "22", "5be34"),
+    toOgSlug("/app/data/content/likes/2026-02-22-5be34.md"),
+  );
+});
+
+test("the colliding pair stays distinct through the URL derivation", () => {
+  assert.notEqual(
+    ogSlugFromUrl("/likes/2026/02/22/5be34/"),
+    ogSlugFromUrl("/replies/2026/02/22/5be34/"),
+  );
+});
+
+test("ogSlugFromUrl falls back to the last segment for non-dated URLs", () => {
+  assert.equal(ogSlugFromUrl("/about/"), "about");
+  assert.equal(ogSlugFromUrl("/"), "");
+  assert.equal(ogSlugFromUrl(""), "");
+  assert.equal(ogSlugFromUrl(undefined), "");
 });
