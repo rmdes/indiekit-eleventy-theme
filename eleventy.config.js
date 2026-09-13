@@ -22,6 +22,7 @@ import { composedPageSlugs } from "./lib/composed-pages.mjs";
 import { buildCategoryIndex, gateCategories, readCategoryConfig, slugifyCategory } from "./lib/categories.mjs";
 import { deriveDescription } from "./lib/description.mjs";
 import { pruneCategoryOrphans } from "./lib/prune-category-pages.mjs";
+import { pruneOgOrphans, readOgManifestSlugs } from "./lib/prune-og.mjs";
 import registerTextFilters from "./lib/text-filters.mjs";
 import { embedInfo } from "./lib/embed-providers.mjs";
 import matter from "gray-matter";
@@ -2029,6 +2030,26 @@ export default function (eleventyConfig) {
       const removed = await pruneCategoryOrphans(categoriesDir, categorySlugsInUse);
       if (removed.length > 0) {
         console.log(`[categories] Pruned ${removed.length} stale category dir(s): ${removed.slice(0, 10).join(", ")}${removed.length > 10 ? " …" : ""}`);
+      }
+    }
+
+    // OG-card orphan pruning. Cards outlive the posts they belonged to: the
+    // in-place build only adds, and passthrough copy never deletes. Both the
+    // cache and the output accumulate them — 62 on rmendes from deleted posts
+    // between March and September, plus the entire set whenever the slug scheme
+    // changes. The manifest is the authority on what should exist, and og.js
+    // drops its own stale entries on a complete pass, so this runs after it.
+    // Must run BEFORE the incremental early-return; never throws.
+    {
+      const ogCacheDir = resolve(__dirname, ".cache", "og");
+      const validSlugs = await readOgManifestSlugs(resolve(ogCacheDir, "manifest.json"));
+      if (validSlugs.size > 0) {
+        for (const target of [ogCacheDir, resolve(directories?.output || dir.output, "og")]) {
+          const removed = await pruneOgOrphans(target, validSlugs);
+          if (removed.length > 0) {
+            console.log(`[og] Pruned ${removed.length} orphaned card(s) from ${target}: ${removed.slice(0, 5).join(", ")}${removed.length > 5 ? " …" : ""}`);
+          }
+        }
       }
     }
 

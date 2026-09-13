@@ -12,6 +12,7 @@ import { readFileSync } from "node:fs";
 
 import {
   computeHash,
+  pruneManifest,
   mixWithWhite,
   buildPalette,
   resolveCard,
@@ -280,4 +281,38 @@ test("toOgSlug matches what the og-fix transform builds from a URL", () => {
 
 test("toOgSlug degrades to the bare filename outside content/", () => {
   assert.equal(toOgSlug("/somewhere/else/file.md"), "file");
+});
+
+// --- pruneManifest: forgetting deleted posts, but only when it is safe to ---
+
+test("a complete pass drops entries for posts that no longer exist", () => {
+  const manifest = { "likes-a": { hash: "1" }, "notes-b": { hash: "2" }, "gone-c": { hash: "3" } };
+  const out = pruneManifest(manifest, new Set(["likes-a", "notes-b"]), false);
+  assert.deepEqual(Object.keys(out).sort(), ["likes-a", "notes-b"]);
+});
+
+test("a PARTIAL pass keeps everything — unseen means 'not reached yet'", () => {
+  // A batch that stopped at its limit has not looked at the rest of the files.
+  // Pruning against it would delete cards that are merely further down the list.
+  const manifest = { "likes-a": { hash: "1" }, "notes-b": { hash: "2" }, "gone-c": { hash: "3" } };
+  const out = pruneManifest(manifest, new Set(["likes-a"]), true);
+  assert.deepEqual(out, manifest);
+});
+
+test("bookkeeping keys survive a complete pass", () => {
+  // __default__ is never a scanned post, so it is never in `seen`.
+  const out = pruneManifest({ __default__: { hash: "d" }, "likes-a": { hash: "1" } }, new Set(["likes-a"]), false);
+  assert.deepEqual(Object.keys(out).sort(), ["__default__", "likes-a"]);
+});
+
+test("pruneManifest does not mutate its input", () => {
+  const manifest = { "likes-a": { hash: "1" }, "gone-c": { hash: "3" } };
+  pruneManifest(manifest, new Set(["likes-a"]), false);
+  assert.deepEqual(Object.keys(manifest).sort(), ["gone-c", "likes-a"]);
+});
+
+test("the whole old slug scheme is dropped after a rename", () => {
+  const manifest = { "2026-02-22-5be34": { hash: "old" }, "likes-2026-02-22-5be34": { hash: "new" } };
+  const out = pruneManifest(manifest, new Set(["likes-2026-02-22-5be34"]), false);
+  assert.deepEqual(Object.keys(out), ["likes-2026-02-22-5be34"]);
 });
