@@ -44,8 +44,22 @@ test("consecutive failures accumulate across writes", () => {
     health = renderBuildHealth(health, { state: "failed", lastBuildAt: "2026-09-12T00:00:00.000Z" });
     assert.equal(health.consecutiveFailures, i);
   }
-  // 40 crashes and still no lastOkAt: the site has never built in this container.
-  assert.equal(health.lastOkAt, undefined);
+  // 40 crashes and still no successful build in this container. lastOkAt must
+  // be an explicit null, NOT an absent key: JSON.stringify drops undefined, and
+  // a monitor rule like "alert if lastOkAt older than 24h" silently matches
+  // nothing against a missing field — the never-built site would fail open.
+  assert.equal(health.lastOkAt, null);
+  assert.ok("lastOkAt" in health, "the key must be present even when unknown");
+});
+
+test("a never-built site publishes lastOkAt as null, not as a missing key", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "build-health-"));
+  const path = join(dir, "health", "build.json");
+  await writeBuildHealth({ state: "failed", lastBuildAt: "2026-09-13T00:00:00.000Z" }, path);
+
+  const raw = await readFile(path, "utf8");
+  assert.match(raw, /"lastOkAt": null/, raw);
+  assert.equal(JSON.parse(raw).lastOkAt, null);
 });
 
 // --- tolerance: start.sh writes this file too ---
