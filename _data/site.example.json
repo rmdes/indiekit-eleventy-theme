@@ -1,19 +1,34 @@
 {
+  "_comment": "Fallback for theme-only development, and the reference for what @rmdes/indiekit-endpoint-site-config writes to /app/data/content/_data/site-config.json at runtime. KEEP THE SHAPE IN SYNC with that artifact (lib/storage/defaults-site.js in the plugin) — this file is what a theme developer reads to learn which fields exist, and an omission here reads as 'that field does not exist'. Values are neutral placeholders; never put real site data here.",
   "schemaVersion": 1,
   "identity": {
     "name": "Jane Doe",
     "siteName": "My IndieWeb Site",
+    "avatar": "/media/images/avatar.jpg",
+    "title": "Developer & writer",
+    "pronoun": "they/them",
+    "bio": "One or two sentences for the h-card and hero.",
     "description": "A site built with Indiekit",
-    "tagline": "",
+    "locality": "Brussels",
+    "country": "Belgium",
+    "org": "",
+    "url": "https://example.com",
+    "email": "hello@example.com",
+    "keyUrl": "",
+    "categories": [],
+    "social": [],
     "defaultAuthor": "",
     "defaultOgImage": "",
+    "tagline": "",
     "locale": "en",
     "timezone": "UTC"
   },
   "branding": {
     "surfacePreset": "warm-stone",
     "surfaceCustom": null,
-    "accentBase": "#f59e0b",
+    "accentBase": "#b45309",
+    "accentPreset": "amber",
+    "mode": "auto",
     "colors": {
       "primary": "#1f3a8a",
       "link": "#3b82f6",
@@ -21,6 +36,18 @@
       "success": "#16a34a",
       "warning": "#eab308",
       "danger": "#dc2626"
+    },
+    "roles": {
+      "bg": null,
+      "fg": null,
+      "fgMuted": null,
+      "heading": null,
+      "link": null,
+      "action": null,
+      "actionFg": null,
+      "surface": null,
+      "border": null,
+      "focus": null
     },
     "typography": {
       "sans": "Inter",
@@ -31,18 +58,16 @@
     "logo": "",
     "favicon": ""
   },
-  "layout": {
-    "preset": "blog",
-    "sidebarEnabled": true,
-    "sidebarSide": "right",
-    "navItems": [{ "label": "Home", "url": "/", "external": false }],
-    "footerColumns": []
+  "navigation": {
+    "items": []
   },
   "features": {
     "webmentions": true,
     "syndication": true,
     "activitypub": false,
     "search": true,
-    "rss": true
+    "rss": true,
+    "aiTransparency": false,
+    "aiTransparencyUrl": "/ai"
   }
 }

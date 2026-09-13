@@ -178,8 +178,38 @@ The `@rmdes/indiekit-endpoint-site-config` plugin unifies all per-site configura
 - **Source:** Site-Config → Identity tab → `site-config.json`
 - **Consumed by:** `_data/site.js` → `site.identity` object
 - **Used in templates:** `hero.njk`, `about.njk`, any template that needs author/site info
-- **Precedence:** Plugin-provided values override env-var fallbacks (e.g., `AUTHOR_NAME` env var)
 - **Purpose:** Centralizes h-card data (name, avatar, bio, title, location, etc.) and social links
+
+**Fields** (mirrors `DEFAULTS_SITE.identity` in the plugin's
+`lib/storage/defaults-site.js`; `_data/site.example.json` carries the same shape
+with neutral values):
+
+`name` · `siteName` · `avatar` · `title` · `pronoun` · `bio` · `description` ·
+`locality` · `country` · `org` · `url` · `email` · `keyUrl` · `categories[]` ·
+`social[]` · `defaultAuthor` · `defaultOgImage` · `tagline` · `locale` ·
+`timezone`
+
+**CRITICAL — precedence is per-field and it is NOT what `_data/site.js` suggests.**
+`site.js` builds `site.author.*` from env vars (`AUTHOR_NAME`, `AUTHOR_AVATAR`…)
+and does NOT read most `identity.*` fields. But templates read `site.identity`
+**directly** — `h-card.njk` and `post.njk` do
+`id.avatar or site.author.avatar` — so **site-config wins and the env var is only
+a fallback**. Changing `AUTHOR_AVATAR` in `env.sh` alone changes nothing visible
+on a site whose site-config has an avatar. To change it for real, edit it in the
+Site-Config admin UI (or the `siteConfig` Mongo collection, `_id: "primary"`,
+then `cloudron restart` — the plugin re-renders its artifacts on every init).
+
+This cost a full debugging session on 2026-09-11: `AUTHOR_AVATAR` was updated
+and pushed, the h-card kept rendering the old path, and the cause was only found
+by inspecting the **rendered page** rather than the config. Verify identity
+changes against live HTML, never against the file you edited.
+
+> **`_data/site.example.json` is a contract, not a sample.** It is the fallback
+> for theme-only dev AND the reference a theme developer reads to learn which
+> fields exist — an omission there reads as "that field does not exist". It was
+> missing `avatar` (and 11 other fields) until 2026-09-13, which is exactly how
+> the precedence bug above went unnoticed. Keep its shape in sync with the
+> plugin's defaults whenever the schema changes.
 
 #### Branding (colors, fonts, visual direction)
 
@@ -188,6 +218,7 @@ The `@rmdes/indiekit-endpoint-site-config` plugin unifies all per-site configura
 - **Pattern:** Tier 2 semantic tokens (e.g., `--c-bg`, `--c-text`, `--c-accent`) replace hardcoded colors
 - **Cache invalidation:** Hash of `theme.css` included in URL query string; updates invalidate browser caches
 - **Fallback:** `css/theme.example.css` and `css/critical.example.css` when files missing (fresh containers)
+- **Two colour systems coexist in the artifact** — `branding.colors.{primary,link,focus,success,warning,danger}` (explicit hex, what the OG card generator reads via `resolveOgConfig`) and `branding.roles.*` + `accentBase`/`accentPreset`/`mode`/`surfacePreset` (the semantic-token system that renders `theme.css`). They are not redundant: `accentBase` can hold a value the site never displays (rmendes: `colors.primary` `#e2b71d` vs `accentBase` `#000000`), so read `colors.primary` for anything that must match what a visitor sees.
 
 #### Navigation (header menu items)
 
