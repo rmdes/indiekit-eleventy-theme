@@ -15,6 +15,7 @@ import {
   mixWithWhite,
   buildPalette,
   resolveCard,
+  toOgSlug,
   stripPictographs,
   detectPostType,
   formatDate,
@@ -254,4 +255,29 @@ test("stripPictographs removes joiners and modifiers, not just the pictographs",
 
 test("sanitize keeps accents (body text path)", () => {
   assert.equal(sanitize("caf\u00E9 \u00E0 Gen\u00E8ve"), "caf\u00E9 \u00E0 Gen\u00E8ve");
+});
+
+// --- toOgSlug: the cache key must be as unique as the URL ---
+
+test("toOgSlug prefixes the post type, so identical basenames cannot collide", () => {
+  // Real pair on rmendes: a like of stefanbohacek.com and a reply to
+  // manton.org that Indiekit gave the same date+suffix. Keyed on the basename
+  // alone they shared one PNG, each overwrote the other every build, and the
+  // manifest hash never settled.
+  const like = toOgSlug("/app/data/content/likes/2026-02-22-5be34.md");
+  const reply = toOgSlug("/app/data/content/replies/2026-02-22-5be34.md");
+  assert.equal(like, "likes-2026-02-22-5be34");
+  assert.equal(reply, "replies-2026-02-22-5be34");
+  assert.notEqual(like, reply);
+});
+
+test("toOgSlug matches what the og-fix transform builds from a URL", () => {
+  // transform: `${type}-${year}-${month}-${day}-${slug}` from /type/y/m/d/slug/
+  const fromPath = toOgSlug("/app/data/content/articles/2026-08-29-trump-successor-election.md");
+  const fromUrl = ["articles", "2026", "08", "29", "trump-successor-election"].join("-");
+  assert.equal(fromPath, fromUrl);
+});
+
+test("toOgSlug degrades to the bare filename outside content/", () => {
+  assert.equal(toOgSlug("/somewhere/else/file.md"), "file");
 });

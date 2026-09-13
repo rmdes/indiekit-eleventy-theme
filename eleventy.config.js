@@ -731,7 +731,13 @@ export default function (eleventyConfig) {
       const [, type, year, month, day, slug] = dateMatch;
       const pageUrlPath = `/${type}/${year}/${month}/${day}/${slug}/`;
       const correctFullUrl = `${siteUrl}${pageUrlPath}`;
-      const ogSlug = `${year}-${month}-${day}-${slug}`;
+      // Must match toOgSlug() in lib/og.js exactly: "<type>-<filename>".
+      // The type prefix exists because Indiekit slugs (date + short random
+      // suffix) can repeat across post types — without it a like and a reply
+      // sharing a basename collide on one cache entry and one PNG, each
+      // overwriting the other every build. Here `type` is the first URL
+      // segment, which is the same string as the content directory.
+      const ogSlug = `${type}-${year}-${month}-${day}-${slug}`;
       const hasOg = hasOgImage(ogSlug);
       const ogImageUrl = hasOg
         ? `${siteUrl}/og/${ogSlug}.png`
