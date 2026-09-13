@@ -14,6 +14,7 @@ import { renderNode } from "./lib/render-composition.mjs";
 import { isListed } from "./lib/visibility.mjs";
 import { renderAvatar } from "./lib/image-shortcode.mjs";
 import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
+import { writeBuildHealth } from "./lib/build-health.mjs";
 import { createBuildLint } from "./lib/build-lint.mjs";
 import { prunePreviewOrphans, readCurrentPreviewTokens } from "./lib/prune-preview.mjs";
 import { pruneComposedPageOrphans } from "./lib/prune-composed-pages.mjs";
@@ -1956,6 +1957,19 @@ export default function (eleventyConfig) {
         pageWarnings,
         // Omitted when unknown so the writer carries the previous value forward
         ...(durationSeconds === undefined ? {} : { lastOkDurationSeconds: durationSeconds }),
+      });
+
+      // Public projection for external uptime monitoring (/health/build.json).
+      // Only a state word, timestamps and counts — build-status.json stays
+      // private because it carries error strings and page paths. A successful
+      // build is the ONLY thing that advances lastOkAt and clears the failure
+      // counter; start.sh's supervisor increments it on every watcher crash.
+      await writeBuildHealth({
+        state: "ok",
+        lastBuildAt: new Date(finishedAt).toISOString(),
+        ...(durationSeconds === undefined ? {} : { durationSeconds }),
+        incremental: Boolean(incremental),
+        pageWarnings: Array.isArray(pageWarnings) ? pageWarnings.length : 0,
       });
     }
 
