@@ -104,7 +104,9 @@ Clean-Markdown surface for AI agents (GEO/AEO). Full reference: `documentation-c
 - nginx serving (`.md` extension + `Accept: text/markdown`) and the robots `Content-Signal` live in `indiekit-cloudron`, not here.
 
 **CRITICAL — do not regress these:**
-- The `eleventy.after` block is gated on a **one-shot module flag (`markdownAgentsDone`), NOT `!incremental`**. Prod runs `--watch --incremental`, so `incremental` is `true` even on the watcher's first full build — a `!incremental` gate would never fire. Any new "run once per full build" post-processing must use this pattern (see `pagefindDone`).
+- The `eleventy.after` block is gated on a **one-shot module flag (`markdownAgentsDone`), NOT on the `incremental` argument**. Any new "run once per build" post-processing must use this pattern (see `pagefindDone`).
+
+  **Do not gate anything on `incremental`, in either direction.** It has now been wrong both ways: under the old `--watch --incremental` watcher it was `true` even on the first FULL build, so `!incremental` never fired; since 2026-09-16 prod runs one-shot `eleventy` and it is always `false`, so `if (incremental)` never fires — which is exactly how the syndication webhook silently stopped working until it was caught pre-deploy. `incremental` means "Eleventy was invoked with `--incremental`", never "this build was triggered by a content change".
 - **Synthesized twins (about/home) are gated on the page existing in Eleventy `results`** (`results.some(r => r.url === "/about/")`). A site with no `/about/` page must NOT get an orphan `/about/index.md`, or nginx returns **403** on `/about/`. (Article/note twins are gated on a real source post existing.)
 - The module is **neutral** — no personal data; all identity comes from the injected `env`.
 
