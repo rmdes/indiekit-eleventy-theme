@@ -132,6 +132,25 @@ function logMemory(phase) {
 }
 
 export default function (eleventyConfig) {
+  // THE REAL OUTPUT DIRECTORY. `--output` on the command line overrides
+  // `dir.output`, so the `_site` returned at the bottom of this file is a lie
+  // whenever the build targets somewhere else. `eleventyConfig.directories` is
+  // already normalized at config-evaluation time and reflects the CLI flag
+  // (verified against @11ty/eleventy 3.1.2: `--output=/x` → `"/x/"` here while
+  // `dir.output` still reads `"_site"`).
+  //
+  // Until now `_site` happened to be correct in production because the
+  // Dockerfile symlinks it to /app/data/site — the same directory Eleventy was
+  // writing to. That made the coupling invisible. It stops being true the moment
+  // a build writes to a staging directory instead of the live site, and then
+  // every hardcoded `_site` write lands in the OLD site while the new one is
+  // missing its OG cards and optimized images.
+  //
+  // The `eleventy.after` hooks (pagefind, markdown-agents, category prune)
+  // already take `directories?.output` from their event payload; this is the
+  // same value for the code that runs outside those hooks.
+  const OUTPUT_DIR = eleventyConfig.directories?.output || "_site";
+
   // Don't use .gitignore for determining what to process
   // (content/ is in .gitignore because it's a symlink, but we need to process it)
   eleventyConfig.setUseGitIgnore(false);
@@ -339,7 +358,7 @@ export default function (eleventyConfig) {
   // {% avatar src, alt, opts %} — optimize local chrome avatars at the call-site
   // (remote avatars pass through with eleventy:ignore). See lib/image-shortcode.mjs.
   eleventyConfig.addAsyncShortcode("avatar", async function (src, alt, opts = {}) {
-    return renderAvatar(src, { alt, ...opts });
+    return renderAvatar(src, { alt, ...opts }, { outputDir: resolve(OUTPUT_DIR, "img") });
   });
 
   // Post graph — GitHub-style contribution grid for posting frequency
@@ -1625,8 +1644,13 @@ export default function (eleventyConfig) {
       // During incremental builds, .cache/og is in watchIgnores so Eleventy's
       // passthrough copy won't pick up newly generated images. Copy them manually.
       const ogCacheDir = resolve(cacheDir, "og");
-      const ogOutputDir = resolve(__dirname, "_site", "og");
-      if (existsSync(ogCacheDir) && existsSync(resolve(__dirname, "_site"))) {
+      // OUTPUT_DIR, not a hardcoded `_site`: when the build targets a staging
+      // release directory these cards must land in the release being built, not
+      // in the live site it will replace. Getting this wrong is what commit
+      // a42ceb6 ("sync OG images from cache to release before atomic swap") was
+      // patching around in the previous release-swap design.
+      const ogOutputDir = resolve(OUTPUT_DIR, "og");
+      if (existsSync(ogCacheDir) && existsSync(OUTPUT_DIR)) {
         mkdirSync(ogOutputDir, { recursive: true });
         let synced = 0;
         for (const file of readdirSync(ogCacheDir)) {
@@ -1847,9 +1871,22 @@ export default function (eleventyConfig) {
       }
     }
 
-    // Syndication webhook — trigger after incremental rebuilds (new posts are now live)
-    // Cuts syndication latency from ~2 min (poller) to ~5 sec (immediate trigger)
-    if (incremental) {
+    // Syndication webhook — a build just finished, so any new post is now live.
+    // Cuts syndication latency from ~2 min (the poller) to ~5 sec.
+    //
+    // This used to be gated on `incremental`, which meant "the watcher rebuilt
+    // because content changed" as opposed to its cold-start full build. That
+    // gate STOPS WORKING the moment builds are one-shot: a plain `eleventy`
+    // invocation reports incremental=false, so the webhook would never fire
+    // again and syndication would quietly fall back to the 2-minute poller —
+    // the same silent-breakage shape as the og-slug change that blocked
+    // syndication in Sep 2026.
+    //
+    // Firing on every completed build is also simply more correct: the endpoint
+    // processes whatever syndications are PENDING, so a build with nothing to
+    // syndicate is a cheap no-op, and a container-start build that finds a
+    // backlog should drain it rather than wait for the poller.
+    {
       const syndicateUrl = process.env.SYNDICATE_WEBHOOK_URL;
       if (syndicateUrl) {
         try {
