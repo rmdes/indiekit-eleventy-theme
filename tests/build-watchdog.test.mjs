@@ -43,8 +43,11 @@ test("threshold is the floor when the site has no recorded good build", () => {
 });
 
 test("threshold self-calibrates upward for a slow site", () => {
-  // A site whose good builds take 5 minutes gets 20 minutes of rope.
-  assert.equal(overdueThresholdSeconds({ lastOkDurationSeconds: 300 }), 1200);
+  // Calibration only kicks in above the floor: a site whose good builds take 10
+  // minutes gets 40 minutes of rope, not the 30-minute floor.
+  assert.equal(overdueThresholdSeconds({ lastOkDurationSeconds: 600 }), 2400);
+  // ...and a site at 5 minutes still gets the floor, because 4 x 300 < 1800.
+  assert.equal(overdueThresholdSeconds({ lastOkDurationSeconds: 300 }), RESTART_FLOOR_SECONDS);
 });
 
 test("a fast site is never given LESS than the floor", () => {
@@ -64,8 +67,15 @@ test("garbage lastOkDurationSeconds falls back to the default, not NaN", () => {
 
 // --- the dangerous direction: do not kill real builds ---
 
-test("the slowest build ever observed on rmendes (461s) is NOT overdue", () => {
+test("the slowest warm build ever observed on rmendes (461s) is NOT overdue", () => {
   assert.equal(isBuildOverdue(building(461, { lastOkDurationSeconds: 55 }), NOW), false);
+});
+
+test("a COLD build (~20min, empty OG cache) is NOT overdue", () => {
+  // lastOkDurationSeconds is always a WARM figure, so 4x it never covers a cold
+  // build — only the floor does. Killing one would kill its retry too, turning a
+  // slow-but-working deploy into a permanent restart loop.
+  assert.equal(isBuildOverdue(building(1200, { lastOkDurationSeconds: 154 }), NOW), false);
 });
 
 test("a build one second under the threshold is NOT overdue", () => {
@@ -111,10 +121,10 @@ test("the 2026-09-15 incident is detected", () => {
   const oneHourLater = Date.parse("2026-09-15T19:13:47.494Z");
   assert.equal(isBuildOverdue(incident, oneHourLater), true);
 
-  // ...and was NOT yet flagged five minutes in, while a full build could still
-  // plausibly have been running.
-  const fiveMinutesLater = Date.parse("2026-09-15T18:18:47.494Z");
-  assert.equal(isBuildOverdue(incident, fiveMinutesLater), false);
+  // ...and was NOT yet flagged twenty minutes in, while even a cold build could
+  // still plausibly have been running.
+  const twentyMinutesLater = Date.parse("2026-09-15T18:33:47.494Z");
+  assert.equal(isBuildOverdue(incident, twentyMinutesLater), false);
 });
 
 // --- the file reader ---
@@ -122,11 +132,11 @@ test("the 2026-09-15 incident is detected", () => {
 test("inspectBuildStatus reports elapsed and threshold alongside the verdict", async () => {
   const dir = await mkdtemp(join(tmpdir(), "watchdog-"));
   const path = join(dir, "build-status.json");
-  await writeFile(path, JSON.stringify(building(1000, { lastOkDurationSeconds: 55.3 })));
+  await writeFile(path, JSON.stringify(building(2000, { lastOkDurationSeconds: 55.3 })));
 
   const result = inspectBuildStatus(path, NOW);
   assert.equal(result.overdue, true);
-  assert.equal(result.elapsedSeconds, 1000);
+  assert.equal(result.elapsedSeconds, 2000);
   assert.equal(result.thresholdSeconds, RESTART_FLOOR_SECONDS);
   assert.equal(result.status.buildId, "b1");
 });
