@@ -151,6 +151,32 @@ export default function (eleventyConfig) {
   // same value for the code that runs outside those hooks.
   const OUTPUT_DIR = eleventyConfig.directories?.output || "_site";
 
+  // GENERATED MEDIA LIVES OUTSIDE THE ELEVENTY OUTPUT.
+  //
+  // Responsive images and OG cards are expensive to produce and identical
+  // between builds, but they used to be written into the output directory,
+  // which makes that directory expensive to recreate. That is what blocked the
+  // atomic release swap: a release has to be built from EMPTY (seeding it from
+  // the previous release with hardlinks is not an option — Eleventy writes with
+  // fs.writeFile, which truncates in place and would mutate the live release
+  // through the link), and from empty eleventy-img regenerates every file.
+  //
+  // Both are safe to share across releases:
+  //   - img/ filenames are CONTENT-ADDRESSED (hash-width-format, e.g.
+  //     `--bG_sagpa-1567.webp`), so a changed source yields a different name and
+  //     a stale file is unreachable rather than wrong.
+  //   - og/ cards are already generated into the persistent `.cache/og` and were
+  //     merely COPIED into the output every build; the copy is pure duplication.
+  //
+  // nginx serves both with an `alias` from these paths. The copy target is a
+  // separate public directory rather than `.cache/og` itself so the build cache
+  // — including its manifest — stays off the public surface.
+  //
+  // Unset (theme-only dev with no container), both fall back inside the output
+  // so a local `npx eleventy` still produces a self-contained _site.
+  const OG_PUBLIC_DIR = process.env.OG_PUBLIC_DIR || resolve(OUTPUT_DIR, "og");
+  const IMG_PUBLIC_DIR = process.env.IMG_PUBLIC_DIR || resolve(OUTPUT_DIR, "img");
+
   // Don't use .gitignore for determining what to process
   // (content/ is in .gitignore because it's a symlink, but we need to process it)
   eleventyConfig.setUseGitIgnore(false);
@@ -358,7 +384,7 @@ export default function (eleventyConfig) {
   // {% avatar src, alt, opts %} — optimize local chrome avatars at the call-site
   // (remote avatars pass through with eleventy:ignore). See lib/image-shortcode.mjs.
   eleventyConfig.addAsyncShortcode("avatar", async function (src, alt, opts = {}) {
-    return renderAvatar(src, { alt, ...opts }, { outputDir: resolve(OUTPUT_DIR, "img") });
+    return renderAvatar(src, { alt, ...opts }, { outputDir: IMG_PUBLIC_DIR });
   });
 
   // Post graph — GitHub-style contribution grid for posting frequency
@@ -592,6 +618,10 @@ export default function (eleventyConfig) {
     formats: ["webp", "jpeg"],
     widths: ["auto"],
     failOnError: false,
+    // Defaults to path.join(directories.output, urlPath); a supplied value wins
+    // (global-options.js does Object.assign(defaults, options)). urlPath stays
+    // /img/ — only where the bytes land changes.
+    outputDir: IMG_PUBLIC_DIR,
     cacheOptions: {
       duration: process.env.ELEVENTY_RUN_MODE === "build" ? "1d" : "30d",
     },
@@ -1644,13 +1674,12 @@ export default function (eleventyConfig) {
       // During incremental builds, .cache/og is in watchIgnores so Eleventy's
       // passthrough copy won't pick up newly generated images. Copy them manually.
       const ogCacheDir = resolve(cacheDir, "og");
-      // OUTPUT_DIR, not a hardcoded `_site`: when the build targets a staging
-      // release directory these cards must land in the release being built, not
-      // in the live site it will replace. Getting this wrong is what commit
-      // a42ceb6 ("sync OG images from cache to release before atomic swap") was
-      // patching around in the previous release-swap design.
-      const ogOutputDir = resolve(OUTPUT_DIR, "og");
-      if (existsSync(ogCacheDir) && existsSync(OUTPUT_DIR)) {
+      // Copies into the PERSISTENT public dir, not the release being built, so
+      // a release directory never has to carry 222MB of cards it did not change.
+      // The cache itself stays private (it holds manifest.json); this is the
+      // published mirror of it.
+      const ogOutputDir = OG_PUBLIC_DIR;
+      if (existsSync(ogCacheDir)) {
         mkdirSync(ogOutputDir, { recursive: true });
         let synced = 0;
         for (const file of readdirSync(ogCacheDir)) {
@@ -2076,7 +2105,7 @@ export default function (eleventyConfig) {
       const ogCacheDir = resolve(__dirname, ".cache", "og");
       const validSlugs = await readOgManifestSlugs(resolve(ogCacheDir, "manifest.json"));
       if (validSlugs.size > 0) {
-        for (const target of [ogCacheDir, resolve(directories?.output || dir.output, "og")]) {
+        for (const target of [ogCacheDir, OG_PUBLIC_DIR]) {
           const removed = await pruneOgOrphans(target, validSlugs);
           if (removed.length > 0) {
             console.log(`[og] Pruned ${removed.length} orphaned card(s) from ${target}: ${removed.slice(0, 5).join(", ")}${removed.length > 5 ? " …" : ""}`);
