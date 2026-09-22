@@ -618,10 +618,29 @@ export default function (eleventyConfig) {
     formats: ["webp", "jpeg"],
     widths: ["auto"],
     failOnError: false,
-    // Defaults to path.join(directories.output, urlPath); a supplied value wins
-    // (global-options.js does Object.assign(defaults, options)). urlPath stays
-    // /img/ — only where the bytes land changes.
+    // BOTH of these are required, and outputDir alone is SILENTLY IGNORED.
+    //
+    // global-options.js does Object.assign(defaults, options), so a supplied
+    // outputDir does win there. But transform-plugin.js then recomputes it
+    // per image in getOutputLocations(), and that function only respects the
+    // plugin options when `urlPath` is set:
+    //
+    //     if (options.urlPath) {
+    //       // do nothing, user has specified directories in the plugin options.
+    //       return {};
+    //     }
+    //     if (path.isAbsolute(originalSource)) {
+    //       return { outputDir: path.join(projectOutputDirectory, "/img/"), ... };
+    //     }
+    //
+    // Content images are authored as root-relative /media/... paths, so they
+    // take that absolute branch and land back inside the Eleventy output —
+    // which means Sharp regenerates every one of them into each fresh release.
+    // Setting urlPath makes the plugin keep our outputDir instead. The value is
+    // the same /img/ the absolute branch would have produced, so public URLs
+    // are unchanged; only where the bytes are written moves.
     outputDir: IMG_PUBLIC_DIR,
+    urlPath: "/img/",
     cacheOptions: {
       duration: process.env.ELEVENTY_RUN_MODE === "build" ? "1d" : "30d",
     },
