@@ -14,7 +14,7 @@
     "@11ty/eleventy": "^3.0.0",
     "@11ty/eleventy-fetch": "^5.0.0",
     "@11ty/eleventy-img": "^7.0.0",
-    "@11ty/eleventy-plugin-rss": "^2.0.2",
+    "@11ty/eleventy-plugin-rss": "^3.0.0",
     "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.2",
     "@11ty/is-land": "^5.0.1",
     "@alpinejs/collapse": "^3.15.8",
