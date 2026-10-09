@@ -902,9 +902,38 @@ export default function (eleventyConfig) {
     return result;
   });
 
-  // HTML minification — only during initial build, skip during watch rebuilds
+  // HTML minification — OFF by default. Set ELEVENTY_HTMLMIN=1 to enable.
+  //
+  // It was the single most expensive thing in the build and bought almost
+  // nothing. CPU profile (--cpu-prof, sampled) of a 609s production build on
+  // rmendes, 2026-10-09:
+  //
+  //     215.2s  34.5%  node_modules/html-minifier-terser     <- this transform
+  //     118.0s  19.0%  node_modules/nunjucks (compilation)
+  //      77.7s  12.4%  (garbage collector)
+  //       2.6s   0.4%  node_modules/posthtml*
+  //
+  // 215s per build, and a publish costs TWO full builds (the syndication
+  // write-back is a genuine content change), so ~7 minutes per published post.
+  //
+  // What it bought: nginx already gzips text/html — 96,693 bytes of minified
+  // markup leaves as 23,596. Minifying BEFORE gzip saved an estimated 134 bytes
+  // per page, ~0.7% of what is actually transferred, ~0.4MB across 3,476 pages.
+  // gzip compresses the whitespace and comments that collapseWhitespace and
+  // removeComments remove, so the two overlap almost entirely.
+  //
+  // Kept rather than deleted: it is the right thing to run if HTML ever has to
+  // be served uncompressed, or for a one-off size audit. Enable with
+  // ELEVENTY_HTMLMIN=1 in env.sh. Measure before re-enabling it permanently —
+  // the 0.7% figure above is an estimate (production never emits unminified
+  // output, so the comparison used whitespace re-inserted into a minified page).
   eleventyConfig.addTransform("htmlmin", async function (content, outputPath) {
-    if (outputPath && outputPath.endsWith(".html") && process.env.ELEVENTY_RUN_MODE === "build") {
+    if (
+      outputPath &&
+      outputPath.endsWith(".html") &&
+      process.env.ELEVENTY_RUN_MODE === "build" &&
+      process.env.ELEVENTY_HTMLMIN === "1"
+    ) {
       try {
         return await minify(content, {
           collapseWhitespace: true,
