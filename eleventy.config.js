@@ -15,6 +15,7 @@ import { isListed } from "./lib/visibility.mjs";
 import { renderAvatar } from "./lib/image-shortcode.mjs";
 import { writeBuildStatus, writeBuildStatusSync } from "./lib/build-status.mjs";
 import { writeBuildHealth } from "./lib/build-health.mjs";
+import { hasOptimizableContentImage } from "./lib/content-image-gate.mjs";
 import { createBuildLint } from "./lib/build-lint.mjs";
 import { prunePreviewOrphans, readCurrentPreviewTokens } from "./lib/prune-preview.mjs";
 import { pruneComposedPageOrphans } from "./lib/prune-composed-pages.mjs";
@@ -658,8 +659,24 @@ export default function (eleventyConfig) {
   // parses EVERY page (~87% of which carry no content image — chrome <img> is remote
   // and never optimized anyway). We override that transform by name to skip the parse
   // on pages with no content image, detected by a /media/ or /uploads/ path (content
-  // images use those; chrome/avatar/widget images are remote other-origin). Validated:
-  // 0 false-positives on chrome-only pages, matches all 455 content-image pages.
+  // images use those). Validated: 0 false-positives on chrome-only pages, matches all
+  // 455 content-image pages.
+  //
+  // `/media/images/` is EXCLUDED, and that exclusion is load-bearing. The gate was
+  // written when every chrome image was remote other-origin. It stopped being true:
+  // site-config's h-card emits the avatar as
+  //     <data class="u-photo hidden" value="https://<host>/media/images/<avatar>">
+  // on EVERY page — a hidden microformats2 element, not an image. The old bare
+  // /(media|uploads)/ test therefore matched all 3,461 of 3,476 pages and the gate
+  // never fired once. Measured on rmendes 2026-10-09 with
+  // DEBUG=Eleventy:Benchmark*: `Transforming \`html\` with posthtml` was 518,807ms
+  // across 3,463 calls — 57% of a 908s build — while all template compile+write
+  // together was 5.6s. Only 469 pages carry a real content image.
+  //
+  // `/media/images/` is the site-asset area (one file: the avatar); uploads land in
+  // `/media/photos/` and `/uploads/`, which still match. The predicate is a denylist
+  // of that one directory rather than an allowlist of upload dirs, so a NEW upload
+  // location fails toward running the transform, never toward silently skipping it.
   // Pages WITH a content image run the full pipeline (Phase-B rewrite + remote-marker
   // + eleventy-img) and optimize correctly. The URL-callback guard preserves any future
   // addUrlTransform. (Re-touches an Eleventy internal transform name — accurate
@@ -669,7 +686,7 @@ export default function (eleventyConfig) {
     if (
       typeof this.outputPath === "string" &&
       this.outputPath.endsWith(".html") &&
-      !/\/(media|uploads)\//.test(content)
+      !hasOptimizableContentImage(content)
     ) {
       const hasUrlCallbacks = eleventyConfig.htmlTransformer.getCallbacks("html", this).length > 0;
       if (!hasUrlCallbacks) return content; // chrome-only page → skip the PostHTML parse
